@@ -8,6 +8,10 @@ build/
 *.iml
 .vscode/
 
+# Node & Husky
+node_modules/
+npm-debug.log*
+
 # OS
 .DS_Store
 Thumbs.db
