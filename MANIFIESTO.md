@@ -48,3 +48,4 @@ Es corto a propósito: si una regla no cabe aquí, pertenece a un spec.
 6. **Dinero exacto:** los montos se guardan como enteros en unidades mínimas. Nunca se usan flotantes para guardar dinero.
 7. **Listo para sincronizar desde el día 1:** IDs globales (UUID), movimientos append-only y correcciones como nuevos eventos. Ninguna decisión de hoy puede impedir la sincronización P2P ni el respaldo de mañana.
 8. **Sostenible sin traicionar al usuario:** el núcleo es gratis para siempre y el proyecto vive de donaciones. Lo premium solo agrega comodidad (por ejemplo, respaldo en tu nube), nunca encierra tus datos. Sin publicidad ni venta de datos.
+9. **Mundial desde el día 1:** el dominio no contiene textos de idioma ni formatos regionales. Devuelve enums, códigos e IDs, y la presentación traduce y formatea según el locale. La app empieza en español y luego suma idiomas; el proyecto (specs, commits, docs) se escribe en español.

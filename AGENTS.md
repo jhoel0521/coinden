@@ -14,6 +14,7 @@ Si una tarea las contradice, detente y pregunta.
 4. **Categoría ≠ medio de pago.** "QR", "efectivo" o "Meru" indican la *billetera*, no la *categoría*.
 5. **Capturar ≠ confirmar.** Un borrador no afecta saldos hasta que el usuario lo confirma.
 6. **Sync-ready.** Las entidades usan IDs UUID (nunca autoincrementales); los movimientos son append-only y una corrección es un nuevo evento, no se pisa el anterior. Nada del dominio puede asumir un solo dispositivo.
+7. **Dominio sin idioma.** En `core/domain` no hay textos para el usuario ni formatos regionales (separador decimal, símbolo, fechas): solo enums, códigos e IDs. Traducir y formatear es tarea de la capa de presentación. Los nombres que escribe el usuario, como el de una billetera, se guardan tal cual.
 
 ## Flujo SDD con OpenSpec
 
