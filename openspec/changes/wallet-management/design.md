@@ -32,7 +32,7 @@ Un movimiento anulado deja de contar en **su propio** punto cronológico, como s
 - *Alternativa descartada:* que la anulación aplique un contra-movimiento en su propia fecha. Esconde huecos históricos.
 
 ### D5. Validación cronológica: proyectar el libro candidato
-Para registrar un evento nuevo, el caso de uso carga los eventos de las billeteras afectadas, agrega el candidato, ordena por (`occurredAt`, `recordedAt`, `id`) y calcula el saldo acumulado. Si la billetera no admite negativos y el mínimo es menor que cero, devuelve `Rejected(InsufficientFunds(walletId, shortfall: Money, firstNegativeAtEpochMs))` y no persiste nada. La misma proyección sobre el libro real, sin candidato, da el estado `DESCUADRADA`.
+Para registrar un evento nuevo, el caso de uso carga los eventos de las billeteras afectadas, agrega el candidato, ordena por (`occurredAt`, `recordedAt`, `id`) y calcula el saldo acumulado. Si la billetera no admite negativos y el candidato **empeora** la proyección (el mínimo baja o el primer negativo se adelanta respecto del libro sin candidato), devuelve `Rejected(InsufficientFunds(walletId, shortfall: Money, firstNegativeAtEpochMs))` y no persiste nada. La misma proyección sobre el libro real, sin candidato, da el estado `DESCUADRADA`. Comparar contra el libro sin candidato evita que un hueco previo (por ejemplo, de una fusión) bloquee todos los movimientos, incluido el ajuste que lo corrige.
 - Costo: O(n log n) por billetera en cada registro. Es aceptable en un dispositivo; si crece, en el futuro se pueden agregar snapshots por periodo sin cambiar la regla.
 
 ### D6. Puertos nuevos para el mundo exterior

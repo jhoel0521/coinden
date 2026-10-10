@@ -111,7 +111,7 @@ El sistema DEBE (MUST) corregir movimientos únicamente registrando un evento de
 - **THEN** el sistema rechaza la operación con un error de movimiento ya anulado
 
 ### Requirement: Control Estricto de Saldo Cronológico
-En una billetera que no admite negativos, el sistema DEBE (MUST) rechazar cualquier movimiento nuevo, incluidas las anulaciones, tras el cual el saldo acumulado quede negativo en algún punto de la historia ordenada por fecha de ocurrencia. El rechazo indica la billetera, el faltante máximo y el primer momento en que el saldo queda negativo.
+En una billetera que no admite negativos, el sistema DEBE (MUST) rechazar cualquier movimiento nuevo, incluidas las anulaciones, que introduzca o agrave un saldo acumulado negativo en algún punto de la historia ordenada por fecha de ocurrencia; un movimiento que no empeora el punto más bajo ni adelanta el primer negativo se acepta. El rechazo indica la billetera, el faltante máximo y el primer momento en que el saldo queda negativo.
 
 #### Scenario: Olvidó registrar el retiro del cajero
 - **WHEN** "Billetera" tiene 10.00 Bs y Carlos intenta registrar un GASTO de 45.00 Bs por el almuerzo
@@ -125,6 +125,10 @@ En una billetera que no admite negativos, el sistema DEBE (MUST) rechazar cualqu
 - **WHEN** "Billetera" recibió 200.00 Bs a las 14:00 con 10.00 Bs previos, y Carlos registra un GASTO de 45.00 Bs ocurrido a las 13:00
 - **THEN** el sistema rechaza el gasto porque a las 13:00 el saldo habría sido -35.00 Bs, aunque el saldo final sería positivo
 
+#### Scenario: Un ajuste posterior no se bloquea por un hueco existente
+- **WHEN** "Billetera" está DESCUADRADA por un faltante de 20.00 Bs a las 13:00 y Carlos registra a las 21:00 un AJUSTE de +20.00 Bs
+- **THEN** el sistema acepta el ajuste porque no empeora el faltante, y la billetera sigue DESCUADRADA hasta que se registre un ajuste o ingreso en el momento del faltante
+
 #### Scenario: Anulación de un ingreso que deja el saldo negativo
 - **WHEN** "Billetera" tiene un INGRESO de 200.00 Bs del que dependen gastos posteriores por 180.00 Bs, y Carlos intenta anular ese ingreso
 - **THEN** el sistema rechaza la anulación indicando el faltante resultante
@@ -134,7 +138,7 @@ El sistema DEBE (MUST) informar como DESCUADRADA a toda billetera que no admite 
 
 #### Scenario: Movimientos fusionados desde otro dispositivo
 - **WHEN** el libro de "Billetera" recibe por fusión gastos registrados en el celular y en la PC que juntos dejan el saldo en -20.00 Bs
-- **THEN** el sistema conserva todos los movimientos, informa la billetera como DESCUADRADA con un faltante de 20.00 Bs y un AJUSTE positivo posterior la vuelve a cuadrar
+- **THEN** el sistema conserva todos los movimientos, informa la billetera como DESCUADRADA con un faltante de 20.00 Bs y un AJUSTE positivo de 20.00 Bs con fecha en el momento del faltante la vuelve a cuadrar
 
 ### Requirement: Identidad y Trazabilidad Lista para Sincronización
 Cada billetera y cada movimiento DEBE (MUST) tener un identificador global único generado en el dispositivo, y cada movimiento DEBE registrar el dispositivo que lo creó, el momento en que ocurrió y el momento en que se registró. El orden cronológico usa el momento de ocurrencia y, ante empate, el de registro y luego el identificador.
