@@ -77,7 +77,7 @@ Un borrador DEBE (MUST) estar Listo solo cuando su propuesta tiene todos los dat
 - **THEN** el borrador queda Incompleto con el problema de monto inválido, porque normalizar formatos regionales es tarea del intérprete
 
 ### Requirement: Confirmación con las Reglas del Libro
-Confirmar un borrador Listo DEBE (MUST) registrar su movimiento en el libro aplicando todas las reglas de `wallet-management`, con el momento de ocurrencia de la propuesta o, si falta, el de la captura. Si el libro rechaza el movimiento, el borrador sigue Listo con el motivo del rechazo. Solo un borrador Listo puede confirmarse.
+Confirmar un borrador Listo DEBE (MUST) registrar su movimiento en el libro aplicando todas las reglas de `wallet-management`, con el momento de ocurrencia de la propuesta o, si falta, el de la captura. Si el libro rechaza el movimiento, el borrador sigue Listo con el motivo del rechazo. Solo un borrador Listo puede confirmarse. Al confirmar un gasto, el usuario puede indicar una categoría; el sistema registra la clasificación con la nota del borrador como descripción y, si no se indicó categoría, el gasto queda Sin categoría. La categoría nunca bloquea la confirmación.
 
 #### Scenario: Confirmar el almuerzo
 - **WHEN** Carlos confirma a las 21:00 el borrador "almuerzo 45 qr" capturado a las 12:58
@@ -90,6 +90,14 @@ Confirmar un borrador Listo DEBE (MUST) registrar su movimiento en el libro apli
 #### Scenario: Confirmar un borrador incompleto
 - **WHEN** el usuario intenta confirmar un borrador Incompleto
 - **THEN** el sistema rechaza la confirmación indicando los datos faltantes
+
+#### Scenario: Confirmar con categoría
+- **WHEN** Carlos confirma el borrador "POLLOS DEL VALLE 25 Bs" eligiendo "comida"
+- **THEN** el gasto queda clasificado como "comida" con la descripción "POLLOS DEL VALLE" y nace la regla correspondiente
+
+#### Scenario: Confirmar sin categoría
+- **WHEN** Carlos confirma un gasto sin indicar categoría
+- **THEN** el gasto se registra igual y queda como Sin categoría
 
 ### Requirement: Ajuste a un Saldo Objetivo
 Una propuesta de ajuste DEBE (MUST) expresar el saldo real que el usuario dice tener, no la diferencia. Al confirmar, el sistema calcula la diferencia contra el saldo actual de la billetera y registra ese ajuste; si no hay diferencia, la confirmación se rechaza porque no hay nada que ajustar.
@@ -114,7 +122,7 @@ Cuando el intérprete reconoce algo que no es un movimiento (pago recurrente, pr
 - **THEN** el borrador pasa a Listo y puede confirmarse como gasto
 
 ### Requirement: Bandeja de Revisión con Saldo Proyectado
-El sistema DEBE (MUST) listar los borradores pendientes de un usuario (Capturado, Incompleto, Listo y No soportado), ordenados de menor a mayor confianza y, a igual confianza, por momento de captura, y, para cada billetera afectada por borradores Listos, el saldo que quedaría al confirmarlos, avisando sin bloquear cuando una billetera que no admite negativos quedaría por debajo de cero.
+El sistema DEBE (MUST) listar los borradores pendientes de un usuario (Capturado, Incompleto, Listo y No soportado), ordenados de menor a mayor confianza y, a igual confianza, por momento de captura, y, para cada billetera afectada por borradores Listos, el saldo que quedaría al confirmarlos, avisando sin bloquear cuando una billetera que no admite negativos quedaría por debajo de cero. Para cada borrador de gasto la bandeja muestra además la categoría sugerida con su confianza y su motivo, sin que la categoría afecte la confianza del borrador.
 
 #### Scenario: Aviso de faltante proyectado
 - **WHEN** "Billetera" tiene 10.00 Bs y hay borradores Listos por 3.00 Bs y 45.00 Bs en ella
@@ -127,6 +135,10 @@ El sistema DEBE (MUST) listar los borradores pendientes de un usuario (Capturado
 #### Scenario: Lo dudoso primero
 - **WHEN** Carlos tiene un borrador de un comprobante con confianza ALTA capturado a las 10:00 y "gaste 2 para un semillita" con confianza BAJA capturado a las 15:00
 - **THEN** la bandeja muestra primero el borrador de confianza BAJA
+
+#### Scenario: Categoría sugerida en la bandeja
+- **WHEN** Carlos tiene pendiente el borrador "almuerzo 45 qr"
+- **THEN** la bandeja lo muestra con la categoría sugerida "comida", confianza MEDIA y el motivo "almuerzo"
 
 ### Requirement: Historial de Transiciones y Confirmación Idempotente
 Cada transición de un borrador DEBE (MUST) registrarse como un evento append-only con id global, dispositivo y momentos de ocurrencia y registro, y el estado actual DEBE derivarse de reproducir los eventos en orden. El movimiento confirmado usa un id derivado del borrador, de modo que confirmar el mismo borrador más de una vez nunca registra dos movimientos.
