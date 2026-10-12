@@ -46,7 +46,7 @@ ReadyMovement = Expense(amount: Money, walletId, occurredAt, note)
               | Income(...) | Transfer(out: Money, fromId, into: Money, toId, occurredAt, note)
               | AdjustTo(target: Money, walletId, occurredAt, note)
 ```
-Una función pura `DraftEvaluator.evaluate(proposal, WalletDirectory, capturedAt)` decide entre `Ready`, `Incomplete` o `Unsupported`. `WalletDirectory` es una instantánea de las billeteras del dueño (id, moneda, estado y alias). `Ready` solo se construye desde `evaluate`, así que sus campos no nulos están garantizados por tipos. `DraftField { KIND, AMOUNT, WALLET, TO_AMOUNT, TO_WALLET }` y `DraftIssue { INVALID_AMOUNT, CURRENCY_MISMATCH, UNKNOWN_WALLET_HINT, WALLET_ARCHIVED, SAME_WALLET, INCONSISTENT_AMOUNTS }` no llevan texto (principio 9).
+Una función pura `DraftEvaluator.evaluate(proposal, WalletDirectory, capturedAt)` decide entre `Ready`, `Incomplete` o `Unsupported`. `WalletDirectory` es una instantánea de las billeteras del dueño (id, moneda, estado y alias). `Ready` solo se construye desde `evaluate`, así que sus campos no nulos están garantizados por tipos. `DraftField { KIND, AMOUNT, WALLET, TO_AMOUNT, TO_WALLET }` y `DraftIssue { INVALID_AMOUNT, CURRENCY_MISMATCH, UNKNOWN_WALLET, UNKNOWN_WALLET_HINT, WALLET_ARCHIVED, SAME_WALLET, INCONSISTENT_AMOUNTS }` no llevan texto (principio 9). `UNKNOWN_WALLET` cubre un `ById` cuyo id no existe. En una transferencia sin monto de llegada, si ambas billeteras tienen la misma moneda, llega lo mismo que sale ("saqué 200 del cajero").
 
 ### D3. Historial de transiciones como eventos append-only
 ```
@@ -101,6 +101,7 @@ test feature/       CarlosDraftDayFeatureTest, JohnDraftFeatureTest, FacundoDraf
 - [Reproducir el historial en cada consulta] → Son pocos eventos por borrador. La bandeja proyecta solo los pendientes.
 - [El estado depende del directorio actual de billeteras] → Es intencional: un borrador Listo cuya billetera se archivó no debe confirmarse a ciegas.
 - [Ids derivados `"draft:<id>"` conviven con ids generados] → Siguen siendo globales y únicos porque el id del borrador lo es. Se documenta en el KDoc del caso de uso.
+- [Dos transiciones del mismo borrador en el mismo milisegundo] → El orden lo decide el id, que es arbitrario. En la práctica la revisión ocurre mucho después de la captura; si alguna vez importa, se puede agregar un número de secuencia por dispositivo sin cambiar el modelo.
 - [Captura con N propuestas crea N borradores] → Si el intérprete separa mal, el usuario descarta o revisa cada uno; la evidencia compartida permite ver el origen.
 
 ## Migration Plan

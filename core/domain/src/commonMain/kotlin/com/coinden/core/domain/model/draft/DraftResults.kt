@@ -1,0 +1,53 @@
+package com.coinden.core.domain.model.draft
+
+import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.wallet.WalletError
+
+/** Motivos de rechazo de una operación sobre borradores. Sin textos: la presentación los traduce. */
+sealed interface DraftError {
+    data object NotFound : DraftError
+
+    data object TerminalState : DraftError
+
+    data class NotReady(
+        val missing: Set<DraftField>,
+        val issues: Set<DraftIssue>,
+    ) : DraftError
+
+    /** El ajuste pide el saldo que la billetera ya tiene. */
+    data object NothingToAdjust : DraftError
+
+    /** El libro de movimientos rechazó el movimiento (por ejemplo, saldo insuficiente). */
+    data class Wallet(
+        val error: WalletError,
+    ) : DraftError
+
+    data class AliasAlreadyUsed(
+        val alias: String,
+        val walletId: String,
+    ) : DraftError
+}
+
+sealed interface DraftResult {
+    data class Ok(
+        val draft: Draft,
+    ) : DraftResult
+
+    data class Rejected(
+        val error: DraftError,
+    ) : DraftResult
+}
+
+/** Saldo de una billetera si se confirmaran todos sus borradores Listos. */
+data class ProjectedBalance(
+    val walletId: String,
+    val current: Money,
+    val projected: Money,
+    val hasShortfall: Boolean,
+)
+
+/** La bandeja de revisión: pendientes y proyección por billetera. */
+data class DraftInbox(
+    val pending: List<Draft>,
+    val projections: List<ProjectedBalance>,
+)

@@ -101,6 +101,9 @@ enum class MovementKind {
 
 /**
  * Caso de Uso: registrar un gasto, ingreso o ajuste en una billetera activa.
+ *
+ * [eventId] permite fijar el id del evento (por ejemplo, derivado de un borrador para que
+ * confirmarlo dos veces no duplique el movimiento); si falta, se genera uno nuevo.
  */
 class RegisterMovementUseCase(
     private val ctx: LedgerContext,
@@ -110,6 +113,7 @@ class RegisterMovementUseCase(
         kind: MovementKind,
         amount: Money,
         occurredAtEpochMs: Long? = null,
+        eventId: String? = null,
     ): WalletOperationResult {
         val wallet = ctx.repository.getWallet(walletId) ?: return Rejected(WalletError.NotFound)
         if (!wallet.isActive) return Rejected(WalletError.WalletArchived)
@@ -122,7 +126,7 @@ class RegisterMovementUseCase(
         if (!validAmount) return Rejected(WalletError.InvalidAmount)
 
         val now = ctx.clock.nowEpochMs()
-        val id = ctx.ids.newId()
+        val id = eventId ?: ctx.ids.newId()
         val device = ctx.device.deviceId()
         val occurred = occurredAtEpochMs ?: now
         val event =
@@ -140,6 +144,7 @@ class RegisterMovementUseCase(
 
 /**
  * Caso de Uso: transferir entre dos billeteras, en la misma moneda o cambiando de moneda.
+ * [eventId] es opcional, como en [RegisterMovementUseCase].
  */
 class RegisterTransferUseCase(
     private val ctx: LedgerContext,
@@ -150,6 +155,7 @@ class RegisterTransferUseCase(
         amountOut: Money,
         amountIn: Money,
         occurredAtEpochMs: Long? = null,
+        eventId: String? = null,
     ): WalletOperationResult {
         if (fromWalletId == toWalletId) return Rejected(WalletError.SameWallet)
         val from = ctx.repository.getWallet(fromWalletId) ?: return Rejected(WalletError.NotFound)
@@ -166,7 +172,7 @@ class RegisterTransferUseCase(
         val now = ctx.clock.nowEpochMs()
         val transfer =
             LedgerEvent.Transfer(
-                id = ctx.ids.newId(),
+                id = eventId ?: ctx.ids.newId(),
                 deviceId = ctx.device.deviceId(),
                 occurredAtEpochMs = occurredAtEpochMs ?: now,
                 recordedAtEpochMs = now,

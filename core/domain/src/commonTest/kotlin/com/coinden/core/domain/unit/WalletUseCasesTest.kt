@@ -309,4 +309,13 @@ class WalletUseCasesTest {
                     .map { it.recordedAtEpochMs }
             assertEquals(listOf(at(21), at(20), at(21)), ordered)
         }
+
+    @Test
+    fun `registrar con un id de evento dado`() =
+        runTest {
+            val cash = newWallet("Billetera", bs(1_000))
+            val bnb = newWallet("BNB Bs", bs(20_000), WalletType.BANK)
+            assertEquals("draft:d-1", recorded(register(cash.id, MovementKind.EXPENSE, bs(100), at(12), eventId = "draft:d-1")).id)
+            assertEquals("draft:d-2", recorded(transfer(bnb.id, cash.id, bs(500), bs(500), at(13), eventId = "draft:d-2")).id)
+        }
 }

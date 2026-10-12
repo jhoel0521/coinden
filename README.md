@@ -69,7 +69,10 @@ Los principios completos están en [MANIFIESTO.md](MANIFIESTO.md). En resumen:
 |---|-----------|--------|
 | 0 | `currency-configuration`: monedas, tasas reales, consolidado | ✅ hecho |
 | 1 | `wallet-management`: billeteras, libro de movimientos, cambio con tasa propia | ✅ hecho |
-| 2 | `draft-inbox`: borradores y revisión de la tarde (entrada de texto) | |
+| — | `domain-i18n-cleanup`: dominio sin textos de idioma | ✅ hecho (limpieza) |
+| — | `money-precision`: `Money` encapsulado y `Money * ExchangeRate` exacto | ✅ hecho (limpieza) |
+| 2 | `draft-inbox`: borradores como máquina de estados, bandeja de revisión y confirmación idempotente | ✅ hecho |
+| 2b | `text-interpreter`: intérprete de texto con reglas (normaliza "45,50", "Bs 45", alias) | 🔜 siguiente |
 | 3 | `expense-categorization`: reglas + aprendizaje por corrección | |
 | 4 | `commitments`: pagos recurrentes y préstamos (debo / me deben) con recordatorios | |
 | 5 | `free-to-spend`: dinero libre y la pregunta de la hamburguesa | |
