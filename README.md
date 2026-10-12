@@ -72,7 +72,7 @@ Los principios completos están en [MANIFIESTO.md](MANIFIESTO.md). En resumen:
 | — | `domain-i18n-cleanup`: dominio sin textos de idioma | ✅ hecho (limpieza) |
 | — | `money-precision`: `Money` encapsulado y `Money * ExchangeRate` exacto | ✅ hecho (limpieza) |
 | 2 | `draft-inbox`: borradores como máquina de estados, bandeja de revisión y confirmación idempotente | ✅ hecho |
-| 2b | `text-interpreter`: intérprete de texto con reglas (normaliza "45,50", "Bs 45", alias) | 🔜 siguiente |
+| 2b | `text-interpreter`: intérprete agnóstico de frases y comprobantes (paquetes en/es/pt y plantillas como datos), confianza ALTA/MEDIA/BAJA por borrador | ✅ hecho |
 | 3 | `expense-categorization`: reglas + aprendizaje por corrección | |
 | 4 | `commitments`: pagos recurrentes y préstamos (debo / me deben) con recordatorios | |
 | 5 | `free-to-spend`: dinero libre y la pregunta de la hamburguesa | |

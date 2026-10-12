@@ -73,6 +73,19 @@ sealed interface Draft {
     val id: String get() = header.id
     val isTerminal: Boolean get() = this is Confirmed || this is Discarded
 
+    /**
+     * Confianza del borrador: la de su campo propuesto más débil. Capturado y No soportado son
+     * BAJA (nadie propuso un movimiento); Confirmado es ALTA (ya es la verdad del libro).
+     */
+    val confidence: Confidence
+        get() =
+            when (this) {
+                is Captured, is Unsupported, is Discarded -> Confidence.LOW
+                is Incomplete -> proposal.confidence
+                is Ready -> proposal.confidence
+                is Confirmed -> Confidence.HIGH
+            }
+
     /** Recién capturado: hay evidencia, todavía sin propuesta. */
     data class Captured(
         override val header: DraftHeader,

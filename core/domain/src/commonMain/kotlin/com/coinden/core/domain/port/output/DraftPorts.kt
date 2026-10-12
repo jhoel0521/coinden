@@ -43,4 +43,12 @@ interface WalletAliasRepositoryPort {
 
     /** Alias normalizado -> id de billetera. */
     suspend fun aliasesFor(ownerId: String): Map<String, String>
+
+    /** Billetera elegida para las capturas que no nombran billetera (null = sin elección). */
+    suspend fun setDefaultWallet(
+        ownerId: String,
+        walletId: String?,
+    )
+
+    suspend fun defaultWalletFor(ownerId: String): String?
 }

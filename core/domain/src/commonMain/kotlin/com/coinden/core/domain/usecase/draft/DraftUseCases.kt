@@ -13,6 +13,7 @@ import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.ProjectedBalance
 import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.draft.WalletDirectory
+import com.coinden.core.domain.model.draft.markedCorrected
 import com.coinden.core.domain.model.wallet.LedgerProjection
 import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.port.output.ClockPort
@@ -38,7 +39,10 @@ class DraftContext(
     val clock: ClockPort,
     val device: DeviceIdentityPort,
 ) {
-    suspend fun directory(ownerId: String): WalletDirectory = WalletDirectory(wallets.listWallets(ownerId), aliases.aliasesFor(ownerId))
+    suspend fun directory(ownerId: String): WalletDirectory {
+        val owned = wallets.listWallets(ownerId)
+        return WalletDirectory(owned, aliases.aliasesFor(ownerId), WalletDirectory.resolveDefault(owned, aliases.defaultWalletFor(ownerId)))
+    }
 
     /** Estado actual del borrador, reproducido desde su historial con el directorio vigente. */
     suspend fun load(draftId: String): Draft? {
@@ -78,6 +82,26 @@ class SetWalletAliasesUseCase(
             return DraftError.AliasAlreadyUsed(it, existing.getValue(it))
         }
         ctx.aliases.setAliases(ownerId, walletId, normalized)
+        return null
+    }
+}
+
+/**
+ * Caso de Uso: elegir la billetera por defecto para las capturas que no nombran billetera
+ * (normalmente efectivo). null borra la elección. Devuelve null si se guardó, o el error.
+ */
+class SetDefaultWalletUseCase(
+    private val ctx: DraftContext,
+) {
+    suspend operator fun invoke(
+        ownerId: String,
+        walletId: String?,
+    ): DraftError? {
+        if (walletId != null) {
+            val wallet = ctx.wallets.getWallet(walletId)
+            if (wallet == null || wallet.ownerId != ownerId || !wallet.isActive) return DraftError.NotFound
+        }
+        ctx.aliases.setDefaultWallet(ownerId, walletId)
         return null
     }
 }
@@ -142,7 +166,7 @@ class ReviseDraftUseCase(
         if (draft.isTerminal) return Rejected(DraftError.TerminalState)
         val revised =
             ctx.record(draft) { id, device, now ->
-                DraftEvent.Revised(id, draftId, draft.header.ownerId, device, now, now, proposal)
+                DraftEvent.Revised(id, draftId, draft.header.ownerId, device, now, now, proposal.markedCorrected())
             }
         return DraftResult.Ok(revised)
     }
@@ -242,7 +266,8 @@ class ConfirmDraftUseCase(
 }
 
 /**
- * Caso de Uso: la bandeja de la noche. Lista los pendientes y proyecta el saldo de cada billetera
+ * Caso de Uso: la bandeja de la noche. Lista los pendientes, primero lo dudoso (de menor a mayor
+ * confianza y, a igual confianza, por hora de captura), y proyecta el saldo de cada billetera
  * si se confirmaran sus borradores Listos; avisa (sin bloquear) cuando quedaría un faltante.
  */
 class GetDraftInboxUseCase(
@@ -255,7 +280,7 @@ class GetDraftInboxUseCase(
                 .draftIdsFor(ownerId)
                 .mapNotNull { DraftProjection.project(ctx.drafts.eventsFor(it), directory) }
                 .filterNot { it.isTerminal }
-                .sortedBy { it.header.capturedAtEpochMs }
+                .sortedWith(compareBy<Draft>({ it.confidence }, { it.header.capturedAtEpochMs }))
 
         val projected = mutableMapOf<String, Money>()
         val current = mutableMapOf<String, Money>()

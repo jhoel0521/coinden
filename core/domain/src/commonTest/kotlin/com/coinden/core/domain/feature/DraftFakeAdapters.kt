@@ -42,6 +42,17 @@ class InMemoryWalletAliasRepository : WalletAliasRepositoryPort {
 
     override suspend fun aliasesFor(ownerId: String): Map<String, String> =
         byOwner[ownerId].orEmpty().flatMap { (walletId, aliases) -> aliases.map { it to walletId } }.toMap()
+
+    private val defaults = mutableMapOf<String, String?>()
+
+    override suspend fun setDefaultWallet(
+        ownerId: String,
+        walletId: String?,
+    ) {
+        defaults[ownerId] = walletId
+    }
+
+    override suspend fun defaultWalletFor(ownerId: String): String? = defaults[ownerId]
 }
 
 /**

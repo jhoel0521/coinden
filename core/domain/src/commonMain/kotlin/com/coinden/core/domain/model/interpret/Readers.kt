@@ -1,0 +1,447 @@
+package com.coinden.core.domain.model.interpret
+
+import com.coinden.core.domain.model.ExchangeRate
+import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.draft.DraftField
+import com.coinden.core.domain.model.draft.FieldOrigin
+import com.coinden.core.domain.model.draft.MovementProposal
+import com.coinden.core.domain.model.draft.ProposedAmount
+import com.coinden.core.domain.model.draft.WalletDirectory
+import com.coinden.core.domain.model.draft.WalletRef
+
+/** Todo lo que un lector necesita, además del texto. */
+data class InterpretContext(
+    val pack: LanguagePack,
+    val locale: UserLocale,
+    val utcOffsetMinutes: Int,
+    val directory: WalletDirectory,
+)
+
+/** Lo que se leyó de un monto, listo para la propuesta, con los orígenes de monto y moneda. */
+private data class AmountRead(
+    val proposed: ProposedAmount,
+    val amountOrigin: FieldOrigin,
+    val currencyOrigin: FieldOrigin?,
+)
+
+private fun MoneyMatch.toRead(certain: FieldOrigin): AmountRead =
+    AmountRead(
+        proposed = ProposedAmount(amount.canonical, currency),
+        amountOrigin = if (amount.ambiguous) FieldOrigin.INFERRED else certain,
+        currencyOrigin = currency?.let { if (currencyInferred) FieldOrigin.INFERRED else certain },
+    )
+
+private fun originsOf(vararg pairs: Pair<DraftField, FieldOrigin?>): Map<DraftField, FieldOrigin> =
+    pairs.mapNotNull { (field, origin) -> origin?.let { field to it } }.toMap()
+
+/** ¿El texto normalizado contiene la palabra o frase clave como palabras completas? */
+private fun String.containsWords(phrase: String): Boolean = " $this ".contains(" $phrase ")
+
+private fun defaultWallet(directory: WalletDirectory): WalletRef? = directory.defaultWalletId?.let { WalletRef.ById(it) }
+
+/**
+ * Lee frases escritas o dictadas: "page 3 bs para trasmporte", "almuerzo 45 qr",
+ * "vendi 50 dolares a 11.88", "I pay 3 dollars for transportation".
+ */
+object PhraseReader {
+    fun read(
+        text: String,
+        ctx: InterpretContext,
+    ): List<MovementProposal> = segments(TextNormalizer.words(text), ctx.pack).mapNotNull { readSegment(it, ctx) }
+
+    /** Divide por conectores ("y", "and", "e") solo si cada parte tiene un número. */
+    private fun segments(
+        words: List<Word>,
+        pack: LanguagePack,
+    ): List<List<Word>> {
+        val parts = mutableListOf(mutableListOf<Word>())
+        words.forEach { word ->
+            if (word.normalized in pack.conjunctions) parts += mutableListOf<Word>() else parts.last() += word
+        }
+        val merged = mutableListOf<MutableList<Word>>()
+        parts.filter { it.isNotEmpty() }.forEach { part ->
+            if (part.none { it.normalized.any(Char::isDigit) } && merged.isNotEmpty()) merged.last() += part else merged += part
+        }
+        return merged
+    }
+
+    private enum class Kind { EXPENSE, INCOME, WITHDRAWAL, EXCHANGE }
+
+    private fun readSegment(
+        words: List<Word>,
+        ctx: InterpretContext,
+    ): MovementProposal? {
+        val pack = ctx.pack
+        val used = mutableSetOf<Int>()
+
+        // Tipo: la primera palabra que coincide con un verbo; exacta = dicho, aproximada = inferido.
+        var kind = Kind.EXPENSE
+        var kindOrigin = FieldOrigin.INFERRED
+        run search@{
+            listOf(false, true).forEach { fuzzy ->
+                words.forEachIndexed { i, w ->
+                    val found =
+                        when {
+                            TextNormalizer.matches(w.normalized, pack.exchangeWords, fuzzy) -> Kind.EXCHANGE
+                            TextNormalizer.matches(w.normalized, pack.withdrawalWords, fuzzy) -> Kind.WITHDRAWAL
+                            TextNormalizer.matches(w.normalized, pack.incomeWords, fuzzy) -> Kind.INCOME
+                            TextNormalizer.matches(w.normalized, pack.expenseWords, fuzzy) -> Kind.EXPENSE
+                            else -> null
+                        }
+                    if (found != null) {
+                        kind = found
+                        kindOrigin = if (fuzzy) FieldOrigin.INFERRED else FieldOrigin.STATED
+                        used += i
+                        return@search
+                    }
+                }
+            }
+        }
+
+        // Tasa de un cambio: "a 11.88" / "at 11.88".
+        var rate: String? = null
+        if (kind == Kind.EXCHANGE) {
+            words.forEachIndexed { i, w ->
+                if (rate == null && w.normalized in pack.rateMarkers && i + 1 < words.size) {
+                    AmountReader.read(words[i + 1].original, ctx.locale)?.let {
+                        rate = it.canonical
+                        used += i
+                        used += i + 1
+                    }
+                }
+            }
+        }
+
+        // Monto y moneda: el primer número que no sea la tasa ("3", "45,50", "$20", "Bs25").
+        val scan = { raw: String -> MoneyScanner.scan(raw, ctx.locale, pack.currencyWords).firstOrNull() }
+        val amountIndex =
+            words.indices.firstOrNull { it !in used && words[it].normalized.any(Char::isDigit) && scan(words[it].original) != null }
+                ?: return null
+        val money = scan(words[amountIndex].original)!!
+        used += amountIndex
+        var currency = money.currency
+        var currencyInferred = money.currencyInferred
+        if (currency == null) {
+            // "3 bs", "12 usd", "50 dolares": la moneda en la palabra siguiente.
+            words.getOrNull(amountIndex + 1)?.takeIf { it.normalized.none(Char::isDigit) }?.let { next ->
+                scan("1 ${next.original}")?.takeIf { it.currency != null }?.let {
+                    currency = it.currency
+                    currencyInferred = it.currencyInferred
+                    used += amountIndex + 1
+                }
+            }
+        }
+        if (currency == null) {
+            // "Bs 36", "$ 20": el símbolo en la palabra anterior.
+            words.getOrNull(amountIndex - 1)?.takeIf { it.normalized.none(Char::isDigit) }?.let { prev ->
+                scan("${prev.original}1")?.takeIf { it.currency != null }?.let {
+                    currency = it.currency
+                    currencyInferred = it.currencyInferred
+                    used += amountIndex - 1
+                }
+            }
+        }
+        val amount =
+            AmountRead(
+                proposed = ProposedAmount(money.amount.canonical, currency),
+                amountOrigin = if (money.amount.ambiguous) FieldOrigin.INFERRED else FieldOrigin.STATED,
+                currencyOrigin = currency?.let { if (currencyInferred) FieldOrigin.INFERRED else FieldOrigin.STATED },
+            )
+
+        // Billetera por alias; si no se nombra, la sugerida por defecto.
+        val aliasIndex = words.indices.firstOrNull { it !in used && ctx.directory.byHint(words[it].normalized) != null }
+        val wallet: WalletRef?
+        val walletOrigin: FieldOrigin?
+        if (aliasIndex != null) {
+            used += aliasIndex
+            wallet = WalletRef.ByHint(words[aliasIndex].normalized)
+            walletOrigin = FieldOrigin.STATED
+        } else {
+            wallet = null
+            walletOrigin = null
+        }
+
+        val note = note(words, used, pack)
+        val default = defaultWallet(ctx.directory)
+
+        return when (kind) {
+            Kind.EXPENSE, Kind.INCOME -> {
+                val w = wallet ?: default
+                val origins =
+                    originsOf(
+                        DraftField.KIND to kindOrigin,
+                        DraftField.AMOUNT to amount.amountOrigin,
+                        DraftField.CURRENCY to amount.currencyOrigin,
+                        DraftField.WALLET to (walletOrigin ?: default?.let { FieldOrigin.SUGGESTED }),
+                    )
+                if (kind == Kind.EXPENSE) {
+                    MovementProposal.Expense(amount.proposed, w, note = note, origins = origins)
+                } else {
+                    MovementProposal.Income(amount.proposed, w, note = note, origins = origins)
+                }
+            }
+            Kind.WITHDRAWAL ->
+                MovementProposal.Transfer(
+                    out = amount.proposed,
+                    from = wallet,
+                    to = default,
+                    note = note,
+                    origins =
+                        originsOf(
+                            DraftField.KIND to kindOrigin,
+                            DraftField.AMOUNT to amount.amountOrigin,
+                            DraftField.CURRENCY to amount.currencyOrigin,
+                            DraftField.WALLET to walletOrigin,
+                            DraftField.TO_WALLET to default?.let { FieldOrigin.SUGGESTED },
+                        ),
+                )
+            Kind.EXCHANGE -> {
+                val into = exchangeInto(amount.proposed, rate, default, ctx.directory)
+                MovementProposal.Transfer(
+                    out = amount.proposed,
+                    from = wallet,
+                    into = into,
+                    to = default,
+                    note = note,
+                    origins =
+                        originsOf(
+                            DraftField.KIND to kindOrigin,
+                            DraftField.AMOUNT to amount.amountOrigin,
+                            DraftField.CURRENCY to amount.currencyOrigin,
+                            DraftField.WALLET to walletOrigin,
+                            DraftField.TO_AMOUNT to into?.let { FieldOrigin.INFERRED },
+                            DraftField.TO_WALLET to default?.let { FieldOrigin.SUGGESTED },
+                        ),
+                )
+            }
+        }
+    }
+
+    /** Lo que sigue a la preposición de nota; si no hay, las palabras no usadas en su orden original. */
+    private fun note(
+        words: List<Word>,
+        used: Set<Int>,
+        pack: LanguagePack,
+    ): String? {
+        val prepositionIndex = words.indices.firstOrNull { it !in used && words[it].normalized in pack.notePrepositions }
+        val noteWords =
+            if (prepositionIndex != null) {
+                words.drop(prepositionIndex + 1).filterIndexed { i, _ -> (prepositionIndex + 1 + i) !in used }
+            } else {
+                words.filterIndexed { i, _ -> i !in used }
+            }
+        return noteWords.joinToString(" ") { it.original }.ifBlank { null }
+    }
+
+    /** "vendi 50 dolares a 11.88": lo que llega a la billetera por defecto, calculado con la tasa dicha. */
+    private fun exchangeInto(
+        out: ProposedAmount,
+        rate: String?,
+        default: WalletRef?,
+        directory: WalletDirectory,
+    ): ProposedAmount? {
+        val fromCurrency = out.currency ?: return null
+        val toWallet = (default as? WalletRef.ById)?.let { directory.byId(it.walletId) } ?: return null
+        if (rate == null || fromCurrency == toWallet.currency) return null
+        val outMoney = runCatching { Money.parseCanonical(out.value, fromCurrency) }.getOrNull() ?: return null
+        val converted = outMoney * ExchangeRate.parse(fromCurrency, toWallet.currency, rate)
+        return ProposedAmount(converted.toNumericString(), toWallet.currency)
+    }
+}
+
+/** Líneas de un comprobante y búsqueda de valores por etiqueta. */
+private class ReceiptLines(
+    text: String,
+) {
+    val original: List<String> = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
+    val normalized: List<String> = original.map { TextNormalizer.normalize(it) }
+
+    /** Índice de la primera línea que empieza con la etiqueta. */
+    fun labelLine(label: String): Int? = normalized.indices.firstOrNull { normalized[it] == label || normalized[it].startsWith("$label ") }
+
+    /** Valor de una etiqueta: lo que sigue en la misma línea o, si no hay, la línea siguiente. */
+    fun valueOf(label: String): Pair<String, Int>? {
+        val index = labelLine(label) ?: return null
+        val line = original[index]
+        val inline =
+            if (':' in line) {
+                line.substringAfter(':')
+            } else {
+                line.split(Regex("""\s+""")).drop(label.split(' ').size).joinToString(" ")
+            }
+        val cleaned = inline.trim().trimEnd('-', '_', '—', ' ').trim()
+        if (cleaned.isNotEmpty()) return cleaned to index
+        return original.getOrNull(index + 1)?.let { it to index + 1 }
+    }
+
+    fun firstLabel(labels: Set<String>): Pair<String, Int>? = labels.sortedByDescending { it.length }.firstNotNullOfOrNull { valueOf(it) }
+}
+
+/** Resuelve la cuenta de un comprobante con el alias que el usuario le puso (el número de cuenta). */
+private fun accountWallet(
+    accountText: String?,
+    directory: WalletDirectory,
+): WalletRef? {
+    val digits = accountText?.let { Regex("""\d{4,}""").findAll(it).maxByOrNull { m -> m.value.length }?.value } ?: return null
+    val alias =
+        directory.aliases.keys.firstOrNull {
+                key ->
+            key.length >= 4 && key.all(Char::isDigit) && digits.contains(key)
+        } ?: return null
+    return WalletRef.ByHint(alias)
+}
+
+private fun readDate(
+    text: String,
+    ctx: InterpretContext,
+): Pair<Long?, FieldOrigin?> {
+    val read = DateTimeReader.read(text, ctx.pack.months, ctx.locale, ctx.utcOffsetMinutes) ?: return null to null
+    return read.epochMs to if (read.ambiguous) FieldOrigin.INFERRED else FieldOrigin.EVIDENCE
+}
+
+/** Lee comprobantes que coinciden con una plantilla conocida: sus campos son evidencia. */
+object TemplateReader {
+    fun matches(
+        template: ReceiptTemplate,
+        text: String,
+    ): Boolean {
+        val normalized = TextNormalizer.normalize(text)
+        return template.markers.all { normalized.contains(it) }
+    }
+
+    fun read(
+        template: ReceiptTemplate,
+        text: String,
+        ctx: InterpretContext,
+    ): List<MovementProposal> {
+        val lines = ReceiptLines(text)
+        val scan = { line: String -> MoneyScanner.scan(line, ctx.locale, ctx.pack.currencyWords).firstOrNull { it.currency != null } }
+
+        val (moneyMatch, amountLine) =
+            template.amountLabel?.let { label ->
+                lines.valueOf(label)?.let { (value, index) -> scan(value)?.let { it to index } }
+            } ?: lines.original.indices.firstNotNullOfOrNull { i -> scan(lines.original[i])?.let { it to i } }
+                ?: return emptyList()
+        val amount = moneyMatch.toRead(FieldOrigin.EVIDENCE)
+
+        val counterparty =
+            when {
+                template.counterpartyAfterAmount -> lines.original.getOrNull(amountLine + 1)
+                template.counterpartyLabel != null -> lines.valueOf(template.counterpartyLabel)?.first
+                else -> null
+            }
+        val note = counterparty ?: template.noteLabel?.let { lines.valueOf(it)?.first }
+        val account = template.accountLabel?.let { accountWallet(lines.valueOf(it)?.first, ctx.directory) }
+        val wallet = template.issuerWalletHint?.let { WalletRef.ByHint(it) } ?: account
+        val (occurredAt, dateOrigin) = readDate(text, ctx)
+
+        val origins =
+            originsOf(
+                DraftField.KIND to FieldOrigin.EVIDENCE,
+                DraftField.AMOUNT to amount.amountOrigin,
+                DraftField.CURRENCY to amount.currencyOrigin,
+                DraftField.WALLET to wallet?.let { FieldOrigin.EVIDENCE },
+                DraftField.OCCURRED_AT to dateOrigin,
+            )
+        return listOf(
+            when (template.kind) {
+                TemplateKind.EXPENSE -> MovementProposal.Expense(amount.proposed, wallet, occurredAt, note, origins)
+                TemplateKind.INCOME -> MovementProposal.Income(amount.proposed, wallet, occurredAt, note, origins)
+                TemplateKind.WITHDRAWAL -> {
+                    val default = defaultWallet(ctx.directory)
+                    MovementProposal.Transfer(
+                        out = amount.proposed,
+                        from = wallet,
+                        to = default,
+                        occurredAtEpochMs = occurredAt,
+                        note = note,
+                        origins = origins + originsOf(DraftField.TO_WALLET to default?.let { FieldOrigin.SUGGESTED }),
+                    )
+                }
+            },
+        )
+    }
+}
+
+/**
+ * Lee comprobantes de bancos desconocidos solo por su estructura: monto con moneda junto a una
+ * etiqueta de importe, contraparte, cuenta, fecha y hora, y el sentido por las palabras del paquete.
+ */
+object GenericReceiptReader {
+    fun looksLikeReceipt(
+        text: String,
+        fromPhoto: Boolean,
+        pack: LanguagePack,
+    ): Boolean {
+        if (fromPhoto) return true
+        val lines = ReceiptLines(text)
+        val labels = pack.amountLabels + pack.counterpartyLabels + pack.accountLabels + pack.noteLabels
+        return lines.original.size >= 2 && labels.count { lines.labelLine(it) != null } >= 2
+    }
+
+    fun read(
+        text: String,
+        ctx: InterpretContext,
+    ): List<MovementProposal> {
+        val pack = ctx.pack
+        val lines = ReceiptLines(text)
+        val all = MoneyScanner.scan(text, ctx.locale, pack.currencyWords)
+
+        val labeled =
+            lines.firstLabel(
+                pack.amountLabels,
+            )?.first?.let { MoneyScanner.scan(it, ctx.locale, pack.currencyWords).firstOrNull() }
+        val amount =
+            when {
+                labeled != null -> labeled.toRead(FieldOrigin.EVIDENCE)
+                else -> {
+                    val largest = all.filter { it.currency != null }.maxWithOrNull(BY_VALUE) ?: return emptyList()
+                    largest.toRead(FieldOrigin.EVIDENCE).let { it.copy(amountOrigin = FieldOrigin.INFERRED) }
+                }
+            }
+
+        val normalized = TextNormalizer.normalize(text)
+        val kind =
+            when {
+                pack.withdrawalWords.any { normalized.containsWords(it) } -> TemplateKind.WITHDRAWAL
+                pack.incomeWords.any { normalized.containsWords(it) } -> TemplateKind.INCOME
+                else -> TemplateKind.EXPENSE
+            }
+        val note = lines.firstLabel(pack.counterpartyLabels)?.first ?: lines.firstLabel(pack.noteLabels)?.first
+        val account = accountWallet(lines.firstLabel(pack.accountLabels)?.first, ctx.directory)
+        val (occurredAt, dateOrigin) = readDate(text, ctx)
+
+        val origins =
+            originsOf(
+                DraftField.KIND to FieldOrigin.INFERRED,
+                DraftField.AMOUNT to amount.amountOrigin,
+                DraftField.CURRENCY to amount.currencyOrigin,
+                DraftField.WALLET to account?.let { FieldOrigin.EVIDENCE },
+                DraftField.OCCURRED_AT to dateOrigin,
+            )
+        return listOf(
+            when (kind) {
+                TemplateKind.EXPENSE -> MovementProposal.Expense(amount.proposed, account, occurredAt, note, origins)
+                TemplateKind.INCOME -> MovementProposal.Income(amount.proposed, account, occurredAt, note, origins)
+                TemplateKind.WITHDRAWAL -> {
+                    val default = defaultWallet(ctx.directory)
+                    MovementProposal.Transfer(
+                        out = amount.proposed,
+                        from = account,
+                        to = default,
+                        occurredAtEpochMs = occurredAt,
+                        note = note,
+                        origins = origins + originsOf(DraftField.TO_WALLET to default?.let { FieldOrigin.SUGGESTED }),
+                    )
+                }
+            },
+        )
+    }
+
+    /** Orden por valor de un decimal canónico sin coma flotante: parte entera y luego decimales. */
+    private val BY_VALUE: Comparator<MoneyMatch> =
+        compareBy<MoneyMatch>(
+            { it.amount.canonical.substringBefore('.').toLong() },
+            { it.amount.canonical.substringAfter('.', "").padEnd(8, '0') },
+        )
+}

@@ -10,6 +10,7 @@ import com.coinden.core.domain.feature.SequentialIdGenerator
 import com.coinden.core.domain.feature.at
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.draft.Confidence
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.DraftError
 import com.coinden.core.domain.model.draft.DraftEvent
@@ -17,6 +18,7 @@ import com.coinden.core.domain.model.draft.DraftField
 import com.coinden.core.domain.model.draft.DraftResult
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.EvidenceSource
+import com.coinden.core.domain.model.draft.FieldOrigin
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.NonMovementIntent
 import com.coinden.core.domain.model.draft.ProposedAmount
@@ -32,6 +34,7 @@ import com.coinden.core.domain.usecase.draft.DiscardDraftUseCase
 import com.coinden.core.domain.usecase.draft.DraftContext
 import com.coinden.core.domain.usecase.draft.GetDraftInboxUseCase
 import com.coinden.core.domain.usecase.draft.ReviseDraftUseCase
+import com.coinden.core.domain.usecase.draft.SetDefaultWalletUseCase
 import com.coinden.core.domain.usecase.draft.SetWalletAliasesUseCase
 import com.coinden.core.domain.usecase.wallet.CreateWalletUseCase
 import com.coinden.core.domain.usecase.wallet.GetWalletStatusUseCase
@@ -303,5 +306,63 @@ class DraftUseCasesTest {
             val credit = result.projections.single { it.walletId == visa.id }
             assertEquals(bs("-80.00"), credit.projected)
             assertTrue(!credit.hasShortfall)
+        }
+
+    @Test
+    fun `la bandeja muestra primero lo dudoso`() =
+        runTest {
+            val billetera = wallet("Billetera", bs("100"))
+            text["comprobante"] =
+                listOf(
+                    MovementProposal.Expense(
+                        ProposedAmount("25", Currency.BOB),
+                        WalletRef.ById(billetera.id),
+                        origins = mapOf(DraftField.AMOUNT to FieldOrigin.EVIDENCE, DraftField.WALLET to FieldOrigin.EVIDENCE),
+                    ),
+                )
+            text["semillita"] =
+                listOf(
+                    MovementProposal.Expense(
+                        ProposedAmount("2"),
+                        WalletRef.ById(billetera.id),
+                        note = "un semillita",
+                        origins = mapOf(DraftField.WALLET to FieldOrigin.SUGGESTED),
+                    ),
+                )
+            text["algo"] =
+                listOf(
+                    MovementProposal.Expense(
+                        ProposedAmount("5"),
+                        WalletRef.ById(billetera.id),
+                        origins = mapOf(DraftField.KIND to FieldOrigin.INFERRED),
+                    ),
+                )
+
+            clock.nowEpochMs = at(10)
+            val receipt = capture("carlos", textEvidence("comprobante"), at(10)).single()
+            clock.nowEpochMs = at(12)
+            val medium = capture("carlos", textEvidence("algo"), at(12)).single()
+            clock.nowEpochMs = at(15)
+            val low = capture("carlos", textEvidence("semillita"), at(15)).single()
+
+            assertEquals(listOf(low.id, medium.id, receipt.id), inbox("carlos").pending.map { it.id })
+            assertEquals(listOf(Confidence.LOW, Confidence.MEDIUM, Confidence.HIGH), inbox("carlos").pending.map { it.confidence })
+        }
+
+    @Test
+    fun `billetera por defecto - unica de efectivo, eleccion explicita y sin defecto`() =
+        runTest {
+            val billetera = wallet("Billetera", bs("10"))
+            val meru = wallet("Meru", Money.parseCanonical("100", Currency.USD), WalletType.DIGITAL)
+            assertEquals(billetera.id, ctx.directory("carlos").defaultWalletId)
+
+            val setDefault = SetDefaultWalletUseCase(ctx)
+            assertNull(setDefault("carlos", meru.id))
+            assertEquals(meru.id, ctx.directory("carlos").defaultWalletId)
+            assertEquals(DraftError.NotFound, setDefault("otro", meru.id))
+
+            assertNull(setDefault("carlos", null))
+            wallet("Monedero", bs("5"))
+            assertNull(ctx.directory("carlos").defaultWalletId)
         }
 }

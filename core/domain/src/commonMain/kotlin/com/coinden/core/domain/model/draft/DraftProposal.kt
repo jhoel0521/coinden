@@ -2,6 +2,7 @@ package com.coinden.core.domain.model.draft
 
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.wallet.Wallet
+import com.coinden.core.domain.model.wallet.WalletType
 
 /** Por dónde llegó una captura. */
 enum class EvidenceSource {
@@ -52,25 +53,74 @@ enum class NonMovementIntent {
 }
 
 /**
+ * De dónde salió un campo propuesto. Todo en un borrador es una recomendación; el origen
+ * dice cuánto respaldo tiene.
+ */
+enum class FieldOrigin {
+    /** Lo dice la evidencia: una etiqueta o una plantilla del comprobante. */
+    EVIDENCE,
+
+    /** Lo dijo o escribió el usuario. */
+    STATED,
+
+    /** Lo corrigió el usuario en la revisión. */
+    CORRECTED,
+
+    /** Lo dedujo una regla de lectura (un verbo con error de tipeo, un "$" resuelto por el locale). */
+    INFERRED,
+
+    /** Lo propuso una regla por defecto: nadie lo dijo (la billetera por defecto). */
+    SUGGESTED,
+    ;
+
+    val confidence: Confidence
+        get() =
+            when (this) {
+                EVIDENCE, STATED, CORRECTED -> Confidence.HIGH
+                INFERRED -> Confidence.MEDIUM
+                SUGGESTED -> Confidence.LOW
+            }
+}
+
+/** Confianza de un borrador, de menor a mayor (así ordena la bandeja). */
+enum class Confidence {
+    LOW,
+    MEDIUM,
+    HIGH,
+}
+
+/**
  * Lo que un intérprete (IA local, reglas de texto, OCR o formulario) entendió de una evidencia.
  *
  * El tipo ES el movimiento: no hay enum de "kind". Cualquier campo puede faltar; el dominio
- * decide con [DraftEvaluator] si alcanza para un borrador Listo.
+ * decide con [DraftEvaluator] si alcanza para un borrador Listo. [origins] indica de dónde salió
+ * cada campo presente; un campo sin entrada cuenta como [FieldOrigin.STATED].
  */
 sealed interface MovementProposal {
+    val origins: Map<DraftField, FieldOrigin>
+
+    /** Campos que la propuesta trae (el tipo de un movimiento siempre está presente). */
+    val presentFields: Set<DraftField>
+
     data class Expense(
         val amount: ProposedAmount? = null,
         val wallet: WalletRef? = null,
         val occurredAtEpochMs: Long? = null,
         val note: String? = null,
-    ) : MovementProposal
+        override val origins: Map<DraftField, FieldOrigin> = emptyMap(),
+    ) : MovementProposal {
+        override val presentFields: Set<DraftField> get() = singleWalletFields(amount, wallet, occurredAtEpochMs)
+    }
 
     data class Income(
         val amount: ProposedAmount? = null,
         val wallet: WalletRef? = null,
         val occurredAtEpochMs: Long? = null,
         val note: String? = null,
-    ) : MovementProposal
+        override val origins: Map<DraftField, FieldOrigin> = emptyMap(),
+    ) : MovementProposal {
+        override val presentFields: Set<DraftField> get() = singleWalletFields(amount, wallet, occurredAtEpochMs)
+    }
 
     /** Entre dos billeteras: misma moneda (cajero, pagar la tarjeta) o cambio de moneda. */
     data class Transfer(
@@ -80,7 +130,13 @@ sealed interface MovementProposal {
         val to: WalletRef? = null,
         val occurredAtEpochMs: Long? = null,
         val note: String? = null,
-    ) : MovementProposal
+        override val origins: Map<DraftField, FieldOrigin> = emptyMap(),
+    ) : MovementProposal {
+        override val presentFields: Set<DraftField>
+            get() =
+                singleWalletFields(out, from, occurredAtEpochMs) +
+                    listOfNotNull(into?.let { DraftField.TO_AMOUNT }, to?.let { DraftField.TO_WALLET })
+    }
 
     /** "En la billetera tengo 140": el saldo real, no la diferencia. */
     data class AdjustTo(
@@ -88,25 +144,71 @@ sealed interface MovementProposal {
         val wallet: WalletRef? = null,
         val occurredAtEpochMs: Long? = null,
         val note: String? = null,
-    ) : MovementProposal
+        override val origins: Map<DraftField, FieldOrigin> = emptyMap(),
+    ) : MovementProposal {
+        override val presentFields: Set<DraftField> get() = singleWalletFields(target, wallet, occurredAtEpochMs)
+    }
 
     data class NotAMovement(
         val intent: NonMovementIntent,
         val note: String? = null,
-    ) : MovementProposal
+    ) : MovementProposal {
+        override val origins: Map<DraftField, FieldOrigin> get() = emptyMap()
+        override val presentFields: Set<DraftField> get() = emptySet()
+    }
 
     data class Unknown(
         val note: String? = null,
-    ) : MovementProposal
+    ) : MovementProposal {
+        override val origins: Map<DraftField, FieldOrigin> get() = emptyMap()
+        override val presentFields: Set<DraftField> get() = emptySet()
+    }
 }
 
-/** Datos que faltan para que un borrador esté Listo. */
+private fun singleWalletFields(
+    amount: ProposedAmount?,
+    wallet: WalletRef?,
+    occurredAtEpochMs: Long?,
+): Set<DraftField> =
+    setOfNotNull(
+        DraftField.KIND,
+        amount?.let { DraftField.AMOUNT },
+        amount?.currency?.let { DraftField.CURRENCY },
+        wallet?.let { DraftField.WALLET },
+        occurredAtEpochMs?.let { DraftField.OCCURRED_AT },
+    )
+
+/**
+ * Confianza determinista de una propuesta: la del campo presente más débil. Sin campos
+ * presentes (no se entendió o no es un movimiento) es BAJA.
+ */
+val MovementProposal.confidence: Confidence
+    get() =
+        presentFields
+            .map { (origins[it] ?: FieldOrigin.STATED).confidence }
+            .minOrNull() ?: Confidence.LOW
+
+/** La misma propuesta revisada por el usuario: todos sus campos presentes pasan a corregidos. */
+fun MovementProposal.markedCorrected(): MovementProposal {
+    val corrected = presentFields.associateWith { FieldOrigin.CORRECTED }
+    return when (this) {
+        is MovementProposal.Expense -> copy(origins = corrected)
+        is MovementProposal.Income -> copy(origins = corrected)
+        is MovementProposal.Transfer -> copy(origins = corrected)
+        is MovementProposal.AdjustTo -> copy(origins = corrected)
+        is MovementProposal.NotAMovement, is MovementProposal.Unknown -> this
+    }
+}
+
+/** Campos de una propuesta: los que pueden faltar y los que pueden tener un origen. */
 enum class DraftField {
     KIND,
     AMOUNT,
+    CURRENCY,
     WALLET,
     TO_AMOUNT,
     TO_WALLET,
+    OCCURRED_AT,
 }
 
 /** Contradicciones que impiden que un borrador esté Listo. */
@@ -127,6 +229,8 @@ enum class DraftIssue {
 data class WalletDirectory(
     val wallets: List<Wallet>,
     val aliases: Map<String, String> = emptyMap(),
+    /** Billetera sugerida para capturas que no nombran ninguna (ver [resolveDefault]). */
+    val defaultWalletId: String? = null,
 ) {
     fun byId(walletId: String): Wallet? = wallets.firstOrNull { it.id == walletId }
 
@@ -134,5 +238,18 @@ data class WalletDirectory(
 
     companion object {
         fun normalizeAlias(alias: String): String = alias.trim().lowercase()
+
+        /**
+         * La elección explícita si la billetera sigue activa; si no, la única billetera activa
+         * de efectivo; si no, ninguna.
+         */
+        fun resolveDefault(
+            wallets: List<Wallet>,
+            chosenWalletId: String?,
+        ): String? {
+            val active = wallets.filter { it.isActive }
+            active.firstOrNull { it.id == chosenWalletId }?.let { return it.id }
+            return active.singleOrNull { it.type == WalletType.CASH }?.id
+        }
     }
 }

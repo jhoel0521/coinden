@@ -40,7 +40,7 @@ Es corto a propósito: si una regla no cabe aquí, pertenece a un spec.
 
 ## Principios del producto que ningún spec puede romper
 
-1. **Local-first:** los datos viven en los dispositivos del usuario. Solo se mueven entre ellos (sincronización P2P) o hacia la nube *propia* del usuario (respaldo), y siempre por decisión explícita suya y cifrados de extremo a extremo.
+1. **Local-first:** los datos viven en los dispositivos del usuario. Solo se mueven entre ellos (sincronización P2P) o hacia la nube *propia* del usuario (respaldo), y siempre por decisión explícita suya y cifrados de extremo a extremo. La app puede descargar paquetes de idioma y plantillas de comprobantes, que son datos públicos: nunca se envía nada del usuario para obtenerlos.
 2. **Cero servidores de CoinDen:** no hay backend propio, cuenta obligatoria ni API keys pagas. La app funciona completa sin registrarse.
 3. **Tasas reales:** se usa la tasa que el usuario realmente usa (paralelo, Meru, manual), no la oficial impuesta.
 4. **Inteligencia determinista y local:** la categorización y la interpretación son reglas que se pueden probar y explicar. Los modelos (voz a texto, OCR) solo *perciben*, corren on-device y nunca deciden.
