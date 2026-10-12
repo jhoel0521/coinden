@@ -68,7 +68,7 @@ Los principios completos están en [MANIFIESTO.md](MANIFIESTO.md). En resumen:
 | # | Capacidad | Estado |
 |---|-----------|--------|
 | 0 | `currency-configuration`: monedas, tasas reales, consolidado | ✅ hecho |
-| 1 | `wallet-management`: billeteras, libro de movimientos, cambio con tasa propia | 🔜 siguiente |
+| 1 | `wallet-management`: billeteras, libro de movimientos, cambio con tasa propia | ✅ hecho |
 | 2 | `draft-inbox`: borradores y revisión de la tarde (entrada de texto) | |
 | 3 | `expense-categorization`: reglas + aprendizaje por corrección | |
 | 4 | `commitments`: pagos recurrentes y préstamos (debo / me deben) con recordatorios | |
