@@ -1,6 +1,8 @@
 package com.coinden.core.domain.usecase.draft
 
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.category.CategoryOrigin
+import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.DraftError
 import com.coinden.core.domain.model.draft.DraftEvent
@@ -23,6 +25,7 @@ import com.coinden.core.domain.port.output.DraftRepositoryPort
 import com.coinden.core.domain.port.output.IdGeneratorPort
 import com.coinden.core.domain.port.output.WalletAliasRepositoryPort
 import com.coinden.core.domain.port.output.WalletRepositoryPort
+import com.coinden.core.domain.usecase.category.CategorizationContext
 import com.coinden.core.domain.usecase.wallet.LedgerContext
 import com.coinden.core.domain.usecase.wallet.MovementKind
 import com.coinden.core.domain.usecase.wallet.RegisterMovementUseCase
@@ -38,6 +41,8 @@ class DraftContext(
     val ids: IdGeneratorPort,
     val clock: ClockPort,
     val device: DeviceIdentityPort,
+    /** Categorización opcional: si está, la bandeja sugiere categorías y confirmar clasifica el gasto. */
+    val categorization: CategorizationContext? = null,
 ) {
     suspend fun directory(ownerId: String): WalletDirectory {
         val owned = wallets.listWallets(ownerId)
@@ -203,7 +208,10 @@ class ConfirmDraftUseCase(
     private val registerMovement = RegisterMovementUseCase(ledger)
     private val registerTransfer = RegisterTransferUseCase(ledger)
 
-    suspend operator fun invoke(draftId: String): DraftResult {
+    suspend operator fun invoke(
+        draftId: String,
+        category: CategoryRef? = null,
+    ): DraftResult {
         val draft = ctx.load(draftId) ?: return Rejected(DraftError.NotFound)
         val ready =
             when (draft) {
@@ -218,6 +226,7 @@ class ConfirmDraftUseCase(
         if (ctx.wallets.findEvent(ledgerEventId) == null) {
             register(ready.movement, ledgerEventId)?.let { return Rejected(it) }
         }
+        classify(ready, ledgerEventId, category)
 
         val confirmed =
             ctx.record(ready) { id, device, now ->
@@ -253,6 +262,27 @@ class ConfirmDraftUseCase(
                 }
             }
         return (result as? WalletOperationResult.Rejected)?.let { DraftError.Wallet(it.error) }
+    }
+
+    /**
+     * Clasifica el gasto con la nota del borrador y la categoría elegida (o Sin categoría). Una
+     * confirmación repetida no duplica la clasificación.
+     */
+    private suspend fun classify(
+        ready: Draft.Ready,
+        movementId: String,
+        category: CategoryRef?,
+    ) {
+        val categorization = ctx.categorization ?: return
+        if (ready.movement !is ReadyMovement.Expense) return
+        if (categorization.current(movementId) != null) return
+        categorization.classify(
+            ownerId = ready.header.ownerId,
+            movementId = movementId,
+            description = ready.movement.note,
+            category = category,
+            origin = category?.let { CategoryOrigin.USER },
+        )
     }
 
     private suspend fun currentBalance(walletId: String): Money {
@@ -311,6 +341,19 @@ class GetDraftInboxUseCase(
                 val wallet = directory.byId(walletId)!!
                 ProjectedBalance(walletId, current.getValue(walletId), balance, !wallet.allowsNegative && balance.isNegative)
             }
-        return DraftInbox(pending, projections)
+        val suggestions =
+            ctx.categorization?.let { categorization ->
+                pending
+                    .mapNotNull { draft ->
+                        val proposal =
+                            when (draft) {
+                                is Draft.Ready -> draft.proposal
+                                is Draft.Incomplete -> draft.proposal
+                                else -> null
+                            } as? MovementProposal.Expense
+                        proposal?.note?.let { note -> categorization.suggest(ownerId, note)?.let { draft.id to it } }
+                    }.toMap()
+            }.orEmpty()
+        return DraftInbox(pending, projections, suggestions)
     }
 }

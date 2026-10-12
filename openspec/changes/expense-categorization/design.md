@@ -47,7 +47,7 @@ SuggestionReason = UserRule(key) | PackWord(word)
 2. **Paquete:** la primera palabra de la descripción, en orden, que coincide con `LanguagePack.categoryWords` de los paquetes activos (exacta o con una edición en palabras de 4 letras o más). → MEDIUM.
 3. Si no hay coincidencia → null.
 
-Las reglas que apuntan a una categoría propia archivada se ignoran. `Confidence` es el enum de `draft-inbox` (LOW, MEDIUM, HIGH).
+Las reglas que apuntan a una categoría propia archivada se ignoran. Como último recurso, una palabra típica de 5 letras o más al **inicio** de un token también cuenta ("StreamingPremium650" → "streaming"), para descripciones de comprobantes con palabras pegadas. `Confidence` es el enum de `draft-inbox` (LOW, MEDIUM, HIGH).
 
 ### D5. Palabras típicas en los paquetes de idioma
 `LanguagePack` agrega `categoryWords: Map<String, BaseCategory>` (palabras normalizadas). Hay datos para `en`, `es` y `pt`, por ejemplo "almuerzo", "pollo", "salteña", "semillita" → FOOD; "micro", "taxi", "uber", "transporte" → TRANSPORT; "farmacia" → HEALTH; "netflix", "youtube", "spotify", "streaming" → SUBSCRIPTIONS; "lunch", "coffee" → FOOD; "almoço", "lanche" → FOOD. `merged()` las une.
@@ -65,7 +65,7 @@ Para no acoplar `draft-inbox` al paquete de categorización con dependencias cir
 - suma por moneda con `Money + Money`;
 - consolida en la moneda local con un `CurrencyConverter` armado desde la estrategia del perfil.
 
-La construcción de tasas se extrae de `GetConsolidatedPortfolioUseCase` a una función compartida (`ProfileRates.converterFor(profile, cryptoRates)`), así el consolidado y el reporte usan exactamente las mismas tasas. Resultado: `SpendingReport(rows: List<CategoryTotal(category, byCurrency, consolidated)>, total)`, ordenado por `consolidated` descendente.
+La construcción de tasas se extrae de `GetConsolidatedPortfolioUseCase` a una función compartida (`ProfileRates.converterFor(profile, cryptoRates)`), así el consolidado y el reporte usan exactamente las mismas tasas. Resultado: `SpendingReport(currency, rows: List<CategoryTotal(category, byCurrency, consolidated, hasUnconvertedAmounts)>, total)`, ordenado por `consolidated` descendente. Si una moneda no tiene tasa configurada, queda en `byCurrency` pero no suma en `consolidated`, y `hasUnconvertedAmounts` lo avisa; sin perfil de moneda el reporte usa USD.
 
 ### D8. Puertos
 ```

@@ -1,5 +1,7 @@
 package com.coinden.core.domain.model.interpret
 
+import com.coinden.core.domain.model.category.BaseCategory
+
 /**
  * Paquete de idioma: las palabras clave que el intérprete reconoce, como datos. Agregar un idioma
  * es agregar un paquete, no código. Todas las palabras se guardan normalizadas (ver [TextNormalizer]).
@@ -21,6 +23,8 @@ data class LanguagePack(
     val months: Map<String, Int>,
     /** Palabra de moneda -> código ISO; null = la moneda del locale ("pesos"). */
     val currencyWords: Map<String, String?>,
+    /** Palabras típicas de cada categoría base ("almuerzo" -> FOOD), normalizadas. */
+    val categoryWords: Map<String, BaseCategory> = emptyMap(),
 )
 
 /** Une varios paquetes activos en uno solo para buscar en todos a la vez. */
@@ -40,12 +44,23 @@ fun List<LanguagePack>.merged(): LanguagePack =
         rateMarkers = flatMap { it.rateMarkers }.toSet(),
         months = fold(emptyMap()) { acc, pack -> acc + pack.months },
         currencyWords = fold(emptyMap()) { acc, pack -> acc + pack.currencyWords },
+        categoryWords = fold(emptyMap()) { acc, pack -> acc + pack.categoryWords },
     )
 
 /**
  * Catálogo de paquetes. [ENGLISH] siempre está activo; los demás solo si están instalados.
  */
 object LanguagePacks {
+    private fun words(vararg groups: Pair<BaseCategory, List<String>>): Map<String, BaseCategory> =
+        groups.flatMap { (category, words) -> words.map { it to category } }.toMap()
+
+    /** Marcas digitales iguales en todos los idiomas. */
+    private val GLOBAL_BRANDS =
+        words(
+            BaseCategory.SUBSCRIPTIONS to listOf("netflix", "youtube", "spotify", "streaming", "disney", "hbo", "icloud", "chatgpt"),
+            BaseCategory.TRANSPORT to listOf("uber", "cabify", "indriver", "didi"),
+        )
+
     private fun months(vararg names: Pair<List<String>, Int>): Map<String, Int> =
         names.flatMap { (words, n) -> words.map { it to n } }.toMap()
 
@@ -71,6 +86,23 @@ object LanguagePacks {
                     listOf("nov", "november") to 11, listOf("dec", "december") to 12,
                 ),
             currencyWords = mapOf("dollar" to "USD", "dollars" to "USD", "euro" to "EUR", "euros" to "EUR", "pesos" to null),
+            categoryWords =
+                GLOBAL_BRANDS +
+                    words(
+                        BaseCategory.FOOD to
+                            listOf("lunch", "dinner", "breakfast", "food", "coffee", "snack", "restaurant", "pizza", "burger"),
+                        BaseCategory.GROCERIES to listOf("groceries", "supermarket", "market"),
+                        BaseCategory.TRANSPORT to listOf("transport", "transportation", "taxi", "bus", "gas", "fuel", "parking", "metro"),
+                        BaseCategory.HEALTH to listOf("pharmacy", "doctor", "medicine", "hospital", "dentist"),
+                        BaseCategory.SUBSCRIPTIONS to listOf("subscription"),
+                        BaseCategory.BILLS to listOf("electricity", "water", "internet", "phone", "bill"),
+                        BaseCategory.HOUSING to listOf("rent"),
+                        BaseCategory.LEISURE to listOf("cinema", "movies", "bar", "party", "drinks"),
+                        BaseCategory.SHOPPING to listOf("clothes", "shoes", "shopping"),
+                        BaseCategory.EDUCATION to listOf("course", "school", "tuition", "books"),
+                        BaseCategory.PEOPLE to listOf("gift", "loan"),
+                        BaseCategory.FEES to listOf("fee", "commission"),
+                    ),
         )
 
     val SPANISH =
@@ -109,6 +141,27 @@ object LanguagePacks {
                     "pesos" to null,
                     "peso" to null,
                 ),
+            categoryWords =
+                GLOBAL_BRANDS +
+                    words(
+                        BaseCategory.FOOD to
+                            listOf(
+                                "almuerzo", "comida", "cena", "desayuno", "saltena", "saltenas",
+                                "semillita", "semillitas", "cafe", "menu", "hamburguesa", "pizza", "empanada",
+                            ),
+                        BaseCategory.GROCERIES to listOf("mercado", "super", "supermercado", "verduras", "abarrotes"),
+                        BaseCategory.TRANSPORT to
+                            listOf("transporte", "micro", "minibus", "trufi", "taxi", "pasaje", "gasolina", "colectivo"),
+                        BaseCategory.HEALTH to listOf("farmacia", "farmacias", "medico", "medicamentos", "remedio", "doctor", "dentista"),
+                        BaseCategory.SUBSCRIPTIONS to listOf("suscripcion"),
+                        BaseCategory.BILLS to listOf("luz", "agua", "internet", "telefono", "credito", "megas"),
+                        BaseCategory.HOUSING to listOf("alquiler", "anticretico"),
+                        BaseCategory.LEISURE to listOf("cine", "salida", "fiesta", "cerveza", "boliche"),
+                        BaseCategory.SHOPPING to listOf("ropa", "zapatos", "polera"),
+                        BaseCategory.EDUCATION to listOf("curso", "colegio", "universidad", "libros", "matricula"),
+                        BaseCategory.PEOPLE to listOf("regalo", "prestamo"),
+                        BaseCategory.FEES to listOf("comision", "mantenimiento"),
+                    ),
         )
 
     val PORTUGUESE =
@@ -133,5 +186,21 @@ object LanguagePacks {
                     listOf("out", "outubro") to 10, listOf("nov", "novembro") to 11, listOf("dez", "dezembro") to 12,
                 ),
             currencyWords = mapOf("real" to "BRL", "reais" to "BRL", "dolar" to "USD", "dolares" to "USD", "euros" to "EUR"),
+            categoryWords =
+                GLOBAL_BRANDS +
+                    words(
+                        BaseCategory.FOOD to listOf("almoco", "jantar", "comida", "lanche", "cafe", "padaria", "restaurante", "pizza"),
+                        BaseCategory.GROCERIES to listOf("mercado", "supermercado", "feira"),
+                        BaseCategory.TRANSPORT to listOf("transporte", "onibus", "taxi", "metro", "gasolina", "combustivel"),
+                        BaseCategory.HEALTH to listOf("farmacia", "remedio", "medico", "dentista"),
+                        BaseCategory.SUBSCRIPTIONS to listOf("assinatura"),
+                        BaseCategory.BILLS to listOf("luz", "agua", "internet", "telefone", "conta"),
+                        BaseCategory.HOUSING to listOf("aluguel"),
+                        BaseCategory.LEISURE to listOf("cinema", "festa", "cerveja", "bar"),
+                        BaseCategory.SHOPPING to listOf("roupa", "sapato", "compras"),
+                        BaseCategory.EDUCATION to listOf("curso", "escola", "faculdade", "livros"),
+                        BaseCategory.PEOPLE to listOf("presente", "emprestimo"),
+                        BaseCategory.FEES to listOf("tarifa", "taxa"),
+                    ),
         )
 }

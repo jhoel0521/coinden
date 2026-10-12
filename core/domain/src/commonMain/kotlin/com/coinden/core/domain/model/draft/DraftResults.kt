@@ -1,6 +1,7 @@
 package com.coinden.core.domain.model.draft
 
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.category.CategorySuggestion
 import com.coinden.core.domain.model.wallet.WalletError
 
 /** Motivos de rechazo de una operación sobre borradores. Sin textos: la presentación los traduce. */
@@ -46,8 +47,12 @@ data class ProjectedBalance(
     val hasShortfall: Boolean,
 )
 
-/** La bandeja de revisión: pendientes y proyección por billetera. */
+/**
+ * La bandeja de revisión: pendientes, proyección por billetera y, para los borradores de gasto,
+ * la categoría sugerida (id del borrador -> sugerencia). La categoría no afecta la confianza del borrador.
+ */
 data class DraftInbox(
     val pending: List<Draft>,
     val projections: List<ProjectedBalance>,
+    val suggestions: Map<String, CategorySuggestion> = emptyMap(),
 )
