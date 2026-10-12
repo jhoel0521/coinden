@@ -7,6 +7,7 @@ import com.coinden.core.domain.model.CurrencyConverter
 import com.coinden.core.domain.model.ExchangeRateStrategy
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.ProviderStamp
+import com.coinden.core.domain.model.RateSourceKind
 import com.coinden.core.domain.model.SelectorStatus
 import com.coinden.core.domain.port.output.CurrencyProfileRepositoryPort
 
@@ -27,7 +28,8 @@ class GetConsolidatedPortfolioUseCase(
         val target = viewInCurrency ?: localCurrency
 
         var rateToUsd = 1.0
-        var sourceName = "Base USD"
+        var kind = RateSourceKind.BASE
+        var reference: String? = null
         var isDegraded = false
         var asOfEpochMs = 0L
 
@@ -35,20 +37,22 @@ class GetConsolidatedPortfolioUseCase(
             when (val strategy = profile.strategy) {
                 is ExchangeRateStrategy.Fixed -> {
                     rateToUsd = strategy.rate
-                    sourceName = "Tasa Fija (${profile.localCurrency.code})"
+                    kind = RateSourceKind.FIXED
                 }
                 is ExchangeRateStrategy.ManualDaily -> {
                     rateToUsd = strategy.rate
-                    sourceName = "Manual del Usuario"
+                    kind = RateSourceKind.MANUAL
                     asOfEpochMs = strategy.updatedAtEpochMs
                 }
                 is ExchangeRateStrategy.Verified -> {
                     rateToUsd = strategy.currentRate
-                    sourceName = "Fuente Verificada: ${strategy.sourceId}"
+                    kind = RateSourceKind.VERIFIED
+                    reference = strategy.sourceId
                 }
                 is ExchangeRateStrategy.CustomSelector -> {
                     rateToUsd = strategy.selector.lastKnownRate
-                    sourceName = "Web Selector (${strategy.selector.sourceUrl})"
+                    kind = RateSourceKind.WEB_SELECTOR
+                    reference = strategy.selector.sourceUrl
                     isDegraded = strategy.selector.status == SelectorStatus.NEEDS_RECONFIRMATION
                     asOfEpochMs = strategy.selector.lastSuccessfulFetchEpochMs
                 }
@@ -69,7 +73,8 @@ class GetConsolidatedPortfolioUseCase(
 
         val stamp =
             ProviderStamp(
-                sourceName = sourceName,
+                kind = kind,
+                reference = reference,
                 exchangeRateToUsd = rateToUsd,
                 asOfEpochMs = asOfEpochMs,
                 isDegradedFallback = isDegraded,

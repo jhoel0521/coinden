@@ -10,6 +10,9 @@ import kotlin.math.abs
  *   eliminando por completo los errores de redondeo de punto flotante (Double/Float).
  * - Respeta dinámicamente la escala de la divisa (0 decimales para CLP/SATS/VALE, 2 para BOB/USD, 8 para BTC).
  * - Prohibe operaciones aritméticas entre distintas monedas sin conversión previa.
+ * - Sin idioma: [toString] es la forma canónica ("1188.00 BOB": punto decimal, sin separadores
+ *   de miles ni símbolo) para pruebas, registros y serialización. El formato regional es tarea
+ *   de la presentación.
  */
 data class Money(
     val amountInMinorUnits: Long,
@@ -77,25 +80,10 @@ data class Money(
         return "$majorPart.$minorStr"
     }
 
-    /**
-     * Representación visual para la interfaz del usuario.
-     * Ejemplo: "Bs 35.50", "-$ 12.50", "$ 5000", "₿ 0.00050000".
-     */
-    fun formatted(): String {
-        val unsignedStr = toUnsignedNumericString()
-        return if (isNegative) {
-            "-${currency.symbol} $unsignedStr"
-        } else {
-            "${currency.symbol} $unsignedStr"
-        }
-    }
-
     fun toDecimalDouble(): Double {
         val scale = scaleFactor(currency.decimals)
         return amountInMinorUnits.toDouble() / scale.toDouble()
     }
-
-    fun toFormattedString(): String = toString()
 
     override fun toString(): String {
         return "${toNumericString()} ${currency.code}"
@@ -132,42 +120,27 @@ data class Money(
             return Money(totalMinor, currency)
         }
 
-        fun fromFormatted(
-            amountString: String,
-            currency: Currency = Currency.USD,
+        /**
+         * Lee un monto en forma canónica: signo opcional, dígitos y, si la moneda tiene decimales,
+         * un punto seguido de 1 a [Currency.decimals] dígitos. Ej.: "35.50", "-12.5", "1200".
+         *
+         * Rechaza formatos regionales ("35,50", "1.234,56", "1,234.56") y decimales de más:
+         * interpretar lo que escribe el usuario corresponde a la presentación o al parser de borradores.
+         */
+        fun parseCanonical(
+            canonical: String,
+            currency: Currency,
         ): Money {
-            val clean = amountString.trim().replace(" ", "").replace(",", ".")
-            require(clean.isNotBlank()) { "El monto numérico no puede estar vacío" }
-
             val decimals = currency.decimals
-            if (decimals == 0) {
-                val integerOnly = clean.substringBefore(".")
-                val parsed =
-                    integerOnly.toLongOrNull()
-                        ?: throw IllegalArgumentException("Valor numérico inválido para moneda sin decimales: '$amountString'")
-                return Money(parsed, currency)
-            }
+            val pattern = if (decimals == 0) Regex("""^-?\d+$""") else Regex("""^-?\d+(\.\d{1,$decimals})?$""")
+            require(pattern.matches(canonical)) { "Monto no canónico para ${currency.code}: '$canonical'" }
 
-            val isNegative = clean.startsWith("-")
-            val unsigned = if (isNegative) clean.substring(1) else clean
-            val parts = unsigned.split(".")
-
-            val majorStr = parts[0]
-            val major =
-                majorStr.toLongOrNull()
-                    ?: throw IllegalArgumentException("Parte entera inválida en monto: '$amountString'")
-
-            val minorStr = if (parts.size > 1) parts[1] else ""
-            val normalizedMinor = minorStr.padEnd(decimals, '0').take(decimals)
-            val minor =
-                normalizedMinor.toLongOrNull()
-                    ?: throw IllegalArgumentException("Parte decimal inválida en monto: '$amountString'")
-
-            val scale = scaleFactor(decimals)
-            val total = (major * scale) + minor
-            val signedTotal = if (isNegative) -total else total
-
-            return Money(signedTotal, currency)
+            val isNegative = canonical.startsWith("-")
+            val unsigned = canonical.removePrefix("-")
+            val major = unsigned.substringBefore(".")
+            val minor = unsigned.substringAfter(".", "").padEnd(decimals, '0')
+            val total = major.toLong() * scaleFactor(decimals) + (if (minor.isEmpty()) 0L else minor.toLong())
+            return Money(if (isNegative) -total else total, currency)
         }
 
         fun fromDecimal(

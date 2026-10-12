@@ -3,6 +3,7 @@ package com.coinden.core.domain.feature
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.ExchangeRateStrategy
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.RateSourceKind
 import com.coinden.core.domain.model.VerifiedSourceDirectory
 import com.coinden.core.domain.usecase.ConfigureLocalCurrencyUseCase
 import com.coinden.core.domain.usecase.GetConsolidatedPortfolioUseCase
@@ -65,12 +66,13 @@ class FacundoArgentinaFeatureTest {
             // 500 USD * 1420 = 710,000.00 ARS
             // 0.05 BTC = 3,110 USD * 1420 = 4,416,200.00 ARS
             // Total = 5,126,200.00 ARS
-            assertEquals("5126200.00 ARS", portfolio.totalUnifiedAmount.toFormattedString())
+            assertEquals("5126200.00 ARS", portfolio.totalUnifiedAmount.toString())
             assertEquals(512620000L, portfolio.totalUnifiedAmount.amountInMinorUnits)
 
             // Verificación de sello de auditoría
             val stamp = portfolio.primaryProviderStamp
-            assertEquals("Fuente Verificada: ar-dolar-blue", stamp?.sourceName)
+            assertEquals(RateSourceKind.VERIFIED, stamp?.kind)
+            assertEquals("ar-dolar-blue", stamp?.reference)
             assertEquals(1420.0, stamp?.exchangeRateToUsd)
             assertFalse(stamp?.isDegradedFallback ?: true)
         }

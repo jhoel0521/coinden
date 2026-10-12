@@ -61,7 +61,18 @@ class ConfigureLocalCurrencyUseCase(
 sealed interface SelectorConfirmationResult {
     data class Success(val extractedRate: Double, val selector: SavedRateSelector) : SelectorConfirmationResult
 
-    data class Failure(val reason: String) : SelectorConfirmationResult
+    data class Failure(val reason: SelectorFailure) : SelectorConfirmationResult
+}
+
+/**
+ * Motivo tipado de fallo al confirmar un selector web; la presentación lo traduce.
+ */
+enum class SelectorFailure {
+    /** La URL no respondió o devolvió un error de red/HTTP. */
+    FETCH_FAILED,
+
+    /** La página respondió, pero el selector no extrajo una cotización mayor a cero. */
+    NO_VALID_RATE,
 }
 
 /**
@@ -90,7 +101,7 @@ class ConfirmWebSelectorUseCase(
             try {
                 webFetcher.fetchUrl(sourceUrl)
             } catch (e: Exception) {
-                return SelectorConfirmationResult.Failure("Error al consultar la URL: ${e.message}")
+                return SelectorConfirmationResult.Failure(SelectorFailure.FETCH_FAILED)
             }
 
         val extractedRate =
@@ -100,9 +111,7 @@ class ConfirmWebSelectorUseCase(
             }
 
         if (extractedRate == null || extractedRate <= 0.0) {
-            return SelectorConfirmationResult.Failure(
-                "No se pudo extraer una cotización válida mayor a cero con el selector '$selectorExpression'",
-            )
+            return SelectorConfirmationResult.Failure(SelectorFailure.NO_VALID_RATE)
         }
 
         val savedSelector =

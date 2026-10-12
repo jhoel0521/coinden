@@ -1,10 +1,26 @@
 package com.coinden.core.domain.model
 
 /**
- * Sello de auditoría y procedencia del proveedor de tipo de cambio.
+ * Tipo de fuente de una tasa de cambio. La presentación arma el texto en el idioma del usuario.
+ */
+enum class RateSourceKind {
+    /** Sin perfil configurado: se valora en USD. */
+    BASE,
+    FIXED,
+    MANUAL,
+    VERIFIED,
+    WEB_SELECTOR,
+}
+
+/**
+ * Sello de auditoría y procedencia del proveedor de tipo de cambio, como datos estructurados.
+ *
+ * [reference] es el id de la fuente verificada (VERIFIED) o la URL configurada (WEB_SELECTOR);
+ * es null en los demás tipos.
  */
 data class ProviderStamp(
-    val sourceName: String,
+    val kind: RateSourceKind,
+    val reference: String?,
     val exchangeRateToUsd: Double,
     val asOfEpochMs: Long,
     val isDegradedFallback: Boolean = false,

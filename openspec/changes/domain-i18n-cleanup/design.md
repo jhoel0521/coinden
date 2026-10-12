@@ -40,6 +40,9 @@ ProviderStamp(kind, reference: String?, exchangeRateToUsd, asOfEpochMs, isDegrad
 ### D5. Mensajes de `require` fuera del alcance
 Son mensajes para desarrolladores y nunca llegan a la UI. Los errores de negocio ya son tipados (wallet) o lo serán al tocar cada caso de uso.
 
+### D6. Fallos del selector web tipados
+`SelectorConfirmationResult.Failure` deja de llevar una frase en español y pasa a llevar `SelectorFailure { FETCH_FAILED, NO_VALID_RATE }`, siguiendo el patrón de `WalletError`. El detalle técnico de la excepción de red no se expone: no es para el usuario y solo serviría para diagnóstico.
+
 ## Risks / Trade-offs
 - [Muchos cambios incompatibles a la vez] → No hay consumidores externos. La suite completa (80 pruebas) actúa como red: cada prueba que comparaba textos se reescribe para comparar datos.
 - [Rechazar decimales de más puede romper flujos futuros] → Es intencional. El parser de borradores (draft-inbox) normalizará la entrada del usuario antes de crear un `Money`.

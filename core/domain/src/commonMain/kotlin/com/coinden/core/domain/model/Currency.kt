@@ -9,12 +9,15 @@ package com.coinden.core.domain.model
  *   - Código de 3 a 6 caracteres alfanuméricos en mayúsculas (ej. "BOB", "USD", "VALE", "BTC").
  *   - Precisión decimal estricta entre 0 y 8 posiciones (0 para CLP/JPY/VALE, 8 para Satoshis de Bitcoin).
  * - Distingue si es una divisa estándar del catálogo o personalizada ([isCustom]).
+ * - Sin idioma: las monedas del catálogo solo tienen código y decimales. [symbol] y [name]
+ *   existen únicamente en monedas personalizadas, tal como los escribió el usuario; el nombre
+ *   y el símbolo de una moneda ISO los resuelve la presentación según el locale.
  */
 data class Currency(
     val code: String,
-    val symbol: String = code,
+    val symbol: String? = null,
     val decimals: Int = 2,
-    val name: String = code,
+    val name: String? = null,
     val isCustom: Boolean = false,
 ) {
     init {
@@ -33,18 +36,18 @@ data class Currency(
         private val CODE_REGEX = Regex("^[A-Z0-9]{3,6}$")
 
         // Divisas Ancla y Globales Principales
-        val USD = Currency(code = "USD", symbol = "$", decimals = 2, name = "Dólar Estadounidense")
-        val EUR = Currency(code = "EUR", symbol = "€", decimals = 2, name = "Euro")
-        val CNY = Currency(code = "CNY", symbol = "¥", decimals = 2, name = "Yuan Chino")
-        val BTC = Currency(code = "BTC", symbol = "₿", decimals = 8, name = "Bitcoin")
+        val USD = Currency(code = "USD", decimals = 2)
+        val EUR = Currency(code = "EUR", decimals = 2)
+        val CNY = Currency(code = "CNY", decimals = 2)
+        val BTC = Currency(code = "BTC", decimals = 8)
 
         // Divisas Frecuentes de la Región
-        val BOB = Currency(code = "BOB", symbol = "Bs", decimals = 2, name = "Boliviano")
-        val ARS = Currency(code = "ARS", symbol = "$", decimals = 2, name = "Peso Argentino")
-        val CLP = Currency(code = "CLP", symbol = "$", decimals = 0, name = "Peso Chileno")
-        val COP = Currency(code = "COP", symbol = "$", decimals = 0, name = "Peso Colombiano")
-        val PEN = Currency(code = "PEN", symbol = "S/", decimals = 2, name = "Sol Peruano")
-        val BRL = Currency(code = "BRL", symbol = "R$", decimals = 2, name = "Real Brasileño")
+        val BOB = Currency(code = "BOB", decimals = 2)
+        val ARS = Currency(code = "ARS", decimals = 2)
+        val CLP = Currency(code = "CLP", decimals = 0)
+        val COP = Currency(code = "COP", decimals = 0)
+        val PEN = Currency(code = "PEN", decimals = 2)
+        val BRL = Currency(code = "BRL", decimals = 2)
 
         private val PREDEFINED_MAP: Map<String, Currency> =
             listOf(
@@ -64,9 +67,9 @@ data class Currency(
             }
             return Currency(
                 code = normalized,
-                symbol = symbol ?: existing?.symbol ?: normalized,
+                symbol = symbol ?: existing?.symbol,
                 decimals = decimals ?: existing?.decimals ?: 2,
-                name = name ?: existing?.name ?: normalized,
+                name = name ?: existing?.name,
             )
         }
 

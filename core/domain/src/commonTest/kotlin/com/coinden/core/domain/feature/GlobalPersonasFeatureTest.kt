@@ -50,7 +50,7 @@ class GlobalPersonasFeatureTest {
 
             // 1,000 USD * 0.92 = 920.00 EUR
             assertEquals(Currency.EUR, portfolio.targetCurrency)
-            assertEquals("920.00 EUR", portfolio.totalUnifiedAmount.toFormattedString())
+            assertEquals("920.00 EUR", portfolio.totalUnifiedAmount.toString())
         }
 
     @Test
@@ -79,7 +79,7 @@ class GlobalPersonasFeatureTest {
 
             // Total USD = 2,000 + 6,220 = 8,220 USD
             // 8,220 * 7.15 = 58,773.00 CNY
-            assertEquals("58773.00 CNY", portfolio.totalUnifiedAmount.toFormattedString())
+            assertEquals("58773.00 CNY", portfolio.totalUnifiedAmount.toString())
             assertEquals(5877300L, portfolio.totalUnifiedAmount.amountInMinorUnits)
             assertEquals(2, portfolio.holdings.size)
         }

@@ -3,15 +3,18 @@ package com.coinden.core.domain.feature
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.ExchangeRateStrategy
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.RateSourceKind
 import com.coinden.core.domain.model.ResponseFormat
 import com.coinden.core.domain.model.SelectorStatus
 import com.coinden.core.domain.usecase.ConfirmWebSelectorUseCase
 import com.coinden.core.domain.usecase.GetConsolidatedPortfolioUseCase
 import com.coinden.core.domain.usecase.SelectorConfirmationResult
+import com.coinden.core.domain.usecase.SelectorFailure
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -86,8 +89,10 @@ class CarlosBoliviaFeatureTest {
             val portfolioDay1 = getPortfolioUseCase(userId, holdings)
 
             // Total: (0.15 * 62,200 * 11.88) + (100 * 11.88) = 110,840.40 + 1,188.00 = 112,028.40 BOB
-            assertEquals("112028.40 BOB", portfolioDay1.totalUnifiedAmount.toFormattedString())
+            assertEquals("112028.40 BOB", portfolioDay1.totalUnifiedAmount.toString())
             assertEquals(false, portfolioDay1.primaryProviderStamp?.isDegradedFallback)
+            assertEquals(RateSourceKind.WEB_SELECTOR, portfolioDay1.primaryProviderStamp?.kind)
+            assertEquals(targetUrl, portfolioDay1.primaryProviderStamp?.reference)
 
             // 4. Al día siguiente: la web externa cambia su diseño
             webFetcher.setResponse(targetUrl, redesignedWebHtml)
@@ -103,9 +108,30 @@ class CarlosBoliviaFeatureTest {
             // 5. Carlos abre la app: su cartera no crashea ni queda en blanco
             val portfolioDay2 = getPortfolioUseCase(userId, holdings)
 
-            assertEquals("112028.40 BOB", portfolioDay2.totalUnifiedAmount.toFormattedString())
+            assertEquals("112028.40 BOB", portfolioDay2.totalUnifiedAmount.toString())
             // El sello de procedencia alerta al usuario que está en modo degraded fallback
             assertTrue(portfolioDay2.primaryProviderStamp?.isDegradedFallback == true)
             assertEquals(11.88, portfolioDay2.primaryProviderStamp?.exchangeRateToUsd)
+            assertEquals(RateSourceKind.WEB_SELECTOR, portfolioDay2.primaryProviderStamp?.kind)
+            assertEquals(targetUrl, portfolioDay2.primaryProviderStamp?.reference)
+        }
+
+    @Test
+    fun `fallos del selector se informan tipados y no guardan el perfil`() =
+        runTest {
+            val userId = "carlos-bolivia-fallos"
+
+            // La URL no responde
+            val unreachable =
+                confirmSelectorUseCase(userId, targetCurrency, targetUrl, ResponseFormat.HTML, selector)
+            assertEquals(SelectorConfirmationResult.Failure(SelectorFailure.FETCH_FAILED), unreachable)
+
+            // La página responde, pero ya no tiene una cotización válida
+            webFetcher.setResponse(targetUrl, redesignedWebHtml)
+            val noRate =
+                confirmSelectorUseCase(userId, targetCurrency, targetUrl, ResponseFormat.HTML, selector)
+            assertEquals(SelectorConfirmationResult.Failure(SelectorFailure.NO_VALID_RATE), noRate)
+
+            assertNull(repository.getProfile(userId))
         }
 }

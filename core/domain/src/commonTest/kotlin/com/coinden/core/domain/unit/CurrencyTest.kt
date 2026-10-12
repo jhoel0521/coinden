@@ -4,6 +4,7 @@ import com.coinden.core.domain.model.Currency
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class CurrencyTest {
@@ -19,11 +20,29 @@ class CurrencyTest {
         assertEquals(2, Currency.CNY.decimals)
 
         assertEquals("BTC", Currency.BTC.code)
-        assertEquals("₿", Currency.BTC.symbol)
         assertEquals(8, Currency.BTC.decimals) // Satoshis
 
         assertEquals("CLP", Currency.CLP.code)
         assertEquals(0, Currency.CLP.decimals) // Pesos chilenos sin centavos
+    }
+
+    @Test
+    fun `las monedas del catalogo no tienen nombre ni simbolo`() {
+        listOf(Currency.USD, Currency.EUR, Currency.CNY, Currency.BTC, Currency.BOB, Currency.ARS).forEach {
+            assertNull(it.name, "${it.code} no deberia tener nombre")
+            assertNull(it.symbol, "${it.code} no deberia tener simbolo")
+        }
+        val bob = Currency.fromCode("BOB")
+        assertEquals("BOB", bob.code)
+        assertEquals(2, bob.decimals)
+        assertNull(bob.name)
+    }
+
+    @Test
+    fun `una moneda personalizada conserva lo que escribio el usuario`() {
+        val vale = Currency.custom(code = "VALE", symbol = "V", decimals = 0, name = "Vale comunitario")
+        assertEquals("V", vale.symbol)
+        assertEquals("Vale comunitario", vale.name)
     }
 
     @Test

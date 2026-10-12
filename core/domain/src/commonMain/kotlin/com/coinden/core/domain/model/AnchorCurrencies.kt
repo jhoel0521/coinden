@@ -30,6 +30,9 @@ enum class ResponseFormat {
  *
  * En lugar de inflar la aplicación con una clase/interfaz específica por cada país o API,
  * las fuentes verificadas son datos puros configurables.
+ *
+ * [name] es solo el nombre propio del proveedor (no se traduce). Qué cotiza la fuente
+ * (blue, paralelo, oficial) se deduce de [id], [countryIso] y [targetCurrency].
  */
 data class RateSourceDefinition(
     val id: String,
@@ -39,7 +42,6 @@ data class RateSourceDefinition(
     val url: String,
     val responseFormat: ResponseFormat,
     val defaultSelector: String,
-    val description: String,
 )
 
 /**
@@ -55,49 +57,45 @@ object VerifiedSourceDirectory {
     val ARGENTINA_DOLAR_BLUE =
         RateSourceDefinition(
             id = "ar-dolar-blue",
-            name = "DolarApi Argentina (Blue)",
+            name = "DolarApi",
             countryIso = "AR",
             targetCurrency = Currency.of("ARS", decimals = 2),
             url = "https://dolarapi.com/v1/dolares/blue",
             responseFormat = ResponseFormat.JSON,
             defaultSelector = "venta",
-            description = "Cotización de venta del Dólar Blue informal en Argentina",
         )
 
     val BOLIVIA_DOLAR_BLUE =
         RateSourceDefinition(
             id = "bo-dolar-blue",
-            name = "DolarBlueBolivia (Paralelo)",
+            name = "DolarBlueBolivia",
             countryIso = "BO",
             targetCurrency = Currency.of("BOB", decimals = 2),
             url = "https://www.dolarbluebolivia.click/",
             responseFormat = ResponseFormat.HTML,
             defaultSelector = """id="usdRate">[^<]*?(\d+(?:\.\d+)?)""",
-            description = "Cotización paralela del Dólar en Bolivia extraída de DolarBlueBolivia",
         )
 
     val FRANKFURTER_EUR =
         RateSourceDefinition(
             id = "eu-frankfurter-eur",
-            name = "Frankfurter API (BCE)",
+            name = "Frankfurter",
             countryIso = "EU",
             targetCurrency = Currency.EUR,
             url = "https://api.frankfurter.dev/v1/latest?base=USD&symbols=EUR",
             responseFormat = ResponseFormat.JSON,
             defaultSelector = "rates.EUR",
-            description = "Tasa oficial EUR/USD del Banco Central Europeo",
         )
 
     val COINGECKO_BTC_USD =
         RateSourceDefinition(
             id = "crypto-coingecko-btc",
-            name = "CoinGecko BTC/USD",
+            name = "CoinGecko",
             countryIso = "GLOBAL",
             targetCurrency = Currency.BTC,
             url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",
             responseFormat = ResponseFormat.JSON,
             defaultSelector = "bitcoin.usd",
-            description = "Precio spot de Bitcoin en USD",
         )
 
     val all: List<RateSourceDefinition> =

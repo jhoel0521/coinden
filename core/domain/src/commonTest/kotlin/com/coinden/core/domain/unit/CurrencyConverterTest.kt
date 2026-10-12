@@ -43,7 +43,7 @@ class CurrencyConverterTest {
 
         // 100 * 11.88 = 1188.00 BOB
         assertEquals(118800L, inBob.amountInMinorUnits)
-        assertEquals("1188.00 BOB", inBob.toFormattedString())
+        assertEquals("1188.00 BOB", inBob.toString())
     }
 
     @Test
@@ -53,7 +53,7 @@ class CurrencyConverterTest {
 
         // 0.15 * 62,200 = 9330.00 USD
         assertEquals(933000L, inUsd.amountInMinorUnits)
-        assertEquals("9330.00 USD", inUsd.toFormattedString())
+        assertEquals("9330.00 USD", inUsd.toString())
     }
 
     @Test
@@ -63,7 +63,7 @@ class CurrencyConverterTest {
 
         // 0.15 BTC -> 9,330 USD -> (9,330 * 11.88) = 110,840.40 BOB
         assertEquals(11084040L, inBob.amountInMinorUnits)
-        assertEquals("110840.40 BOB", inBob.toFormattedString())
+        assertEquals("110840.40 BOB", inBob.toString())
     }
 
     @Test
@@ -80,7 +80,7 @@ class CurrencyConverterTest {
 
         // Total: 110,840.40 + 1,188.00 = 112,028.40 BOB
         assertEquals(11202840L, consolidated.totalUnifiedAmount.amountInMinorUnits)
-        assertEquals("112028.40 BOB", consolidated.totalUnifiedAmount.toFormattedString())
+        assertEquals("112028.40 BOB", consolidated.totalUnifiedAmount.toString())
         assertEquals(2, consolidated.holdings.size)
     }
 
