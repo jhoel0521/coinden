@@ -7,7 +7,8 @@
     "prepare": "husky",
     "format": "node scripts/format-kotlin.js",
     "lint": "node -e \"const os = require('os'); require('child_process').execSync((os.platform() === 'win32' ? '.\\\\gradlew.bat' : './gradlew') + ' ktlintCheck', { stdio: 'inherit' })\"",
-    "test": "node -e \"const os = require('os'); require('child_process').execSync((os.platform() === 'win32' ? '.\\\\gradlew.bat' : './gradlew') + ' :core:domain:jvmTest', { stdio: 'inherit' })\""
+    "build:android": "node -e \"const os = require('os'); require('child_process').execSync((os.platform() === 'win32' ? '.\\\\gradlew.bat' : './gradlew') + ' :composeApp:assembleDebug', { stdio: 'inherit' })\"",
+    "test": "node -e \"const os = require('os'); require('child_process').execSync((os.platform() === 'win32' ? '.\\\\gradlew.bat' : './gradlew') + ' :core:domain:jvmTest :core:data-memory:jvmTest :composeApp:testDebugUnitTest', { stdio: 'inherit' })\""
   },
   "lint-staged": {
     "*.{kt,kts}": [

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_title">CoinDen</string>
+    <string name="demo_notice">Demostración: los datos viven en memoria y se pierden al cerrar la app.</string>
+    <string name="capture_hint">Escribe un gasto, por ejemplo: almuerzo 45 qr</string>
+    <string name="capture_button">Capturar</string>
+    <string name="capture_empty">Todavía no hay borradores. Escribe una frase y captúrala.</string>
+
+    <string name="kind_expense">Gasto</string>
+    <string name="kind_income">Ingreso</string>
+    <string name="kind_transfer">Transferencia</string>
+    <string name="kind_adjustment">Ajuste de saldo</string>
+    <string name="kind_not_a_movement">No es un movimiento</string>
+    <string name="kind_unknown">Tipo sin definir</string>
+
+    <string name="status_captured">Capturado sin propuesta</string>
+    <string name="status_incomplete">Incompleto</string>
+    <string name="status_ready">Listo para confirmar</string>
+    <string name="status_unsupported">No soportado todavía</string>
+
+    <string name="confidence_low">Confianza baja</string>
+    <string name="confidence_medium">Confianza media</string>
+    <string name="confidence_high">Confianza alta</string>
+
+    <string name="amount_missing">Sin monto</string>
+    <string name="wallet_missing">Sin billetera</string>
+    <string name="wallet_suggested">%1$s (sugerida)</string>
+
+    <string name="category_none">Sin categoría</string>
+    <string name="category_custom">Categoría propia</string>
+    <string name="category_by_word">%1$s, por la palabra «%2$s»</string>
+    <string name="category_by_rule">%1$s, por tu regla «%2$s»</string>
+
+    <string name="category_food">Comida</string>
+    <string name="category_groceries">Supermercado</string>
+    <string name="category_transport">Transporte</string>
+    <string name="category_health">Salud</string>
+    <string name="category_subscriptions">Suscripciones</string>
+    <string name="category_bills">Servicios</string>
+    <string name="category_housing">Vivienda</string>
+    <string name="category_leisure">Ocio</string>
+    <string name="category_shopping">Compras</string>
+    <string name="category_education">Educación</string>
+    <string name="category_people">Personas</string>
+    <string name="category_fees">Comisiones</string>
+</resources>

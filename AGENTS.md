@@ -44,7 +44,16 @@ core/domain/src/
     feature/        pruebas end-to-end por persona + FakeAdapters
 ```
 
+```
+core/data-memory/   adaptadores en memoria de los puertos (hasta local-persistence)
+composeApp/         app Compose Multiplatform (hoy solo Android)
+  commonMain/       UI, presentadores sin Compose y AppContainer (DI manual)
+  androidMain/      Application, MainActivity
+  commonTest/       pruebas de presentadores y formato (corren en la JVM)
+```
+
 - `core/domain` no depende de Android, Ktor, SQLite ni de ningún framework. Solo usa stdlib y coroutines.
+- La UI no tiene textos fijos: todo sale de `composeResources/values/strings.xml`.
 - Las dependencias nuevas se declaran en `gradle/libs.versions.toml`.
 
 ## Pruebas (TDD)
@@ -58,7 +67,8 @@ core/domain/src/
 
 | Acción | Comando |
 |--------|---------|
-| Pruebas | `npm test` (= `./gradlew :core:domain:jvmTest`) |
+| Pruebas | `npm test` (= `./gradlew :core:domain:jvmTest :core:data-memory:jvmTest :composeApp:testDebugUnitTest`) |
+| APK de depuración | `npm run build:android` (= `./gradlew :composeApp:assembleDebug`) |
 | Lint | `npm run lint` (= `./gradlew ktlintCheck`) |
 | Formato | `npm run format` (= `./gradlew ktlintFormat`) |
 

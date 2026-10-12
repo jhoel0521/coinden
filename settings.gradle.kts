@@ -16,3 +16,5 @@ dependencyResolutionManagement {
 rootProject.name = "coinden"
 
 include(":core:domain")
+include(":core:data-memory")
+include(":composeApp")

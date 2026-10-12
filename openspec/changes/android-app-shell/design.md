@@ -20,7 +20,7 @@ Ver proposal.md (Why) y `specs/app-shell/spec.md`. Hoy hay un solo módulo, `:co
 | Pieza | Versión | Motivo |
 |---|---|---|
 | Kotlin | 2.0.21 (sin cambio) | evita migrar el dominio |
-| Android Gradle Plugin | 8.7.3 | compatible con Gradle 8.14 y Kotlin 2.0 |
+| Android Gradle Plugin | 8.5.2 | versión máxima probada por Kotlin 2.0.21 (8.7.3 compilaba, pero Kotlin avisaba que esa combinación no está probada) |
 | Compose Multiplatform | 1.7.3 | compatible con Kotlin 2.0.21 |
 | Compilador de Compose | `org.jetbrains.kotlin.plugin.compose` 2.0.21 | obligatorio desde Kotlin 2.0 |
 | AndroidX Activity Compose | 1.9.3 | `setContent` en la Activity |

@@ -128,7 +128,9 @@ CoinDen quiere vivir de sus usuarios, no de sus datos:
 
 ## Desarrollo
 
-Requisitos: JDK 21 y Node.js (solo para los hooks de git).
+Requisitos: JDK 21, Node.js (solo para los hooks de git) y, para la app, el Android SDK (plataforma 34).
+Gradle encuentra el SDK por `ANDROID_HOME` o por `local.properties` (`sdk.dir=...`, no se versiona);
+Android Studio crea ese archivo al abrir el proyecto.
 
 ```bash
 npm install
@@ -146,6 +148,12 @@ npm run lint
 npm run format
 ```
 
-`npm test` ejecuta `./gradlew :core:domain:jvmTest`, que corre las pruebas unitarias y las de feature con las personas.
+```bash
+npm run build:android
+```
+
+`npm test` corre las pruebas del dominio (unitarias y de feature con las personas), las de los adaptadores en
+memoria y las de la app en la JVM. `npm run build:android` genera el APK de depuración en
+`composeApp/build/outputs/apk/debug/`; el CI lo publica como artefacto en cada push.
 
 Si trabajas con agentes de IA, lee [AGENTS.md](AGENTS.md).

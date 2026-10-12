@@ -1,0 +1,5 @@
+root = true
+
+[*.{kt,kts}]
+# Las funciones @Composable usan PascalCase por convención de Compose.
+ktlint_function_naming_ignore_when_annotated_with = Composable
