@@ -75,29 +75,40 @@ Los principios completos están en [MANIFIESTO.md](MANIFIESTO.md). En resumen:
 - **IA determinista y on-device:** reglas que se pueden probar y explicar. Voz a texto y OCR solo del sistema operativo, sin enviar nada fuera.
 - **Dinero exacto:** enteros en unidades mínimas, sin flotantes.
 
-## Roadmap
+## Camino al MVP
 
-| # | Capacidad | Estado |
-|---|-----------|--------|
-| 0 | `currency-configuration`: monedas, tasas reales, consolidado | ✅ hecho |
-| 1 | `wallet-management`: billeteras, libro de movimientos, cambio con tasa propia | ✅ hecho |
-| — | `domain-i18n-cleanup`: dominio sin textos de idioma | ✅ hecho (limpieza) |
-| — | `money-precision`: `Money` encapsulado y `Money * ExchangeRate` exacto | ✅ hecho (limpieza) |
-| 2 | `draft-inbox`: borradores como máquina de estados, bandeja de revisión y confirmación idempotente | ✅ hecho |
-| 2b | `text-interpreter`: intérprete agnóstico de frases y comprobantes (paquetes en/es/pt y plantillas como datos), confianza ALTA/MEDIA/BAJA por borrador | ✅ hecho |
-| 3 | `expense-categorization`: reglas + aprendizaje por corrección | |
-| 4 | `commitments`: gastos esperados del mes (Netflix "cuando puedo", no un día fijo), préstamos (debo / me deben) y reparto en cuotas | |
-| 5 | `free-to-spend`: dinero libre y la pregunta de la hamburguesa | |
-| 6 | `savings-goals`: metas de ahorro repartidas en varias billeteras | |
-| 7 | `perception-adapters`: voz a texto y OCR on-device → texto para el intérprete (la interpretación ya está en 2b) | |
-| 8 | `device-sync`: celular como servidor, sincronización P2P cifrada con la PC | |
-| 9 | `cloud-backup` (premium): respaldo cifrado en la nube propia del usuario | futuro |
+**MVP:** instalas CoinDen en Android, registras tus gastos del día (texto, voz o comprobante compartido desde Yape o tu banco), los revisas en la noche y ves tus saldos reales y en qué se te fue el dinero del mes. Todo sin servidores.
 
-Mejoras anotadas para el intérprete (2b): detectar comprobantes duplicados por número de transacción, más plantillas de bancos y más paquetes de idioma (datos que puede aportar la comunidad), y traducción con IA solo como respaldo opcional para idiomas sin paquete.
+| # | Capacidad | Qué aporta al MVP | Tipo | Tamaño | Estado |
+|---|---|---|---|---|---|
+| 0 | `currency-configuration` | monedas, tasas reales y patrimonio consolidado | dominio | — | ✅ |
+| 1 | `wallet-management` | billeteras, libro de movimientos y control estricto de saldo | dominio | — | ✅ |
+| — | `domain-i18n-cleanup` · `money-precision` | dominio sin idioma y dinero exacto (`Money * ExchangeRate`) | dominio | — | ✅ |
+| 2 | `draft-inbox` | borradores como máquina de estados, bandeja y confirmación idempotente | dominio | — | ✅ |
+| 2b | `text-interpreter` | frases y comprobantes de cualquier banco, en/es/pt, confianza ALTA/MEDIA/BAJA | dominio | — | ✅ |
+| 3 | `expense-categorization` | **¿en qué se me fue?**: categorías que aprenden de tus correcciones | dominio | L | 🔜 siguiente |
+| 4 | `android-app-shell` | módulo Android con Compose, dominio compilado para Android, inyección de dependencias | infraestructura | M | |
+| 5 | `local-persistence` | SQLDelight + SQLCipher: billeteras, libro, borradores y alias, cifrados | adaptador | L | |
+| 6 | `onboarding-wallets-ui` | moneda local y tasa, billeteras, alias y billetera por defecto | UI | M | |
+| 7 | `capture-ui` + compartir a CoinDen | captura rápida y comprobantes compartidos desde Yape o el banco | UI + adaptador | M | |
+| 8 | `perception-adapters` | voz a texto y OCR on-device → texto para el intérprete | adaptador | M | |
+| 9 | `review-inbox-ui` | la bandeja de la noche: lo dudoso primero, completar y confirmar | UI | M | |
+| 10 | `insights-ui` | saldos, patrimonio consolidado y gasto del mes por categoría | UI | M | |
+| 11 | `rate-fetch-adapter` | cotizaciones reales por red (Frankfurter, DolarApi, selector web) | adaptador | S | |
 
-En paralelo vendrán la persistencia cifrada (SQLite/SQLCipher) y la UI en Compose Multiplatform (Android, iOS, Desktop, Web).
+### Después del MVP
 
-> El modelo de datos se diseña **sync-ready desde hoy**, con IDs UUID y movimientos append-only. Así las capacidades 8 y 9 no van a exigir reescribir nada.
+| Capacidad | Qué aporta |
+|---|---|
+| `free-to-spend` | dinero libre hasta fin de mes: ¿hamburguesa o sopa? |
+| `commitments` | gastos esperados del mes (Netflix "cuando puedo", no un día fijo), préstamos (debo / me deben) y reparto en cuotas |
+| `savings-goals` | metas de ahorro repartidas en varias billeteras |
+| `device-sync` | el celular como servidor y sincronización P2P cifrada con la PC |
+| `cloud-backup` (premium) | respaldo cifrado en la nube propia del usuario |
+| Intérprete | detectar comprobantes duplicados, más plantillas de bancos y paquetes de idioma (datos que puede aportar la comunidad), traducción con IA solo como respaldo |
+| Plataformas | iOS, Desktop y Web con Compose Multiplatform |
+
+> El modelo de datos se diseña **sync-ready desde hoy**, con IDs UUID y movimientos append-only. Así la sincronización y el respaldo no van a exigir reescribir nada.
 
 ## Sostenibilidad
 
