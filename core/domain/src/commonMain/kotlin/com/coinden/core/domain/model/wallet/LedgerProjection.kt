@@ -30,25 +30,25 @@ class LedgerProjection(
     val firstNegativeAtEpochMs: Long?
 
     init {
-        var running = 0L
-        var lowest = 0L
+        var running = Money.zero(wallet.currency)
+        var lowest = Money.zero(wallet.currency)
         var firstNegative: Long? = null
         for (event in effectiveEvents) {
-            running += event.deltaFor(wallet.id)!!.amountInMinorUnits
+            running += event.deltaFor(wallet.id)!!
             if (running < lowest) lowest = running
-            if (running < 0 && firstNegative == null) firstNegative = event.occurredAtEpochMs
+            if (running.isNegative && firstNegative == null) firstNegative = event.occurredAtEpochMs
         }
-        balance = Money(running, wallet.currency)
-        lowestBalance = Money(lowest, wallet.currency)
+        balance = running
+        lowestBalance = lowest
         firstNegativeAtEpochMs = firstNegative
     }
 
     /** Saldo acumulado después de cada evento vigente, en orden cronológico. */
     val runningBalances: List<Pair<LedgerEvent, Money>> by lazy {
-        var running = 0L
+        var running = Money.zero(wallet.currency)
         effectiveEvents.map { event ->
-            running += event.deltaFor(wallet.id)!!.amountInMinorUnits
-            event to Money(running, wallet.currency)
+            running += event.deltaFor(wallet.id)!!
+            event to running
         }
     }
 

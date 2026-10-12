@@ -34,6 +34,7 @@ Se eliminan `amountInMinorUnits`, `amountInCents`, `times(Int/Long)`, `fromMajor
 - `ExchangeRate.parse(from, to, perUnit: String)` lee un decimal canónico ("1420.50", "0.923456"), sin límite de decimales, como `quote = perUnit × 10^to.decimals` por `base = 1 × 10^from.decimals`, todo en enteros.
 - `Money.times(rate)` exige `this.currency == rate.from` y calcula `minor × num / den` con redondeo half-even. Es el único punto de redondeo.
 - `quoteFor(base: Money)` (equivale a `base * this`) permite a la presentación mostrar "1 USD = 11.88 BOB".
+- `ExchangeRate.identity(currency)` es la tasa 1:1 de una moneda consigo misma. Hace falta para el usuario cuya moneda local es USD (John) y para la tasa derivada de una transferencia en la misma moneda; `of` y `parse` siguen exigiendo monedas distintas.
 - *Alternativa descartada:* un decimal de escala fija (por ejemplo 10⁻¹²). La composición BTC→USD→BOB acumularía error de truncamiento; la fracción es exacta.
 
 ### D3. Aritmética entera verificada

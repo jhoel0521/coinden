@@ -5,94 +5,94 @@ import com.coinden.core.domain.model.Money
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class MoneyTest {
+    private fun bs(canonical: String) = Money.parseCanonical(canonical, Currency.BOB)
+
+    private fun usd(canonical: String) = Money.parseCanonical(canonical, Currency.USD)
+
     @Test
-    fun `suma y resta montos de la misma divisa con precision exacta en enteros`() {
-        val m1 = Money.parseCanonical("35.50", Currency.BOB)
-        val m2 = Money.parseCanonical("14.50", Currency.BOB)
-
-        val sum = m1 + m2
-        assertEquals(5000L, sum.amountInMinorUnits)
-        assertEquals("50.00", sum.toNumericString())
+    fun `suma y resta montos de la misma divisa con precision exacta`() {
+        val sum = bs("35.50") + bs("14.50")
+        assertEquals(bs("50.00"), sum)
         assertEquals("50.00 BOB", sum.toString())
+        assertEquals(bs("35.50"), sum - bs("14.50"))
+    }
 
-        val diff = sum - m2
-        assertEquals(m1, diff)
+    @Test
+    fun `0_10 mas 0_20 es exactamente 0_30`() {
+        assertEquals(bs("0.30"), bs("0.10") + bs("0.20"))
     }
 
     @Test
     fun `prohibe operaciones aritmeticas entre divisas distintas`() {
-        val bob = Money.parseCanonical("35.50", Currency.BOB)
-        val usd = Money.parseCanonical("10.00", Currency.USD)
-
-        assertFailsWith<IllegalArgumentException> {
-            bob + usd
-        }
-        assertFailsWith<IllegalArgumentException> {
-            bob - usd
-        }
+        assertFailsWith<IllegalArgumentException> { bs("35.50") + usd("10.00") }
+        assertFailsWith<IllegalArgumentException> { bs("35.50") - usd("10.00") }
+        assertFailsWith<IllegalArgumentException> { bs("35.50") < usd("10.00") }
     }
 
     @Test
-    fun `maneja correctamente monedas sin centavos como pesos chilenos o tokens enteros`() {
-        val vale = Currency.custom(code = "VALE", symbol = "V", decimals = 0, name = "Token")
-        val t1 = Money.parseCanonical("50", vale)
-        val t2 = Money.parseCanonical("25", vale)
+    fun `el desbordamiento falla explicitamente`() {
+        val max = Money.ofMinorUnits(Long.MAX_VALUE, Currency.USD)
+        val min = Money.ofMinorUnits(Long.MIN_VALUE, Currency.USD)
+        assertFailsWith<ArithmeticException> { max + usd("0.01") }
+        assertFailsWith<ArithmeticException> { min - usd("0.01") }
+        assertFailsWith<ArithmeticException> { -min }
+    }
 
-        val total = t1 + t2
-        assertEquals(75L, total.amountInMinorUnits)
+    @Test
+    fun `igualdad y hashCode por moneda y monto`() {
+        assertEquals(bs("10.00"), Money.ofMinorUnits(1_000L, Currency.BOB))
+        assertEquals(bs("10.00").hashCode(), Money.ofMinorUnits(1_000L, Currency.BOB).hashCode())
+        assertNotEquals(bs("10.00"), usd("10.00"))
+        assertEquals(setOf(bs("1.00")), setOf(Money.ofMinorUnits(100L, Currency.BOB)))
+    }
+
+    @Test
+    fun `monedas sin centavos como tokens enteros`() {
+        val vale = Currency.custom(code = "VALE", symbol = "V", decimals = 0, name = "Token")
+        val total = Money.parseCanonical("50", vale) + Money.parseCanonical("25", vale)
+        assertEquals(Money.ofMinorUnits(75L, vale), total)
         assertEquals("75", total.toNumericString())
         assertEquals("75 VALE", total.toString())
     }
 
     @Test
-    fun `soporta Bitcoin con precision de 8 decimales en Satoshis sin coma flotante`() {
-        // 50,000 Satoshis = 0.00050000 BTC
-        val sats = Money(amountInMinorUnits = 50_000L, currency = Currency.BTC)
+    fun `Bitcoin con precision de 8 decimales en satoshis`() {
+        val sats = Money.ofMinorUnits(50_000L, Currency.BTC)
         assertEquals("0.00050000", sats.toNumericString())
         assertEquals("0.00050000 BTC", sats.toString())
 
-        // 1 BTC entero = 100,000,000 Satoshis
-        val oneBtc = Money.fromMajorUnits(majorUnits = 1L, currency = Currency.BTC)
-        assertEquals(100_000_000L, oneBtc.amountInMinorUnits)
-
-        val remaining = oneBtc - sats
-        assertEquals(99_950_000L, remaining.amountInMinorUnits)
-        assertEquals("0.99950000", remaining.toNumericString())
+        val remaining = Money.parseCanonical("1", Currency.BTC) - sats
+        assertEquals("0.99950000 BTC", remaining.toString())
     }
 
     @Test
-    fun `multiplica por factores enteros e invierte el signo correctamente`() {
-        val base = Money.parseCanonical("12.50", Currency.USD)
-        val tripled = base * 3
-
-        assertEquals(3750L, tripled.amountInMinorUnits)
-        assertEquals("37.50 USD", tripled.toString())
-
-        val negative = -base
-        assertEquals(-1250L, negative.amountInMinorUnits)
+    fun `signo, negacion y cero`() {
+        val negative = -usd("12.50")
         assertTrue(negative.isNegative)
         assertEquals("-12.50 USD", negative.toString())
+        assertTrue(Money.zero(Currency.USD).isZero)
+        assertTrue(usd("0.01").isPositive)
+        assertFalse(usd("0.01").isNegative)
     }
 
     @Test
     fun `compara montos de la misma divisa`() {
-        val smaller = Money.parseCanonical("10.00", Currency.USD)
-        val larger = Money.parseCanonical("20.00", Currency.USD)
-
-        assertTrue(smaller < larger)
-        assertTrue(larger > smaller)
+        assertTrue(usd("10.00") < usd("20.00"))
+        assertTrue(usd("20.00") > usd("10.00"))
     }
 
     @Test
     fun `lee la forma canonica con punto decimal y signo opcional`() {
-        assertEquals(Money(3550L, Currency.BOB), Money.parseCanonical("35.50", Currency.BOB))
-        assertEquals(Money(3550L, Currency.BOB), Money.parseCanonical("35.5", Currency.BOB))
-        assertEquals(Money(-1250L, Currency.USD), Money.parseCanonical("-12.5", Currency.USD))
-        assertEquals(Money(1200L, Currency.USD), Money.parseCanonical("12", Currency.USD))
-        assertEquals(Money(50_000L, Currency.BTC), Money.parseCanonical("0.0005", Currency.BTC))
+        assertEquals(Money.ofMinorUnits(3550L, Currency.BOB), bs("35.50"))
+        assertEquals(Money.ofMinorUnits(3550L, Currency.BOB), bs("35.5"))
+        assertEquals(Money.ofMinorUnits(-1250L, Currency.USD), usd("-12.5"))
+        assertEquals(Money.ofMinorUnits(1200L, Currency.USD), usd("12"))
+        assertEquals(Money.ofMinorUnits(50_000L, Currency.BTC), Money.parseCanonical("0.0005", Currency.BTC))
     }
 
     @Test
@@ -107,7 +107,7 @@ class MoneyTest {
 
     @Test
     fun `la representacion canonica no tiene simbolo ni separadores de miles`() {
-        assertEquals("1188.00 BOB", Money(118_800L, Currency.BOB).toString())
-        assertEquals("1234567.89 USD", Money(123_456_789L, Currency.USD).toString())
+        assertEquals("1188.00 BOB", Money.ofMinorUnits(118_800L, Currency.BOB).toString())
+        assertEquals("1234567.89 USD", Money.ofMinorUnits(123_456_789L, Currency.USD).toString())
     }
 }

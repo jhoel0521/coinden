@@ -1,14 +1,22 @@
 package com.coinden.core.domain.extractor
 
 /**
- * Contrato de extracción de tipos de cambio numéricos a partir de payloads remotos (JSON o HTML).
+ * Contrato de extracción de tipos de cambio a partir de payloads remotos (JSON o HTML).
+ *
+ * Devuelve la cotización como decimal canónico ("11.88", "1420.50"): punto decimal, sin
+ * separadores de miles y sin pasar por coma flotante. Se convierte a tasa con `ExchangeRate.parse`.
  */
 interface RateResponseExtractor {
     fun extract(
         payload: String,
         selector: String,
-    ): Double?
+    ): String?
 }
+
+private val CANONICAL_DECIMAL = Regex("""^\d+(\.\d+)?$""")
+
+/** Normaliza la coma decimal de la web a punto y valida la forma canónica. */
+internal fun toCanonicalDecimal(raw: String): String? = raw.trim().replace(',', '.').takeIf { CANONICAL_DECIMAL.matches(it) }
 
 /**
  * Extractor para respuestas JSON que soporta notación de puntos (dot-notation).
@@ -23,7 +31,7 @@ class JsonDotNotationExtractor : RateResponseExtractor {
     override fun extract(
         payload: String,
         selector: String,
-    ): Double? {
+    ): String? {
         if (payload.isBlank() || selector.isBlank()) return null
 
         val pathSegments = selector.trim().split(".").map { it.trim() }.filter { it.isNotEmpty() }
@@ -52,8 +60,7 @@ class JsonDotNotationExtractor : RateResponseExtractor {
             )
 
         val leafMatch = valueRegex.find(currentScope) ?: return null
-        val rawValue = leafMatch.groupValues[1].replace(',', '.')
-        return rawValue.toDoubleOrNull()
+        return toCanonicalDecimal(leafMatch.groupValues[1])
     }
 
     private fun extractJsonBlock(
@@ -107,7 +114,7 @@ class HtmlRegexExtractor : RateResponseExtractor {
     override fun extract(
         payload: String,
         selector: String,
-    ): Double? {
+    ): String? {
         if (payload.isBlank() || selector.isBlank()) return null
 
         try {
@@ -127,8 +134,7 @@ class HtmlRegexExtractor : RateResponseExtractor {
                     numMatch.groupValues[1]
                 }
 
-            val normalized = rawNumeric.trim().replace(',', '.')
-            return normalized.toDoubleOrNull()
+            return toCanonicalDecimal(rawNumeric)
         } catch (_: Exception) {
             return null
         }

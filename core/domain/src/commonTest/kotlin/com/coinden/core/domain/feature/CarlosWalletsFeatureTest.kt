@@ -1,6 +1,7 @@
 package com.coinden.core.domain.feature
 
 import com.coinden.core.domain.model.Currency
+import com.coinden.core.domain.model.ExchangeRate
 import com.coinden.core.domain.model.ExchangeRateStrategy
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.wallet.LedgerEvent
@@ -49,9 +50,9 @@ class CarlosWalletsFeatureTest {
     private val configureLocal = ConfigureLocalCurrencyUseCase(profiles)
     private val portfolio = GetConsolidatedPortfolioUseCase(profiles)
 
-    private fun bs(cents: Long) = Money(cents, Currency.BOB)
+    private fun bs(cents: Long) = Money.ofMinorUnits(cents, Currency.BOB)
 
-    private fun usd(cents: Long) = Money(cents, Currency.USD)
+    private fun usd(cents: Long) = Money.ofMinorUnits(cents, Currency.USD)
 
     private suspend fun wallet(
         name: String,
@@ -84,7 +85,8 @@ class CarlosWalletsFeatureTest {
             // Vende 50 USD al paralelo
             val venta = transfer(colchon.id, billetera.id, usd(5_000), bs(59_400), at(15))
             val ventaEvent = assertIs<LedgerEvent.Transfer>(assertIs<WalletOperationResult.EventRecorded>(venta).event)
-            assertEquals(bs(1_188), ventaEvent.derivedRate())
+            assertEquals(ExchangeRate.of(usd(5_000), bs(59_400)), ventaEvent.derivedRate())
+            assertEquals(bs(1_188), ventaEvent.derivedRate().quoteFor(usd(100)))
 
             // Corrige el micro mal registrado
             val micro = assertIs<WalletOperationResult.EventRecorded>(register(billetera.id, MovementKind.EXPENSE, bs(3_000), at(17)))
@@ -96,7 +98,7 @@ class CarlosWalletsFeatureTest {
             assertEquals(usd(45_000), status(colchon.id)!!.balance)
 
             // Patrimonio consolidado desde las billeteras, con su tasa fija de 11.20 Bs por USD
-            configureLocal("carlos", Currency.BOB, ExchangeRateStrategy.Fixed(11.20))
+            configureLocal("carlos", Currency.BOB, ExchangeRateStrategy.Fixed(ExchangeRate.parse(Currency.USD, Currency.BOB, "11.20")))
             val holdings = balances("carlos").map { it.balance }
             val consolidated = portfolio("carlos", holdings)
 

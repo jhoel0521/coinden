@@ -16,23 +16,26 @@ enum class RateSourceKind {
  * Sello de auditoría y procedencia del proveedor de tipo de cambio, como datos estructurados.
  *
  * [reference] es el id de la fuente verificada (VERIFIED) o la URL configurada (WEB_SELECTOR);
- * es null en los demás tipos.
+ * es null en los demás tipos. [rate] es la tasa de la moneda local desde USD.
  */
 data class ProviderStamp(
     val kind: RateSourceKind,
     val reference: String?,
-    val exchangeRateToUsd: Double,
+    val rate: ExchangeRate,
     val asOfEpochMs: Long,
     val isDegradedFallback: Boolean = false,
 )
 
 /**
  * Desglose individual de una posición/activo de la cartera.
+ *
+ * [appliedRate] es la tasa compuesta exacta usada para convertir (null si la posición ya
+ * estaba en la moneda destino).
  */
 data class PortfolioHoldingItem(
     val originalAmount: Money,
     val convertedAmount: Money,
-    val exchangeRateToUsd: Double,
+    val appliedRate: ExchangeRate?,
     val providerStamp: ProviderStamp? = null,
 )
 
@@ -40,6 +43,8 @@ data class PortfolioHoldingItem(
  * Proyección de cartera consolidada según los requisitos de CoinDen:
  * - Vista Unificada: Un monto único total en la moneda objetivo con sello de procedencia.
  * - Vista Detallada: Lista completa desglosada por cada activo poseído.
+ *
+ * El total unificado es, por construcción, la suma exacta de los montos convertidos del desglose.
  */
 data class ConsolidatedPortfolio(
     val targetCurrency: Currency,
@@ -49,73 +54,48 @@ data class ConsolidatedPortfolio(
 )
 
 /**
- * Motor de conversión multidivisa transitivo universal.
+ * Motor de conversión multidivisa por composición exacta de tasas.
  *
- * Fórmula Matemática:
- * Todos los activos transitan obligatoriamente a través del pivote USD:
- * 1. (Monto en X) -> USD: Monto * Rate(X -> USD)
- * 2. USD -> (Moneda Local L): Monto en USD * Rate(USD -> L)
+ * Recibe tasas que involucran a USD (en cualquier sentido: "1 USD = 11.88 BOB" o
+ * "1 BTC = 62,200 USD"). Para convertir A -> B compone (A -> USD) * (USD -> B) sin redondear
+ * y aplica `money * tasa` una sola vez: un único redondeo half-even por posición.
  */
 class CurrencyConverter(
-    private val usdToLocalRates: Map<String, Double> = emptyMap(),
-    private val cryptoToUsdRates: Map<String, Double> = emptyMap(),
+    rates: Collection<ExchangeRate> = emptyList(),
 ) {
-    /**
-     * Convierte un monto [source] a la divisa [target].
-     *
-     * @param source Dinero original (ej. 0.15 BTC o 100 USD)
-     * @param target Divisa destino deseada (ej. BOB, ARS, EUR)
-     */
+    private val fromUsd: Map<String, ExchangeRate> =
+        rates
+            .filterNot { it.isIdentity }
+            .map { rate ->
+                when {
+                    rate.from.isSameAs(PIVOT) -> rate
+                    rate.to.isSameAs(PIVOT) -> rate.inverse()
+                    else -> throw IllegalArgumentException("La tasa ${rate.from.code}->${rate.to.code} no involucra a USD")
+                }
+            }.associateBy { it.to.code }
+
+    /** Tasa compuesta exacta de [source] a [target], o null si son la misma moneda. */
+    fun rateBetween(
+        source: Currency,
+        target: Currency,
+    ): ExchangeRate? {
+        if (source.isSameAs(target)) return null
+        val toUsd = if (source.isSameAs(PIVOT)) null else usdRateFor(source).inverse()
+        val usdToTarget = if (target.isSameAs(PIVOT)) null else usdRateFor(target)
+        return when {
+            toUsd == null -> usdToTarget
+            usdToTarget == null -> toUsd
+            else -> toUsd * usdToTarget
+        }
+    }
+
+    /** Convierte [source] a [target] con un único redondeo. */
     fun convert(
         source: Money,
         target: Currency,
     ): Money {
-        if (source.currency.code == target.code) {
-            return source
-        }
-
-        // Paso 1: Convertir de origen a USD
-        val valueInUsd: Double =
-            when {
-                source.currency.isSameAs(Currency.USD) -> {
-                    source.toDecimalDouble()
-                }
-                cryptoToUsdRates.containsKey(source.currency.code) -> {
-                    val rate = cryptoToUsdRates.getValue(source.currency.code)
-                    source.toDecimalDouble() * rate
-                }
-                usdToLocalRates.containsKey(source.currency.code) -> {
-                    // Si la moneda origen es una moneda local (ej. BOB -> USD): dividir por la tasa USD->BOB
-                    val rate = usdToLocalRates.getValue(source.currency.code)
-                    require(rate > 0.0) { "La tasa de cambio debe ser positiva" }
-                    source.toDecimalDouble() / rate
-                }
-                else -> {
-                    throw IllegalArgumentException("No hay tasa de cambio registrada para convertir ${source.currency.code} a USD")
-                }
-            }
-
-        // Paso 2: Convertir de USD a moneda destino
-        val finalAmountDouble: Double =
-            when {
-                target.isSameAs(Currency.USD) -> {
-                    valueInUsd
-                }
-                usdToLocalRates.containsKey(target.code) -> {
-                    val rate = usdToLocalRates.getValue(target.code)
-                    valueInUsd * rate
-                }
-                cryptoToUsdRates.containsKey(target.code) -> {
-                    val rate = cryptoToUsdRates.getValue(target.code)
-                    require(rate > 0.0) { "La tasa crypto debe ser positiva" }
-                    valueInUsd / rate
-                }
-                else -> {
-                    throw IllegalArgumentException("No hay tasa de cambio registrada para convertir USD a ${target.code}")
-                }
-            }
-
-        return Money.fromDecimal(finalAmountDouble, target)
+        val rate = rateBetween(source.currency, target) ?: return source
+        return source * rate
     }
 
     /**
@@ -126,31 +106,19 @@ class CurrencyConverter(
         targetCurrency: Currency,
         providerStamp: ProviderStamp? = null,
     ): ConsolidatedPortfolio {
-        var totalUnits: Long = 0L
-        val items = mutableListOf<PortfolioHoldingItem>()
-
-        for (holding in holdings) {
-            val converted = convert(holding, targetCurrency)
-            totalUnits += converted.amountInMinorUnits
-
-            val rateApplied =
-                if (holding.currency.isSameAs(targetCurrency)) {
-                    1.0
-                } else {
-                    converted.toDecimalDouble() / holding.toDecimalDouble().coerceAtLeast(0.00000001)
-                }
-
-            items.add(
+        var total = Money.zero(targetCurrency)
+        val items =
+            holdings.map { holding ->
+                val rate = rateBetween(holding.currency, targetCurrency)
+                val converted = if (rate == null) holding else holding * rate
+                total += converted
                 PortfolioHoldingItem(
                     originalAmount = holding,
                     convertedAmount = converted,
-                    exchangeRateToUsd = rateApplied,
+                    appliedRate = rate,
                     providerStamp = providerStamp,
-                ),
-            )
-        }
-
-        val total = Money.fromMinorUnits(totalUnits, targetCurrency)
+                )
+            }
 
         return ConsolidatedPortfolio(
             targetCurrency = targetCurrency,
@@ -158,5 +126,13 @@ class CurrencyConverter(
             holdings = items,
             primaryProviderStamp = providerStamp,
         )
+    }
+
+    private fun usdRateFor(currency: Currency): ExchangeRate =
+        fromUsd[currency.code]
+            ?: throw IllegalArgumentException("No hay tasa de cambio registrada entre USD y ${currency.code}")
+
+    private companion object {
+        val PIVOT = Currency.USD
     }
 }

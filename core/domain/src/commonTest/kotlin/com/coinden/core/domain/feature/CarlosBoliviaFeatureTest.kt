@@ -1,6 +1,7 @@
 package com.coinden.core.domain.feature
 
 import com.coinden.core.domain.model.Currency
+import com.coinden.core.domain.model.ExchangeRate
 import com.coinden.core.domain.model.ExchangeRateStrategy
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.RateSourceKind
@@ -35,7 +36,7 @@ class CarlosBoliviaFeatureTest {
     private val getPortfolioUseCase =
         GetConsolidatedPortfolioUseCase(
             repository = repository,
-            cryptoToUsdRates = mapOf("BTC" to 62200.0),
+            cryptoRates = listOf(ExchangeRate.parse(Currency.BTC, Currency.USD, "62200")),
         )
 
     private val targetCurrency = Currency.of("BOB", 2)
@@ -76,14 +77,14 @@ class CarlosBoliviaFeatureTest {
                 )
 
             assertIs<SelectorConfirmationResult.Success>(confirmation)
-            assertEquals(11.88, confirmation.extractedRate)
+            assertEquals(ExchangeRate.parse(Currency.USD, Currency.BOB, "11.88"), confirmation.extractedRate)
             assertEquals(SelectorStatus.ACTIVE, confirmation.selector.status)
 
             // 3. Consulta de cartera inicial (0.15 BTC y 100 USD)
             val holdings =
                 listOf(
-                    Money.fromDecimal(0.15, Currency.BTC),
-                    Money.fromDecimal(100.0, Currency.USD),
+                    Money.parseCanonical("0.15", Currency.BTC),
+                    Money.parseCanonical("100.0", Currency.USD),
                 )
 
             val portfolioDay1 = getPortfolioUseCase(userId, holdings)
@@ -111,7 +112,7 @@ class CarlosBoliviaFeatureTest {
             assertEquals("112028.40 BOB", portfolioDay2.totalUnifiedAmount.toString())
             // El sello de procedencia alerta al usuario que está en modo degraded fallback
             assertTrue(portfolioDay2.primaryProviderStamp?.isDegradedFallback == true)
-            assertEquals(11.88, portfolioDay2.primaryProviderStamp?.exchangeRateToUsd)
+            assertEquals(ExchangeRate.parse(Currency.USD, Currency.BOB, "11.88"), portfolioDay2.primaryProviderStamp?.rate)
             assertEquals(RateSourceKind.WEB_SELECTOR, portfolioDay2.primaryProviderStamp?.kind)
             assertEquals(targetUrl, portfolioDay2.primaryProviderStamp?.reference)
         }

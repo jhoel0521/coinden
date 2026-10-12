@@ -44,9 +44,9 @@ class WalletUseCasesTest {
     private val status = GetWalletStatusUseCase(repo)
     private val balances = GetActiveWalletBalancesUseCase(repo)
 
-    private fun bs(cents: Long) = Money(cents, Currency.BOB)
+    private fun bs(cents: Long) = Money.ofMinorUnits(cents, Currency.BOB)
 
-    private fun usd(cents: Long) = Money(cents, Currency.USD)
+    private fun usd(cents: Long) = Money.ofMinorUnits(cents, Currency.USD)
 
     private suspend fun newWallet(
         name: String,
@@ -71,7 +71,7 @@ class WalletUseCasesTest {
         runTest {
             val result = create("carlos", "Billetera", Currency.BOB, WalletType.CASH, bs(15_000), occurredAtEpochMs = at(8))
             val created = assertIs<WalletOperationResult.WalletCreated>(result)
-            assertEquals(Money(15_000, Currency.BOB), created.openingBalance.amount)
+            assertEquals(Money.ofMinorUnits(15_000, Currency.BOB), created.openingBalance.amount)
             assertEquals("celular", created.openingBalance.deviceId)
             assertEquals(at(8), created.openingBalance.occurredAtEpochMs)
             assertEquals(at(21), created.openingBalance.recordedAtEpochMs)
@@ -83,8 +83,8 @@ class WalletUseCasesTest {
     @Test
     fun `billetera BTC guarda satoshis exactos`() =
         runTest {
-            val ledger = newWallet("Ledger", Money(5_000_000, Currency.BTC), WalletType.CRYPTO)
-            assertEquals(Money(5_000_000, Currency.BTC), balanceOf(ledger.id))
+            val ledger = newWallet("Ledger", Money.ofMinorUnits(5_000_000, Currency.BTC), WalletType.CRYPTO)
+            assertEquals(Money.ofMinorUnits(5_000_000, Currency.BTC), balanceOf(ledger.id))
             assertEquals("0.05000000", balanceOf(ledger.id).toNumericString())
         }
 
@@ -170,9 +170,9 @@ class WalletUseCasesTest {
     @Test
     fun `credito admite saldo negativo`() =
         runTest {
-            val visa = newWallet("Visa Galicia", Money(0, Currency.ARS), WalletType.CREDIT)
-            recorded(register(visa.id, MovementKind.EXPENSE, Money(2_500_000, Currency.ARS), at(12)))
-            assertEquals(Money(-2_500_000, Currency.ARS), balanceOf(visa.id))
+            val visa = newWallet("Visa Galicia", Money.ofMinorUnits(0, Currency.ARS), WalletType.CREDIT)
+            recorded(register(visa.id, MovementKind.EXPENSE, Money.ofMinorUnits(2_500_000, Currency.ARS), at(12)))
+            assertEquals(Money.ofMinorUnits(-2_500_000, Currency.ARS), balanceOf(visa.id))
             assertFalse(status(visa.id)!!.isUnbalanced)
         }
 
@@ -186,7 +186,7 @@ class WalletUseCasesTest {
             val event = recorded(transfer(colchon.id, cash.id, usd(5_000), bs(59_400), at(10)))
             assertEquals(usd(45_000), balanceOf(colchon.id))
             assertEquals(bs(60_400), balanceOf(cash.id))
-            assertEquals(bs(1_188), assertIs<LedgerEvent.Transfer>(event).derivedRate())
+            assertEquals(bs(1_188), assertIs<LedgerEvent.Transfer>(event).derivedRate().quoteFor(usd(100)))
         }
 
     @Test

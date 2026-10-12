@@ -13,7 +13,7 @@ class JsonDotNotationExtractorTest {
         val json = """{"compra": 1390.00, "venta": 1420.50, "fecha": "2026-10-07"}"""
         val rate = extractor.extract(json, "venta")
 
-        assertEquals(1420.50, rate)
+        assertEquals("1420.50", rate)
     }
 
     @Test
@@ -30,10 +30,10 @@ class JsonDotNotationExtractorTest {
             """.trimIndent()
 
         val rateEur = extractor.extract(json, "rates.EUR")
-        assertEquals(0.92, rateEur)
+        assertEquals("0.92", rateEur)
 
         val rateGbp = extractor.extract(json, "rates.GBP")
-        assertEquals(0.78, rateGbp)
+        assertEquals("0.78", rateGbp)
     }
 
     @Test
@@ -52,10 +52,10 @@ class JsonDotNotationExtractorTest {
             """.trimIndent()
 
         val sellRate = extractor.extract(json, "data.blue.sell")
-        assertEquals(11.88, sellRate)
+        assertEquals("11.88", sellRate)
 
         val buyRate = extractor.extract(json, "data.blue.buy")
-        assertEquals(11.83, buyRate)
+        assertEquals("11.83", buyRate)
     }
 
     @Test
@@ -63,7 +63,7 @@ class JsonDotNotationExtractorTest {
         val json = """{"precio": "62200,50"}"""
         val rate = extractor.extract(json, "precio")
 
-        assertEquals(62200.50, rate)
+        assertEquals("62200.50", rate)
     }
 
     @Test

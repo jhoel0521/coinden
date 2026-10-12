@@ -7,5 +7,5 @@ data class UserCurrencyProfile(
     val userId: String,
     val anchorCurrency: Currency = AnchorCurrencies.USD,
     val localCurrency: Currency = AnchorCurrencies.USD,
-    val strategy: ExchangeRateStrategy = ExchangeRateStrategy.Fixed(1.0),
+    val strategy: ExchangeRateStrategy = ExchangeRateStrategy.Fixed(ExchangeRate.identity(AnchorCurrencies.USD)),
 )

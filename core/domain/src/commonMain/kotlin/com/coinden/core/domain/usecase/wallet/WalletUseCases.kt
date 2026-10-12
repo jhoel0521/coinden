@@ -159,9 +159,7 @@ class RegisterTransferUseCase(
             return Rejected(WalletError.CurrencyMismatch)
         }
         if (!amountOut.isPositive || !amountIn.isPositive) return Rejected(WalletError.InvalidAmount)
-        if (LedgerEvent.Transfer.isSameCurrency(amountOut, amountIn) &&
-            amountOut.amountInMinorUnits != amountIn.amountInMinorUnits
-        ) {
+        if (LedgerEvent.Transfer.isSameCurrency(amountOut, amountIn) && amountOut != amountIn) {
             return Rejected(WalletError.InconsistentTransferAmounts)
         }
 

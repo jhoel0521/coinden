@@ -33,7 +33,7 @@ class FacundoCreditCardFeatureTest {
     private val transfer = RegisterTransferUseCase(ctx)
     private val status = GetWalletStatusUseCase(repo)
 
-    private fun ars(cents: Long) = Money(cents, Currency.ARS)
+    private fun ars(cents: Long) = Money.ofMinorUnits(cents, Currency.ARS)
 
     private suspend fun wallet(
         name: String,

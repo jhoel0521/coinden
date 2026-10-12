@@ -2,6 +2,7 @@ package com.coinden.core.domain.feature
 
 import com.coinden.core.domain.model.AnchorCurrencies
 import com.coinden.core.domain.model.Currency
+import com.coinden.core.domain.model.ExchangeRate
 import com.coinden.core.domain.model.ExchangeRateStrategy
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.usecase.ConfigureAnchorCurrencyUseCase
@@ -23,7 +24,7 @@ class GlobalPersonasFeatureTest {
     private val getPortfolioUseCase =
         GetConsolidatedPortfolioUseCase(
             repository = repository,
-            cryptoToUsdRates = mapOf("BTC" to 62200.0),
+            cryptoRates = listOf(ExchangeRate.parse(Currency.BTC, Currency.USD, "62200")),
         )
 
     @Test
@@ -36,13 +37,13 @@ class GlobalPersonasFeatureTest {
             configureLocalUseCase(
                 userId = userId,
                 localCurrency = Currency.EUR,
-                strategy = ExchangeRateStrategy.Fixed(0.92),
+                strategy = ExchangeRateStrategy.Fixed(ExchangeRate.parse(Currency.USD, Currency.EUR, "0.92")),
             )
 
             // 2. Cartera con 1,000 USD
             val holdings =
                 listOf(
-                    Money.fromDecimal(1000.0, Currency.USD),
+                    Money.parseCanonical("1000.0", Currency.USD),
                 )
 
             // 3. Consolidación
@@ -64,14 +65,14 @@ class GlobalPersonasFeatureTest {
             configureLocalUseCase(
                 userId = userId,
                 localCurrency = cny,
-                strategy = ExchangeRateStrategy.Fixed(7.15),
+                strategy = ExchangeRateStrategy.Fixed(ExchangeRate.parse(Currency.USD, Currency.CNY, "7.15")),
             )
 
             // 2. Cartera: 2,000 USD y 0.1 BTC ($6,220 USD)
             val holdings =
                 listOf(
-                    Money.fromDecimal(2000.0, Currency.USD),
-                    Money.fromDecimal(0.1, Currency.BTC),
+                    Money.parseCanonical("2000.0", Currency.USD),
+                    Money.parseCanonical("0.1", Currency.BTC),
                 )
 
             // 3. Consolidación
@@ -80,7 +81,7 @@ class GlobalPersonasFeatureTest {
             // Total USD = 2,000 + 6,220 = 8,220 USD
             // 8,220 * 7.15 = 58,773.00 CNY
             assertEquals("58773.00 CNY", portfolio.totalUnifiedAmount.toString())
-            assertEquals(5877300L, portfolio.totalUnifiedAmount.amountInMinorUnits)
+            assertEquals(Money.ofMinorUnits(5_877_300L, Currency.CNY), portfolio.totalUnifiedAmount)
             assertEquals(2, portfolio.holdings.size)
         }
 }

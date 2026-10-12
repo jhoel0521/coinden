@@ -1,5 +1,6 @@
 package com.coinden.core.domain.model.wallet
 
+import com.coinden.core.domain.model.ExchangeRate
 import com.coinden.core.domain.model.Money
 
 /**
@@ -102,7 +103,7 @@ sealed class LedgerEvent {
         init {
             require(fromWalletId != toWalletId) { "Origen y destino deben ser billeteras distintas" }
             require(amountOut.isPositive && amountIn.isPositive) { "Los montos de una transferencia deben ser positivos" }
-            require(!isSameCurrency(amountOut, amountIn) || amountOut.amountInMinorUnits == amountIn.amountInMinorUnits) {
+            require(!isSameCurrency(amountOut, amountIn) || amountOut == amountIn) {
                 "En la misma moneda, el monto que sale y el que entra deben coincidir"
             }
         }
@@ -117,13 +118,12 @@ sealed class LedgerEvent {
             }
 
         /**
-         * Cuánto de la moneda de destino se obtuvo por UNA unidad mayor de la moneda de origen,
-         * con aritmética entera y redondeo half-even. Ej.: 50.00 USD -> 594.00 BOB = 11.88 BOB.
+         * Tasa exacta de esta operación: "[amountOut] equivale a [amountIn]".
+         * Ej.: 50.00 USD -> 594.00 BOB; su cotización por 1 USD es 11.88 BOB.
+         * En la misma moneda es la tasa identidad.
          */
-        fun derivedRate(): Money {
-            val numerator = amountIn.amountInMinorUnits * Money.scaleFactor(amountOut.currency.decimals)
-            return Money(divideHalfEven(numerator, amountOut.amountInMinorUnits), amountIn.currency)
-        }
+        fun derivedRate(): ExchangeRate =
+            if (isSameCurrency(amountOut, amountIn)) ExchangeRate.identity(amountOut.currency) else ExchangeRate.of(amountOut, amountIn)
 
         companion object {
             fun isSameCurrency(
@@ -145,17 +145,4 @@ sealed class LedgerEvent {
         val targetId: String,
         override val affectedWalletIds: Set<String>,
     ) : LedgerEvent()
-}
-
-private fun divideHalfEven(
-    numerator: Long,
-    denominator: Long,
-): Long {
-    val quotient = numerator / denominator
-    val twiceRemainder = 2 * (numerator % denominator)
-    return when {
-        twiceRemainder > denominator -> quotient + 1
-        twiceRemainder == denominator && quotient % 2 != 0L -> quotient + 1
-        else -> quotient
-    }
 }

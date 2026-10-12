@@ -34,7 +34,7 @@ class HtmlRegexExtractorTest {
         val selector = """id="usdRate">[^<]*?(\d+(?:\.\d+)?)"""
         val rate = extractor.extract(realDolarBlueBoliviaHtml, selector)
 
-        assertEquals(11.88, rate)
+        assertEquals("11.88", rate)
     }
 
     @Test
@@ -42,7 +42,7 @@ class HtmlRegexExtractorTest {
         val selector = """"blue":\{"buy":\d+(?:\.\d+)?,"sell":(\d+(?:\.\d+)?)\}"""
         val rate = extractor.extract(realDolarBlueBoliviaHtml, selector)
 
-        assertEquals(11.88, rate)
+        assertEquals("11.88", rate)
     }
 
     @Test
@@ -51,7 +51,7 @@ class HtmlRegexExtractorTest {
         val selector = """Cotización Venta:\s*([0-9]+,[0-9]+)"""
         val rate = extractor.extract(html, selector)
 
-        assertEquals(11.88, rate)
+        assertEquals("11.88", rate)
     }
 
     @Test
@@ -60,7 +60,7 @@ class HtmlRegexExtractorTest {
         val selector = """class="dolar-hoy">"""
         val rate = extractor.extract(html, selector)
 
-        assertEquals(11.88, rate)
+        assertEquals("11.88", rate)
     }
 
     @Test

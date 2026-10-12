@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 class LedgerProjectionTest {
     private val cash = Wallet("billetera", "carlos", "Billetera", Currency.BOB, WalletType.CASH)
 
-    private fun bs(cents: Long) = Money(cents, Currency.BOB)
+    private fun bs(cents: Long) = Money.ofMinorUnits(cents, Currency.BOB)
 
     private fun opening(
         cents: Long,
@@ -72,7 +72,7 @@ class LedgerProjectionTest {
 
     @Test
     fun `transferencia se proyecta solo con la pata de esta billetera`() {
-        val t = LedgerEvent.Transfer("t", "d", at(10), at(10), "colchon", cash.id, Money(5_000, Currency.USD), bs(59_400))
+        val t = LedgerEvent.Transfer("t", "d", at(10), at(10), "colchon", cash.id, Money.ofMinorUnits(5_000, Currency.USD), bs(59_400))
         assertEquals(bs(60_400), LedgerProjection(cash, listOf(opening(1_000), t)).balance)
     }
 

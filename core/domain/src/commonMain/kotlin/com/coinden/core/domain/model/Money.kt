@@ -3,91 +3,71 @@ package com.coinden.core.domain.model
 import kotlin.math.abs
 
 /**
- * Value Object inmutable que representa un monto monetario seguro.
+ * Value Object inmutable que representa un monto monetario exacto.
  *
- * Implementa el patrón "Money Pattern" (Martin Fowler) para escala mundial:
- * - Almacena el valor en unidades mínimas enteras ([amountInMinorUnits] / Long),
- *   eliminando por completo los errores de redondeo de punto flotante (Double/Float).
- * - Respeta dinámicamente la escala de la divisa (0 decimales para CLP/SATS/VALE, 2 para BOB/USD, 8 para BTC).
- * - Prohibe operaciones aritméticas entre distintas monedas sin conversión previa.
- * - Sin idioma: [toString] es la forma canónica ("1188.00 BOB": punto decimal, sin separadores
- *   de miles ni símbolo) para pruebas, registros y serialización. El formato regional es tarea
- *   de la presentación.
+ * - Representación encapsulada: el monto vive en unidades mínimas enteras (centavos, satoshis)
+ *   y nadie fuera de [Money], [ExchangeRate] y [ExactMath] lo lee. Así la representación
+ *   puede cambiar (por ejemplo, a enteros de precisión arbitraria) sin tocar el resto del dominio.
+ * - Solo operaciones de dominio: [plus]/[minus] en la misma moneda y [times] por una
+ *   [ExchangeRate], la única forma de cruzar monedas: `bs + (usd * usdToBs)`.
+ * - Desbordamiento explícito: si un resultado no cabe, lanza [ArithmeticException].
+ * - Sin idioma: [toString] es la forma canónica ("1188.00 BOB"), también para la persistencia.
  */
-data class Money(
-    val amountInMinorUnits: Long,
-    val currency: Currency = Currency.USD,
+class Money private constructor(
+    internal val minorUnits: Long,
+    val currency: Currency,
 ) : Comparable<Money> {
-    val amountInCents: Long get() = amountInMinorUnits
-
-    val isZero: Boolean get() = amountInMinorUnits == 0L
-    val isPositive: Boolean get() = amountInMinorUnits > 0L
-    val isNegative: Boolean get() = amountInMinorUnits < 0L
+    val isZero: Boolean get() = minorUnits == 0L
+    val isPositive: Boolean get() = minorUnits > 0L
+    val isNegative: Boolean get() = minorUnits < 0L
 
     operator fun plus(other: Money): Money {
         requireSameCurrency(other)
-        return Money(amountInMinorUnits + other.amountInMinorUnits, currency)
+        return Money(ExactMath.addExact(minorUnits, other.minorUnits), currency)
     }
 
     operator fun minus(other: Money): Money {
         requireSameCurrency(other)
-        return Money(amountInMinorUnits - other.amountInMinorUnits, currency)
+        return Money(ExactMath.addExact(minorUnits, ExactMath.negateExact(other.minorUnits)), currency)
     }
 
-    operator fun times(factor: Long): Money = Money(amountInMinorUnits * factor, currency)
+    operator fun unaryMinus(): Money = Money(ExactMath.negateExact(minorUnits), currency)
 
-    operator fun times(factor: Int): Money = times(factor.toLong())
-
-    operator fun unaryMinus(): Money = Money(-amountInMinorUnits, currency)
+    /**
+     * Convierte este monto a la moneda destino de [rate]: exacto hasta el final y un único
+     * redondeo half-even a la unidad mínima destino.
+     */
+    operator fun times(rate: ExchangeRate): Money {
+        require(currency.isSameAs(rate.from) && currency.decimals == rate.from.decimals) {
+            "La tasa ${rate.from.code}->${rate.to.code} no aplica a un monto en ${currency.code}"
+        }
+        val scaled = ExactMath.multiplyExact(minorUnits, rate.numerator)
+        return Money(ExactMath.divideHalfEven(scaled, rate.denominator), rate.to)
+    }
 
     override fun compareTo(other: Money): Int {
         requireSameCurrency(other)
-        return amountInMinorUnits.compareTo(other.amountInMinorUnits)
+        return minorUnits.compareTo(other.minorUnits)
     }
 
-    /**
-     * Devuelve el monto formateado numéricamente con signo (ej. "35.50", "-12.50", "5000", "0.00050000").
-     */
+    /** Número canónico con signo: "35.50", "-12.50", "5000", "0.00050000". */
     fun toNumericString(): String {
         val decimals = currency.decimals
-        if (decimals == 0) {
-            return amountInMinorUnits.toString()
-        }
+        if (decimals == 0) return minorUnits.toString()
 
         val scale = scaleFactor(decimals)
-        val isNeg = amountInMinorUnits < 0
-        val absValue = abs(amountInMinorUnits)
+        val absValue = abs(minorUnits)
         val majorPart = absValue / scale
-        val minorPart = absValue % scale
-        val minorStr = minorPart.toString().padStart(decimals, '0')
-        val sign = if (isNeg) "-" else ""
-
+        val minorStr = (absValue % scale).toString().padStart(decimals, '0')
+        val sign = if (minorUnits < 0) "-" else ""
         return "$sign$majorPart.$minorStr"
     }
 
-    fun toUnsignedNumericString(): String {
-        val decimals = currency.decimals
-        val absValue = abs(amountInMinorUnits)
-        if (decimals == 0) {
-            return absValue.toString()
-        }
+    override fun toString(): String = "${toNumericString()} ${currency.code}"
 
-        val scale = scaleFactor(decimals)
-        val majorPart = absValue / scale
-        val minorPart = absValue % scale
-        val minorStr = minorPart.toString().padStart(decimals, '0')
+    override fun equals(other: Any?): Boolean = other is Money && other.minorUnits == minorUnits && other.currency == currency
 
-        return "$majorPart.$minorStr"
-    }
-
-    fun toDecimalDouble(): Double {
-        val scale = scaleFactor(currency.decimals)
-        return amountInMinorUnits.toDouble() / scale.toDouble()
-    }
-
-    override fun toString(): String {
-        return "${toNumericString()} ${currency.code}"
-    }
+    override fun hashCode(): Int = 31 * minorUnits.hashCode() + currency.hashCode()
 
     private fun requireSameCurrency(other: Money) {
         require(currency == other.currency) {
@@ -96,29 +76,19 @@ data class Money(
     }
 
     companion object {
-        fun scaleFactor(decimals: Int): Long {
+        internal fun scaleFactor(decimals: Int): Long {
             var factor = 1L
             repeat(decimals) { factor *= 10L }
             return factor
         }
 
-        fun fromMinorUnits(
+        /** Crea un monto a partir de unidades mínimas (centavos, satoshis). */
+        fun ofMinorUnits(
             units: Long,
             currency: Currency,
         ): Money = Money(units, currency)
 
-        fun zero(currency: Currency = Currency.USD): Money = Money(0L, currency)
-
-        fun fromMajorUnits(
-            majorUnits: Long,
-            minorUnits: Long = 0,
-            currency: Currency = Currency.USD,
-        ): Money {
-            val scale = scaleFactor(currency.decimals)
-            val sign = if (majorUnits < 0) -1L else 1L
-            val totalMinor = (majorUnits * scale) + (sign * abs(minorUnits))
-            return Money(totalMinor, currency)
-        }
+        fun zero(currency: Currency): Money = Money(0L, currency)
 
         /**
          * Lee un monto en forma canónica: signo opcional, dígitos y, si la moneda tiene decimales,
@@ -137,19 +107,11 @@ data class Money(
 
             val isNegative = canonical.startsWith("-")
             val unsigned = canonical.removePrefix("-")
-            val major = unsigned.substringBefore(".")
-            val minor = unsigned.substringAfter(".", "").padEnd(decimals, '0')
-            val total = major.toLong() * scaleFactor(decimals) + (if (minor.isEmpty()) 0L else minor.toLong())
+            val major = unsigned.substringBefore(".").toLong()
+            val minorText = unsigned.substringAfter(".", "").padEnd(decimals, '0')
+            val minor = if (minorText.isEmpty()) 0L else minorText.toLong()
+            val total = ExactMath.addExact(ExactMath.multiplyExact(major, scaleFactor(decimals)), minor)
             return Money(if (isNegative) -total else total, currency)
-        }
-
-        fun fromDecimal(
-            amount: Double,
-            currency: Currency = Currency.USD,
-        ): Money {
-            val scale = scaleFactor(currency.decimals)
-            val minor = kotlin.math.round(amount * scale).toLong()
-            return Money(minor, currency)
         }
     }
 }

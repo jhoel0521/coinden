@@ -4,6 +4,7 @@ import com.coinden.core.domain.extractor.HtmlRegexExtractor
 import com.coinden.core.domain.extractor.JsonDotNotationExtractor
 import com.coinden.core.domain.model.AnchorCurrencies
 import com.coinden.core.domain.model.Currency
+import com.coinden.core.domain.model.ExchangeRate
 import com.coinden.core.domain.model.ExchangeRateStrategy
 import com.coinden.core.domain.model.ResponseFormat
 import com.coinden.core.domain.model.SavedRateSelector
@@ -59,7 +60,7 @@ class ConfigureLocalCurrencyUseCase(
  * Resultado de la prueba de extracción y confirmación del selector web.
  */
 sealed interface SelectorConfirmationResult {
-    data class Success(val extractedRate: Double, val selector: SavedRateSelector) : SelectorConfirmationResult
+    data class Success(val extractedRate: ExchangeRate, val selector: SavedRateSelector) : SelectorConfirmationResult
 
     data class Failure(val reason: SelectorFailure) : SelectorConfirmationResult
 }
@@ -104,15 +105,15 @@ class ConfirmWebSelectorUseCase(
                 return SelectorConfirmationResult.Failure(SelectorFailure.FETCH_FAILED)
             }
 
-        val extractedRate =
+        val extractedText =
             when (format) {
                 ResponseFormat.JSON -> jsonExtractor.extract(payload, selectorExpression)
                 ResponseFormat.HTML -> htmlExtractor.extract(payload, selectorExpression)
             }
 
-        if (extractedRate == null || extractedRate <= 0.0) {
-            return SelectorConfirmationResult.Failure(SelectorFailure.NO_VALID_RATE)
-        }
+        val extractedRate =
+            extractedText?.let { runCatching { ExchangeRate.parse(AnchorCurrencies.USD, targetCurrency, it) }.getOrNull() }
+                ?: return SelectorConfirmationResult.Failure(SelectorFailure.NO_VALID_RATE)
 
         val savedSelector =
             SavedRateSelector(
@@ -146,11 +147,9 @@ class UpdateManualExchangeRateUseCase(
 ) {
     suspend operator fun invoke(
         userId: String,
-        newRate: Double,
+        newRate: ExchangeRate,
         currentEpochMs: Long = 0L,
     ): UserCurrencyProfile {
-        require(newRate > 0.0) { "La tasa debe ser mayor a cero" }
-
         val existing =
             repository.getProfile(userId)
                 ?: throw IllegalStateException("Perfil de usuario no encontrado")

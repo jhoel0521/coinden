@@ -2,6 +2,7 @@ package com.coinden.core.domain.feature
 
 import com.coinden.core.domain.model.AnchorCurrencies
 import com.coinden.core.domain.model.Currency
+import com.coinden.core.domain.model.ExchangeRate
 import com.coinden.core.domain.model.ExchangeRateStrategy
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.RateSourceKind
@@ -33,7 +34,7 @@ class JohnUsaFeatureTest {
     private val getPortfolioUseCase =
         GetConsolidatedPortfolioUseCase(
             repository = repository,
-            cryptoToUsdRates = mapOf("BTC" to 62200.0),
+            cryptoRates = listOf(ExchangeRate.parse(Currency.BTC, Currency.USD, "62200")),
         )
 
     @Test
@@ -43,12 +44,12 @@ class JohnUsaFeatureTest {
 
             // 1. Configuración de perfil
             configureAnchorUseCase(userId, AnchorCurrencies.USD)
-            configureLocalUseCase(userId, Currency.USD, ExchangeRateStrategy.Fixed(1.0))
+            configureLocalUseCase(userId, Currency.USD, ExchangeRateStrategy.Fixed(ExchangeRate.identity(Currency.USD)))
 
             // 2. Posición de cartera (0.15 BTC)
             val holdings =
                 listOf(
-                    Money.fromDecimal(0.15, Currency.BTC),
+                    Money.parseCanonical("0.15", Currency.BTC),
                 )
 
             // 3. Consulta de cartera consolidada
@@ -57,7 +58,7 @@ class JohnUsaFeatureTest {
             // 4. Verificación de Vista Unificada
             assertEquals(Currency.USD, portfolio.targetCurrency)
             assertEquals("9330.00 USD", portfolio.totalUnifiedAmount.toString())
-            assertEquals(933000L, portfolio.totalUnifiedAmount.amountInMinorUnits)
+            assertEquals(Money.ofMinorUnits(933_000L, Currency.USD), portfolio.totalUnifiedAmount)
 
             // 5. Verificación de Vista Desglosada
             assertEquals(1, portfolio.holdings.size)
@@ -69,7 +70,7 @@ class JohnUsaFeatureTest {
             val stamp = portfolio.primaryProviderStamp
             assertNotNull(stamp)
             assertFalse(stamp.isDegradedFallback)
-            assertEquals(1.0, stamp.exchangeRateToUsd)
+            assertEquals(ExchangeRate.identity(Currency.USD), stamp.rate)
             assertEquals(RateSourceKind.FIXED, stamp.kind)
             assertNull(stamp.reference)
         }

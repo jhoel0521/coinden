@@ -29,9 +29,9 @@ class JohnSatoshiWalletFeatureTest {
     private val transfer = RegisterTransferUseCase(ctx)
     private val status = GetWalletStatusUseCase(repo)
 
-    private fun sats(units: Long) = Money(units, Currency.BTC)
+    private fun sats(units: Long) = Money.ofMinorUnits(units, Currency.BTC)
 
-    private fun usd(cents: Long) = Money(cents, Currency.USD)
+    private fun usd(cents: Long) = Money.ofMinorUnits(cents, Currency.USD)
 
     private suspend fun wallet(
         name: String,
@@ -56,7 +56,7 @@ class JohnSatoshiWalletFeatureTest {
 
             val venta = transfer(hot.id, chase.id, sats(100_000), usd(6_500), at(11))
             val event = assertIs<LedgerEvent.Transfer>(assertIs<WalletOperationResult.EventRecorded>(venta).event)
-            assertEquals(usd(6_500_000), event.derivedRate())
+            assertEquals(usd(6_500_000), event.derivedRate().quoteFor(sats(100_000_000)))
 
             assertEquals(sats(0), status(hot.id)!!.balance)
             assertEquals(usd(456_500), status(chase.id)!!.balance)

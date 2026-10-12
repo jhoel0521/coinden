@@ -60,9 +60,9 @@ class WalletTest {
     fun `el repositorio en memoria nunca reemplaza un evento existente`() =
         runTest {
             val repo = InMemoryWalletRepository()
-            val event = LedgerEvent.Income("e-1", "d", 0, 0, "w-1", Money(100, Currency.BOB))
+            val event = LedgerEvent.Income("e-1", "d", 0, 0, "w-1", Money.ofMinorUnits(100, Currency.BOB))
             repo.appendEvent(event)
-            assertFailsWith<IllegalStateException> { repo.appendEvent(event.copy(amount = Money(999, Currency.BOB))) }
+            assertFailsWith<IllegalStateException> { repo.appendEvent(event.copy(amount = Money.ofMinorUnits(999, Currency.BOB))) }
             assertEquals(listOf(event), repo.allEvents)
         }
 }

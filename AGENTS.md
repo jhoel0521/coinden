@@ -10,7 +10,7 @@ Si una tarea las contradice, detente y pregunta.
 
 1. **Sin servidores de CoinDen ni de terceros.** No agregues backend propio, telemetría, analítica, publicidad ni APIs de IA remotas. La red solo se usa para: (a) consultar las cotizaciones públicas que el usuario configuró, (b) sincronizar P2P entre sus propios dispositivos, y (c) en el futuro, el respaldo cifrado opcional en la nube del propio usuario. Las opciones (b) y (c) son siempre explícitas y van cifradas de extremo a extremo.
 2. **El dominio es determinista.** Parser, categorizador y cálculos son lógica pura que se puede probar en `core/domain`. Los modelos (voz a texto, OCR) se usan solo como adaptadores detrás de un puerto.
-3. **Dinero en enteros.** Usa `Money` (unidades mínimas `Long`). Nunca uses `Double` para guardar o sumar montos.
+3. **Dinero exacto y encapsulado.** Opera solo con `Money`: `Money + Money` y `Money - Money` en la misma moneda, y `Money * ExchangeRate` para cruzar monedas (por ejemplo `bs + (usd * usdToBs)`). Nunca leas su representación interna ni uses `Double` para dinero o tasas; un desbordamiento lanza `ArithmeticException`. Para persistir, usa la forma canónica (`"1188.00 BOB"`).
 4. **Categoría ≠ medio de pago.** "QR", "efectivo" o "Meru" indican la *billetera*, no la *categoría*.
 5. **Capturar ≠ confirmar.** Un borrador no afecta saldos hasta que el usuario lo confirma.
 6. **Sync-ready.** Las entidades usan IDs UUID (nunca autoincrementales); los movimientos son append-only y una corrección es un nuevo evento, no se pisa el anterior. Nada del dominio puede asumir un solo dispositivo.

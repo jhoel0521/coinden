@@ -24,23 +24,21 @@ data class SavedRateSelector(
     val sourceUrl: String,
     val format: ResponseFormat,
     val selectorExpression: String,
-    val lastKnownRate: Double,
+    val lastKnownRate: ExchangeRate,
     val lastSuccessfulFetchEpochMs: Long,
     val status: SelectorStatus = SelectorStatus.ACTIVE,
 ) {
     init {
         require(sourceUrl.isNotBlank()) { "La URL fuente no puede estar vacía" }
         require(selectorExpression.isNotBlank()) { "La expresión del selector no puede estar vacía" }
-        require(lastKnownRate > 0.0) { "La tasa conocida debe ser mayor a cero" }
     }
 
     fun markNeedsReconfirmation(): SavedRateSelector = copy(status = SelectorStatus.NEEDS_RECONFIRMATION)
 
     fun updateRate(
-        newRate: Double,
+        newRate: ExchangeRate,
         fetchEpochMs: Long,
     ): SavedRateSelector {
-        require(newRate > 0.0) { "La nueva tasa debe ser mayor a cero" }
         return copy(
             lastKnownRate = newRate,
             lastSuccessfulFetchEpochMs = fetchEpochMs,
@@ -50,34 +48,28 @@ data class SavedRateSelector(
 }
 
 /**
- * Estrategia polimórfica para determinar el tipo de cambio de una divisa hacia USD.
+ * Estrategia polimórfica para determinar el tipo de cambio de la moneda local.
+ *
+ * Toda tasa se expresa como [ExchangeRate] desde USD hacia la moneda local
+ * ("1 USD = 11.88 BOB"); un usuario cuya moneda local es USD usa la identidad.
  */
 sealed interface ExchangeRateStrategy {
     /** Tasa fija invariable (ej. 1 USD = 1.0 USD o paridad fija). */
-    data class Fixed(val rate: Double) : ExchangeRateStrategy {
-        init {
-            require(rate > 0.0) { "La tasa fija debe ser estrictamente positiva" }
-        }
-    }
+    data class Fixed(val rate: ExchangeRate) : ExchangeRateStrategy
 
     /** Tasa introducida manualmente por el usuario día a día. */
     data class ManualDaily(
-        val rate: Double,
+        val rate: ExchangeRate,
         val updatedAtEpochMs: Long,
-    ) : ExchangeRateStrategy {
-        init {
-            require(rate > 0.0) { "La tasa manual debe ser estrictamente positiva" }
-        }
-    }
+    ) : ExchangeRateStrategy
 
     /** Tasa extraída automáticamente desde una fuente verificada de la lista blanca. */
     data class Verified(
         val sourceId: String,
-        val currentRate: Double,
+        val currentRate: ExchangeRate,
     ) : ExchangeRateStrategy {
         init {
             require(sourceId.isNotBlank()) { "El sourceId no puede estar vacío" }
-            require(currentRate > 0.0) { "La tasa verificada debe ser estrictamente positiva" }
         }
     }
 
@@ -85,7 +77,7 @@ sealed interface ExchangeRateStrategy {
     data class CustomSelector(
         val selector: SavedRateSelector,
     ) : ExchangeRateStrategy {
-        val currentRate: Double get() = selector.lastKnownRate
+        val currentRate: ExchangeRate get() = selector.lastKnownRate
         val isDegraded: Boolean get() = selector.status == SelectorStatus.NEEDS_RECONFIRMATION
     }
 }
