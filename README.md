@@ -24,33 +24,45 @@ Las apps del mercado (Wallet, Toshl, YNAB, Mobills) no sirven aquí:
 
 ## Cómo funciona
 
-```
-  DURANTE EL DIA (segundos)                    EN LA TARDE (minutos)
-  -------------------------                    ---------------------
-  audio  "almuerzo 45 con QR"   --+
-  foto del ticket               --+--> BORRADORES --> REVISAR Y CONFIRMAR
-  comprobante digital           --+    (categoria      (billetera, monto,
-  texto  "vendi 50$ a 11.88"    --+     sugerida)       categoria)
-                                                            |
-                                                            v
-                                             LIBRO DE MOVIMIENTOS POR BILLETERA
-                                                            |
-                         +----------------------+-----------+-----------+
-                         v                      v                       v
-                  en que gaste           dinero libre hasta        metas de ahorro
-                  (por categoria)        fin de mes                (multi-billetera)
+```mermaid
+flowchart TD
+    subgraph DIA["Durante el día (segundos)"]
+        A["🎙️ Audio<br/>'page 3 bs para transporte'"]
+        F["📷 Foto o captura<br/>de un comprobante"]
+        T["⌨️ Texto<br/>'vendí 50$ a 11.88'"]
+    end
+
+    A -->|voz a texto on-device| X["Texto"]
+    F -->|OCR on-device| X
+    T --> X
+
+    X --> I["Intérprete determinista<br/>frases y comprobantes<br/>de cualquier banco o país"]
+    I --> B["Borradores<br/>confianza ALTA / MEDIA / BAJA"]
+
+    subgraph NOCHE["En la noche (minutos)"]
+        R["Revisar y confirmar<br/>lo dudoso primero"]
+    end
+
+    B --> R
+
+    R --> L[("Libro de movimientos<br/>por billetera")]
+    L --> G["¿En qué gasté?<br/>por categoría"]
+    L --> D["Dinero libre<br/>hasta fin de mes"]
+    L --> M["Metas de ahorro<br/>multi-billetera"]
 ```
 
+- **Todo termina en texto.** Voz a texto y OCR solo *perciben* (on-device); un único intérprete determinista convierte ese texto en borradores. Entiende frases ("page 3 bs para trasmporte") y comprobantes de cualquier banco por su estructura; las palabras de cada idioma (inglés base; español y portugués instalables) y los formatos de bancos conocidos (Yape, Banco Económico...) son datos, no código.
+- **Todo borrador es una recomendación.** Cada campo dice de dónde salió (el comprobante, lo que dijiste, una regla, una sugerencia) y el borrador tiene confianza ALTA, MEDIA o BAJA. Una frase sin billetera sugiere efectivo; si fue con QR, habrías compartido el comprobante.
 - **Categoría y medio de pago son ejes distintos.** "Almuerzo 45 Bs con QR": la *categoría* es Comida y el *medio* es la billetera Banco.
 - **El cambio de moneda es una operación con su propia tasa.** "Vendí 50 USD a 11.88" mueve dinero de una billetera en USD a una en BOB con *esa* tasa.
 - **Dinero libre** = saldo confirmado − recurrentes pendientes − cuotas de préstamos + cobros esperados − aportes a metas.
 - **La categorización aprende de tus correcciones.** Cada corrección en la revisión se convierte en una regla local, que se puede explicar y vive solo en tus dispositivos.
 - **Tu celular es tu servidor.** Durante el día capturas en el celular y en la noche revisas en la computadora. Los dos se sincronizan punto a punto, cifrados, sin pasar por ninguna nube.
 
-```
-   CELULAR (captura + servidor) <--- P2P cifrado (red local) ---> PC (revision)
-          |
-          +--- opcional, futuro: respaldo cifrado en TU Google Drive / iCloud
+```mermaid
+flowchart LR
+    C["📱 Celular<br/>captura + servidor"] <-->|"P2P cifrado (red local)"| P["💻 PC<br/>revisión"]
+    C -.->|"opcional, futuro: respaldo cifrado"| N[("☁️ Tu Google Drive / iCloud")]
 ```
 
 ## Principios
@@ -74,12 +86,14 @@ Los principios completos están en [MANIFIESTO.md](MANIFIESTO.md). En resumen:
 | 2 | `draft-inbox`: borradores como máquina de estados, bandeja de revisión y confirmación idempotente | ✅ hecho |
 | 2b | `text-interpreter`: intérprete agnóstico de frases y comprobantes (paquetes en/es/pt y plantillas como datos), confianza ALTA/MEDIA/BAJA por borrador | ✅ hecho |
 | 3 | `expense-categorization`: reglas + aprendizaje por corrección | |
-| 4 | `commitments`: pagos recurrentes y préstamos (debo / me deben) con recordatorios | |
+| 4 | `commitments`: gastos esperados del mes (Netflix "cuando puedo", no un día fijo), préstamos (debo / me deben) y reparto en cuotas | |
 | 5 | `free-to-spend`: dinero libre y la pregunta de la hamburguesa | |
 | 6 | `savings-goals`: metas de ahorro repartidas en varias billeteras | |
-| 7 | `capture-adapters`: voz, foto y comprobante → borrador (on-device) | |
+| 7 | `perception-adapters`: voz a texto y OCR on-device → texto para el intérprete (la interpretación ya está en 2b) | |
 | 8 | `device-sync`: celular como servidor, sincronización P2P cifrada con la PC | |
 | 9 | `cloud-backup` (premium): respaldo cifrado en la nube propia del usuario | futuro |
+
+Mejoras anotadas para el intérprete (2b): detectar comprobantes duplicados por número de transacción, más plantillas de bancos y más paquetes de idioma (datos que puede aportar la comunidad), y traducción con IA solo como respaldo opcional para idiomas sin paquete.
 
 En paralelo vendrán la persistencia cifrada (SQLite/SQLCipher) y la UI en Compose Multiplatform (Android, iOS, Desktop, Web).
 
