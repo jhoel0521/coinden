@@ -1,5 +1,6 @@
 package com.coinden.core.domain.model.interpret
 
+import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.ExchangeRate
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.draft.DraftField
@@ -49,14 +50,18 @@ object PhraseReader {
         ctx: InterpretContext,
     ): List<MovementProposal> = segments(TextNormalizer.words(text), ctx.pack).mapNotNull { readSegment(it, ctx) }
 
-    /** Divide por conectores ("y", "and", "e") solo si cada parte tiene un número. */
+    /**
+     * Divide por conectores ("y", "and", "e") solo si cada parte tiene un número. Un conector
+     * seguido de lo recibido en un cambio ("... y me dieron 1190 bs") no divide.
+     */
     private fun segments(
         words: List<Word>,
         pack: LanguagePack,
     ): List<List<Word>> {
         val parts = mutableListOf(mutableListOf<Word>())
-        words.forEach { word ->
-            if (word.normalized in pack.conjunctions) parts += mutableListOf<Word>() else parts.last() += word
+        words.forEachIndexed { i, word ->
+            val splits = word.normalized in pack.conjunctions && receivedMarkerEnd(words, i + 1, pack) == null
+            if (splits) parts += mutableListOf<Word>() else parts.last() += word
         }
         val merged = mutableListOf<MutableList<Word>>()
         parts.filter { it.isNotEmpty() }.forEach { part ->
@@ -112,41 +117,57 @@ object PhraseReader {
             }
         }
 
-        // Monto y moneda: el primer número que no sea la tasa ("3", "45,50", "$20", "Bs25").
         val scan = { raw: String -> MoneyScanner.scan(raw, ctx.locale, pack.currencyWords).firstOrNull() }
-        val amountIndex =
-            words.indices.firstOrNull { it !in used && words[it].normalized.any(Char::isDigit) && scan(words[it].original) != null }
-                ?: return null
-        val money = scan(words[amountIndex].original)!!
-        used += amountIndex
-        var currency = money.currency
-        var currencyInferred = money.currencyInferred
-        if (currency == null) {
-            // "3 bs", "12 usd", "50 dolares": la moneda en la palabra siguiente.
-            words.getOrNull(amountIndex + 1)?.takeIf { it.normalized.none(Char::isDigit) }?.let { next ->
-                scan("1 ${next.original}")?.takeIf { it.currency != null }?.let {
-                    currency = it.currency
-                    currencyInferred = it.currencyInferred
-                    used += amountIndex + 1
+        val isAmount = { i: Int -> i !in used && words[i].normalized.any(Char::isDigit) && scan(words[i].original) != null }
+
+        // Monto y moneda en una posición: "3 bs", "12 usd", "Bs 36", "$20".
+        fun amountAt(amountIndex: Int): AmountRead {
+            val money = scan(words[amountIndex].original)!!
+            used += amountIndex
+            var currency = money.currency
+            var currencyInferred = money.currencyInferred
+            if (currency == null) {
+                // "3 bs", "12 usd", "50 dolares": la moneda en la palabra siguiente.
+                words.getOrNull(amountIndex + 1)?.takeIf { it.normalized.none(Char::isDigit) }?.let { next ->
+                    scan("1 ${next.original}")?.takeIf { it.currency != null }?.let {
+                        currency = it.currency
+                        currencyInferred = it.currencyInferred
+                        used += amountIndex + 1
+                    }
                 }
             }
-        }
-        if (currency == null) {
-            // "Bs 36", "$ 20": el símbolo en la palabra anterior.
-            words.getOrNull(amountIndex - 1)?.takeIf { it.normalized.none(Char::isDigit) }?.let { prev ->
-                scan("${prev.original}1")?.takeIf { it.currency != null }?.let {
-                    currency = it.currency
-                    currencyInferred = it.currencyInferred
-                    used += amountIndex - 1
+            if (currency == null) {
+                // "Bs 36", "$ 20": el símbolo en la palabra anterior.
+                words.getOrNull(amountIndex - 1)?.takeIf { it.normalized.none(Char::isDigit) }?.let { prev ->
+                    scan("${prev.original}1")?.takeIf { it.currency != null }?.let {
+                        currency = it.currency
+                        currencyInferred = it.currencyInferred
+                        used += amountIndex - 1
+                    }
                 }
             }
-        }
-        val amount =
-            AmountRead(
+            return AmountRead(
                 proposed = ProposedAmount(money.amount.canonical, currency),
                 amountOrigin = if (money.amount.ambiguous) FieldOrigin.INFERRED else FieldOrigin.STATED,
                 currencyOrigin = currency?.let { if (currencyInferred) FieldOrigin.INFERRED else FieldOrigin.STATED },
             )
+        }
+
+        // Lo recibido en un cambio: "me dieron 112 bs", "got 1190 bob", "por 1190 bs". Manda sobre la tasa.
+        var received: AmountRead? = null
+        if (kind == Kind.EXCHANGE) {
+            for (i in words.indices) {
+                if (i in used) continue
+                val end = receivedMarkerEnd(words, i, pack) ?: continue
+                val amountIndex = (end until minOf(end + 2, words.size)).firstOrNull(isAmount) ?: continue
+                (i until end).forEach { used += it }
+                received = amountAt(amountIndex)
+                break
+            }
+        }
+
+        // Monto entregado o gastado: el primer número que no sea la tasa ni lo recibido ("3", "45,50", "$20", "Bs25").
+        val amount = amountAt(words.indices.firstOrNull(isAmount) ?: return null)
 
         // Billetera por alias; si no se nombra, la sugerida por defecto.
         val aliasIndex = words.indices.firstOrNull { it !in used && ctx.directory.byHint(words[it].normalized) != null }
@@ -196,26 +217,45 @@ object PhraseReader {
                         ),
                 )
             Kind.EXCHANGE -> {
-                val into = exchangeInto(amount.proposed, rate, default, ctx.directory)
+                val into = received?.proposed ?: exchangeInto(amount.proposed, rate, default, ctx.directory)
+                val intoOrigin = received?.amountOrigin ?: into?.let { FieldOrigin.INFERRED }
+                // Sin alias, el origen es la única billetera activa en la moneda entregada.
+                val from = wallet ?: soleWalletIn(amount.proposed.currency, ctx.directory)
+                val fromOrigin = walletOrigin ?: from?.let { FieldOrigin.SUGGESTED }
+                val to = exchangeDestination(into?.currency, default, ctx.directory)
                 MovementProposal.Transfer(
                     out = amount.proposed,
-                    from = wallet,
+                    from = from,
                     into = into,
-                    to = default,
+                    to = to,
                     note = note,
                     origins =
                         originsOf(
                             DraftField.KIND to kindOrigin,
                             DraftField.AMOUNT to amount.amountOrigin,
                             DraftField.CURRENCY to amount.currencyOrigin,
-                            DraftField.WALLET to walletOrigin,
-                            DraftField.TO_AMOUNT to into?.let { FieldOrigin.INFERRED },
-                            DraftField.TO_WALLET to default?.let { FieldOrigin.SUGGESTED },
+                            DraftField.WALLET to fromOrigin,
+                            DraftField.TO_AMOUNT to intoOrigin,
+                            DraftField.TO_WALLET to to?.let { FieldOrigin.SUGGESTED },
                         ),
                 )
             }
         }
     }
+
+    /**
+     * Si en [start] empieza un marcador de lo recibido del paquete ("me dieron", "got", "por"),
+     * devuelve la posición siguiente al marcador; si no, null.
+     */
+    private fun receivedMarkerEnd(
+        words: List<Word>,
+        start: Int,
+        pack: LanguagePack,
+    ): Int? =
+        pack.receivedMarkers
+            .map { it.split(' ') }
+            .filter { marker -> marker.indices.all { words.getOrNull(start + it)?.normalized == marker[it] } }
+            .maxOfOrNull { start + it.size }
 
     /** Lo que sigue a la preposición de nota; si no hay, las palabras no usadas en su orden original. */
     private fun note(
@@ -231,6 +271,29 @@ object PhraseReader {
                 words.filterIndexed { i, _ -> i !in used }
             }
         return noteWords.joinToString(" ") { it.original }.ifBlank { null }
+    }
+
+    /** La única billetera activa en [currency]; null si hay varias, ninguna o no se sabe la moneda. */
+    private fun soleWalletIn(
+        currency: Currency?,
+        directory: WalletDirectory,
+    ): WalletRef? {
+        if (currency == null) return null
+        return directory.wallets
+            .filter { it.isActive && it.accepts(currency) }
+            .singleOrNull()
+            ?.let { WalletRef.ById(it.id) }
+    }
+
+    /** Destino de un cambio: la billetera por defecto si acepta lo recibido; si no, la única de esa moneda. */
+    private fun exchangeDestination(
+        received: Currency?,
+        default: WalletRef?,
+        directory: WalletDirectory,
+    ): WalletRef? {
+        val defaultWallet = (default as? WalletRef.ById)?.let { directory.byId(it.walletId) }
+        if (received == null || defaultWallet?.accepts(received) == true) return default
+        return soleWalletIn(received, directory)
     }
 
     /** "vendi 50 dolares a 11.88": lo que llega a la billetera por defecto, calculado con la tasa dicha. */

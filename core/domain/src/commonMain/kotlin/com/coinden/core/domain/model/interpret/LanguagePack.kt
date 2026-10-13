@@ -25,6 +25,11 @@ data class LanguagePack(
     val currencyWords: Map<String, String?>,
     /** Palabras típicas de cada categoría base ("almuerzo" -> FOOD), normalizadas. */
     val categoryWords: Map<String, BaseCategory> = emptyMap(),
+    /**
+     * Marcadores de lo recibido en un cambio ("me dieron 112 bs", "got 1190 bob"); pueden tener
+     * varias palabras. Solo cuentan dentro de un cambio y delante de un monto.
+     */
+    val receivedMarkers: Set<String> = emptySet(),
 )
 
 /** Une varios paquetes activos en uno solo para buscar en todos a la vez. */
@@ -45,6 +50,7 @@ fun List<LanguagePack>.merged(): LanguagePack =
         months = fold(emptyMap()) { acc, pack -> acc + pack.months },
         currencyWords = fold(emptyMap()) { acc, pack -> acc + pack.currencyWords },
         categoryWords = fold(emptyMap()) { acc, pack -> acc + pack.categoryWords },
+        receivedMarkers = flatMap { it.receivedMarkers }.toSet(),
     )
 
 /**
@@ -78,6 +84,7 @@ object LanguagePacks {
             notePrepositions = setOf("for", "on"),
             conjunctions = setOf("and"),
             rateMarkers = setOf("at"),
+            receivedMarkers = setOf("got", "received", "for"),
             months =
                 months(
                     listOf("jan", "january") to 1, listOf("feb", "february") to 2, listOf("mar", "march") to 3,
@@ -123,6 +130,7 @@ object LanguagePacks {
             notePrepositions = setOf("para", "de", "en"),
             conjunctions = setOf("y", "e"),
             rateMarkers = setOf("a"),
+            receivedMarkers = setOf("me dieron", "me dio", "recibi", "por"),
             months =
                 months(
                     listOf("ene", "enero") to 1, listOf("feb", "febrero") to 2, listOf("mar", "marzo") to 3,
@@ -178,6 +186,7 @@ object LanguagePacks {
             notePrepositions = setOf("de", "para", "com"),
             conjunctions = setOf("e"),
             rateMarkers = setOf("a"),
+            receivedMarkers = setOf("me deram", "recebi", "por"),
             months =
                 months(
                     listOf("jan", "janeiro") to 1, listOf("fev", "fevereiro") to 2, listOf("mar", "marco") to 3,

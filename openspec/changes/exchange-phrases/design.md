@@ -26,7 +26,7 @@ Nuevo campo `receivedMarkers: Set<String>` (con valor por defecto vacío para no
 - es: `me dieron`, `me dio`, `recibi`, `por`
 - pt: `me deram`, `recebi`, `por`
 
-`merged()` los une como al resto. Se buscan como secuencia de palabras normalizadas consecutivas, con la misma tolerancia de tipeo que los verbos solo para marcadores de una palabra (`recibi` ≈ `resibi`). Alternativa descartada: reutilizar `incomeWords` ("recibi" ya es verbo de ingreso), porque "dieron", "got" o "for" no son ingresos y "por"/"for" solo son marcadores dentro de un cambio.
+`merged()` los une como al resto. Se buscan como secuencia exacta de palabras normalizadas consecutivas (la normalización ya quita tildes: "recibí" = "recibi"). Sin tolerancia de tipeo: marcadores cortos como "por" o "for" darían falsos positivos; si hiciera falta, se agrega la variante al paquete. Alternativa descartada: reutilizar `incomeWords` ("recibi" ya es verbo de ingreso), porque "dieron", "got" o "for" no son ingresos y "por"/"for" solo son marcadores dentro de un cambio.
 
 ### D2. Un marcador solo cuenta dentro de un cambio y antes de un monto
 Un marcador se reconoce únicamente si el segmento es `Kind.EXCHANGE` y la palabra siguiente al marcador es un monto (con moneda opcional delante o detrás, como el monto principal). Así "for transportation" o "para trasmporte" siguen siendo notas, y "recibí 500 bs" sigue siendo un ingreso (no hay verbo de cambio).

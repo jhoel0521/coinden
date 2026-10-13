@@ -32,7 +32,8 @@ class PhraseReaderTest {
         text: String,
         pack: LanguagePack = es,
         locale: UserLocale = UserLocale("es", "BO"),
-    ) = PhraseReader.read(text, InterpretContext(pack, locale, -240, directory))
+        wallets: WalletDirectory = directory,
+    ) = PhraseReader.read(text, InterpretContext(pack, locale, -240, wallets))
 
     private val suggestedCash = WalletRef.ById("billetera")
 
@@ -110,10 +111,112 @@ class PhraseReaderTest {
         assertEquals(ProposedAmount("50", Currency.USD), transfer.out)
         assertEquals(ProposedAmount("594.00", Currency.BOB), transfer.into)
         assertEquals(suggestedCash, transfer.to)
-        assertEquals(null, transfer.from)
+        assertEquals(WalletRef.ById("colchon"), transfer.from)
+        assertEquals(FieldOrigin.SUGGESTED, transfer.origins[DraftField.WALLET])
         assertEquals(FieldOrigin.STATED, transfer.origins[DraftField.KIND])
         assertEquals(FieldOrigin.INFERRED, transfer.origins[DraftField.TO_AMOUNT])
         assertEquals(FieldOrigin.SUGGESTED, transfer.origins[DraftField.TO_WALLET])
+    }
+
+    // --- Cambio por entrada y salida (el trato real del librecambista) ---
+
+    private fun exchange(
+        text: String,
+        pack: LanguagePack = es,
+    ) = read(text, pack).single() as MovementProposal.Transfer
+
+    @Test
+    fun `vendi 11 dolares, me dieron 112 bs`() {
+        val transfer = exchange("vendí 11 dólares, me dieron 112 bs")
+        assertEquals(ProposedAmount("11", Currency.USD), transfer.out)
+        assertEquals(ProposedAmount("112", Currency.BOB), transfer.into)
+        assertEquals(null, transfer.note)
+        assertEquals(FieldOrigin.STATED, transfer.origins[DraftField.TO_AMOUNT])
+    }
+
+    @Test
+    fun `un conector antes de lo recibido no parte el cambio`() {
+        val proposals = read("vendi 100 dolares y me dieron 1190 bs")
+        val transfer = proposals.single() as MovementProposal.Transfer
+        assertEquals(ProposedAmount("100", Currency.USD), transfer.out)
+        assertEquals(ProposedAmount("1190", Currency.BOB), transfer.into)
+    }
+
+    @Test
+    fun `cambie 100 usd por 1190 bs`() {
+        val transfer = exchange("cambié 100 usd por 1190 bs")
+        assertEquals(ProposedAmount("100", Currency.USD), transfer.out)
+        assertEquals(ProposedAmount("1190", Currency.BOB), transfer.into)
+    }
+
+    @Test
+    fun `lo recibido manda sobre la tasa dicha`() {
+        val transfer = exchange("vendí 100 dólares a 11.80, me dieron 1190 bs")
+        assertEquals(ProposedAmount("1190", Currency.BOB), transfer.into)
+        assertEquals(null, transfer.note)
+    }
+
+    @Test
+    fun `lo recibido sin moneda toma la de la billetera destino`() {
+        val transfer = exchange("vendí 100 dólares, me dieron 1190")
+        assertEquals(ProposedAmount("1190"), transfer.into)
+        assertEquals(suggestedCash, transfer.to)
+    }
+
+    @Test
+    fun `sold 100 usd, got 1190 bob`() {
+        val transfer = exchange("sold 100 usd, got 1190 bob", pack = en)
+        assertEquals(ProposedAmount("100", Currency.USD), transfer.out)
+        assertEquals(ProposedAmount("1190", Currency.BOB), transfer.into)
+    }
+
+    @Test
+    fun `vendi 100 dolares, recebi 530 reais`() {
+        val transfer = exchange("vendi 100 dólares, recebi 530 reais", pack = pt)
+        assertEquals(ProposedAmount("100", Currency.USD), transfer.out)
+        assertEquals(ProposedAmount("530", Currency.BRL), transfer.into)
+    }
+
+    // --- Billeteras sugeridas por moneda en un cambio ---
+
+    @Test
+    fun `el origen es la unica billetera en la moneda entregada`() {
+        val transfer = exchange("vendí 11 dólares, me dieron 112 bs")
+        assertEquals(WalletRef.ById("colchon"), transfer.from)
+        assertEquals(suggestedCash, transfer.to)
+        assertEquals(FieldOrigin.SUGGESTED, transfer.origins[DraftField.WALLET])
+        assertEquals(FieldOrigin.SUGGESTED, transfer.origins[DraftField.TO_WALLET])
+    }
+
+    @Test
+    fun `con dos billeteras en la moneda entregada el origen queda vacio`() {
+        val otra = Wallet("dolares-banco", "u", "Dólares banco", Currency.USD, WalletType.BANK)
+        val wallets = directory.copy(wallets = directory.wallets + otra)
+        val transfer = read("vendí 11 dólares, me dieron 112 bs", wallets = wallets).single() as MovementProposal.Transfer
+        assertEquals(null, transfer.from)
+        assertEquals(null, transfer.origins[DraftField.WALLET])
+    }
+
+    @Test
+    fun `el destino es la unica billetera de la moneda recibida si la de por defecto no la acepta`() {
+        val transfer = exchange("vendí 1190 bs, me dieron 100 dólares")
+        assertEquals(null, transfer.from)
+        assertEquals(WalletRef.ById("colchon"), transfer.to)
+        assertEquals(FieldOrigin.SUGGESTED, transfer.origins[DraftField.TO_WALLET])
+    }
+
+    @Test
+    fun `las billeteras archivadas no cuentan para sugerir`() {
+        val archivada = Wallet("dolares-viejos", "u", "Dólares viejos", Currency.USD, WalletType.CASH).archived()
+        val wallets = directory.copy(wallets = directory.wallets + archivada)
+        val transfer = read("vendí 11 dólares, me dieron 112 bs", wallets = wallets).single() as MovementProposal.Transfer
+        assertEquals(WalletRef.ById("colchon"), transfer.from)
+    }
+
+    @Test
+    fun `recibi 500 bs sin verbo de cambio sigue siendo un ingreso`() {
+        val income = read("recibí 500 bs").single() as MovementProposal.Income
+        assertEquals(ProposedAmount("500", Currency.BOB), income.amount)
     }
 
     @Test
