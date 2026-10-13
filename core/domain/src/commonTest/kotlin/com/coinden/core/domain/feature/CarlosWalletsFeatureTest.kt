@@ -107,4 +107,34 @@ class CarlosWalletsFeatureTest {
             // 756.00 + 19,800.00 + 450 USD x 11.20 (5,040.00) = 25,596.00 Bs
             assertEquals(bs(2_559_600), consolidated.totalUnifiedAmount)
         }
+
+    /**
+     * En el librecambista la tasa que se anuncia ("a 11 y algo") no es la que se cierra:
+     * para convencerlo le ofrecen 1190 Bs por sus 100 USD. Carlos registra lo que entregó y lo
+     * que recibió; la tasa sale de esos dos montos, exacta, sin que nadie la escriba.
+     */
+    @Test
+    fun `en el librecambista Carlos registra entrada y salida y la tasa se deriva exacta`() =
+        runTest {
+            val billetera = wallet("Billetera", bs(0), WalletType.CASH)
+            val colchon = wallet("Dólares colchón", usd(11_100), WalletType.CASH)
+
+            // "Por tus 100 dólares te doy 1190 Bs"
+            val trato = transfer(colchon.id, billetera.id, usd(10_000), bs(119_000), at(10))
+            val tratoEvent = assertIs<LedgerEvent.Transfer>(assertIs<WalletOperationResult.EventRecorded>(trato).event)
+            assertEquals(ExchangeRate.of(usd(10_000), bs(119_000)), tratoEvent.derivedRate())
+            assertEquals(bs(1_190), tratoEvent.derivedRate().quoteFor(usd(100)))
+
+            // "Vendí 11 dólares, me dieron 112 Bs": tasa 112/11 (10.1818...), sin decimal inventado
+            val suelto = transfer(colchon.id, billetera.id, usd(1_100), bs(11_200), at(16))
+            val rate = assertIs<LedgerEvent.Transfer>(assertIs<WalletOperationResult.EventRecorded>(suelto).event).derivedRate()
+            assertEquals(ExchangeRate.of(usd(11), bs(112)), rate)
+            assertEquals(bs(11_200), usd(1_100) * rate)
+            // Redondear la tasa a 10.18 habría perdido 2 centavos en la misma operación
+            assertEquals(bs(11_198), usd(1_100) * ExchangeRate.parse(Currency.USD, Currency.BOB, "10.18"))
+
+            // Los saldos son exactamente lo que entró y salió
+            assertEquals(usd(0), status(colchon.id)!!.balance)
+            assertEquals(bs(130_200), status(billetera.id)!!.balance)
+        }
 }
