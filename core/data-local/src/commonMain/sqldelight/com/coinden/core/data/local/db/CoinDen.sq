@@ -1,0 +1,156 @@
+-- Esquema local de CoinDen (versión 1).
+-- Los eventos son de solo agregar: sobre events y event_refs solo hay INSERT y SELECT.
+-- seq es solo el orden local de inserción: nunca sale del dispositivo ni identifica nada (el id es el UUID).
+
+CREATE TABLE events (
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT NOT NULL UNIQUE,
+    stream TEXT NOT NULL,
+    owner_id TEXT,
+    device_id TEXT NOT NULL,
+    occurred_at INTEGER NOT NULL,
+    recorded_at INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    version INTEGER NOT NULL,
+    payload TEXT NOT NULL
+);
+
+CREATE INDEX events_stream_owner ON events(stream, owner_id);
+
+-- A qué billetera(s), borrador o movimiento pertenece cada evento (una transferencia tiene dos).
+CREATE TABLE event_refs (
+    event_id TEXT NOT NULL,
+    ref TEXT NOT NULL,
+    PRIMARY KEY (event_id, ref)
+);
+
+CREATE INDEX event_refs_ref ON event_refs(ref);
+
+CREATE TABLE wallets (
+    id TEXT NOT NULL PRIMARY KEY,
+    owner_id TEXT NOT NULL,
+    payload TEXT NOT NULL
+);
+
+CREATE TABLE wallet_aliases (
+    owner_id TEXT NOT NULL,
+    alias TEXT NOT NULL,
+    wallet_id TEXT NOT NULL,
+    PRIMARY KEY (owner_id, alias)
+);
+
+CREATE TABLE default_wallets (
+    owner_id TEXT NOT NULL PRIMARY KEY,
+    wallet_id TEXT
+);
+
+CREATE TABLE category_rules (
+    owner_id TEXT NOT NULL,
+    rule_key TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    PRIMARY KEY (owner_id, rule_key)
+);
+
+CREATE TABLE custom_categories (
+    id TEXT NOT NULL PRIMARY KEY,
+    owner_id TEXT NOT NULL,
+    payload TEXT NOT NULL
+);
+
+CREATE TABLE currency_profiles (
+    user_id TEXT NOT NULL PRIMARY KEY,
+    payload TEXT NOT NULL
+);
+
+CREATE TABLE app_identity (
+    name TEXT NOT NULL PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+-- Eventos -------------------------------------------------------------------
+
+insertEvent:
+INSERT INTO events(id, stream, owner_id, device_id, occurred_at, recorded_at, type, version, payload)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+insertEventRef:
+INSERT INTO event_refs(event_id, ref) VALUES (?, ?);
+
+eventExists:
+SELECT count(*) FROM events WHERE id = ?;
+
+eventById:
+SELECT type, version, payload FROM events WHERE id = ? AND stream = ?;
+
+eventsByRef:
+SELECT e.type, e.version, e.payload
+FROM events e JOIN event_refs r ON r.event_id = e.id
+WHERE r.ref = ? AND e.stream = ?
+ORDER BY e.seq;
+
+eventsByOwner:
+SELECT type, version, payload FROM events WHERE stream = ? AND owner_id = ? ORDER BY seq;
+
+refsByOwner:
+SELECT r.ref
+FROM events e JOIN event_refs r ON r.event_id = e.id
+WHERE e.stream = ? AND e.owner_id = ?
+GROUP BY r.ref
+ORDER BY min(e.seq);
+
+-- Estado configurable (se reemplaza; el orden de creación se conserva por rowid) --
+
+upsertWallet:
+INSERT INTO wallets(id, owner_id, payload) VALUES (?, ?, ?)
+ON CONFLICT(id) DO UPDATE SET owner_id = excluded.owner_id, payload = excluded.payload;
+
+walletById:
+SELECT payload FROM wallets WHERE id = ?;
+
+walletsByOwner:
+SELECT payload FROM wallets WHERE owner_id = ? ORDER BY rowid;
+
+deleteAliasesOfWallet:
+DELETE FROM wallet_aliases WHERE owner_id = ? AND wallet_id = ?;
+
+insertAlias:
+INSERT OR REPLACE INTO wallet_aliases(owner_id, alias, wallet_id) VALUES (?, ?, ?);
+
+aliasesByOwner:
+SELECT alias, wallet_id FROM wallet_aliases WHERE owner_id = ? ORDER BY rowid;
+
+upsertDefaultWallet:
+INSERT INTO default_wallets(owner_id, wallet_id) VALUES (?, ?)
+ON CONFLICT(owner_id) DO UPDATE SET wallet_id = excluded.wallet_id;
+
+defaultWallet:
+SELECT wallet_id FROM default_wallets WHERE owner_id = ?;
+
+upsertRule:
+INSERT INTO category_rules(owner_id, rule_key, payload) VALUES (?, ?, ?)
+ON CONFLICT(owner_id, rule_key) DO UPDATE SET payload = excluded.payload;
+
+rulesByOwner:
+SELECT payload FROM category_rules WHERE owner_id = ? ORDER BY rowid;
+
+upsertCustomCategory:
+INSERT INTO custom_categories(id, owner_id, payload) VALUES (?, ?, ?)
+ON CONFLICT(id) DO UPDATE SET owner_id = excluded.owner_id, payload = excluded.payload;
+
+customCategoriesByOwner:
+SELECT payload FROM custom_categories WHERE owner_id = ? ORDER BY rowid;
+
+upsertProfile:
+INSERT INTO currency_profiles(user_id, payload) VALUES (?, ?)
+ON CONFLICT(user_id) DO UPDATE SET payload = excluded.payload;
+
+profileByUser:
+SELECT payload FROM currency_profiles WHERE user_id = ?;
+
+-- Identidad del dispositivo y del usuario local -------------------------------
+
+identityValue:
+SELECT value FROM app_identity WHERE name = ?;
+
+insertIdentity:
+INSERT INTO app_identity(name, value) VALUES (?, ?);

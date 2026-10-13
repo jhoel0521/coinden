@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_title">CoinDen</string>
-    <string name="demo_notice">Demostración: los datos viven en memoria y se pierden al cerrar la app.</string>
+    <string name="demo_notice">Demostración: tus datos se guardan cifrados en este teléfono.</string>
     <string name="capture_hint">Escribe un gasto, por ejemplo: almuerzo 45 qr</string>
     <string name="capture_button">Capturar</string>
     <string name="capture_empty">Todavía no hay borradores. Escribe una frase y captúrala.</string>

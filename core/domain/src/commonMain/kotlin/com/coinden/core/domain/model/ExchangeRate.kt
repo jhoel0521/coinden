@@ -46,7 +46,13 @@ class ExchangeRate private constructor(
 
     override fun hashCode(): Int = ((from.hashCode() * 31 + to.hashCode()) * 31 + numerator.hashCode()) * 31 + denominator.hashCode()
 
-    /** Forma canónica: "1 USD = 11.88 BOB" (cotización de una unidad mayor, redondeada solo para mostrar). */
+    /**
+     * Forma canónica para persistir: la fracción reducida de unidades mínimas, "numerador/denominador".
+     * "11 USD por 112 BOB" es "112/11", nunca el decimal 10.1818... Se lee con [parseCanonical].
+     */
+    fun toCanonical(): String = "$numerator/$denominator"
+
+    /** Para mostrar: "1 USD = 11.88 BOB" (cotización de una unidad mayor, redondeada solo para mostrar). */
     override fun toString(): String = "1 ${from.code} = ${quoteFor(Money.parseCanonical("1", from))}"
 
     companion object {
@@ -58,6 +64,24 @@ class ExchangeRate private constructor(
             require(!base.currency.isSameAs(quote.currency)) { "Una tasa necesita dos monedas distintas" }
             require(base.isPositive && quote.isPositive) { "Los montos de una tasa deben ser positivos" }
             return create(base.currency, quote.currency, quote.minorUnits, base.minorUnits)
+        }
+
+        /**
+         * Lee la forma canónica de [toCanonical] ("112/11"): dos enteros positivos de unidades
+         * mínimas. Se reduce al leerla. Una moneda consigo misma solo admite la identidad ("1/1").
+         */
+        fun parseCanonical(
+            canonical: String,
+            from: Currency,
+            to: Currency,
+        ): ExchangeRate {
+            val match = requireNotNull(Regex("""^(\d+)/(\d+)$""").matchEntire(canonical)) { "Tasa canónica inválida: '$canonical'" }
+            val numerator = requireNotNull(match.groupValues[1].toLongOrNull()) { "Tasa canónica inválida: '$canonical'" }
+            val denominator = requireNotNull(match.groupValues[2].toLongOrNull()) { "Tasa canónica inválida: '$canonical'" }
+            require(numerator > 0L && denominator > 0L) { "La tasa debe ser positiva: '$canonical'" }
+            val rate = create(from, to, numerator, denominator)
+            require(!from.isSameAs(to) || rate.numerator == rate.denominator) { "Una moneda consigo misma solo admite la tasa 1/1" }
+            return rate
         }
 
         /** Tasa 1:1 de una moneda consigo misma (por ejemplo, un usuario cuya moneda local es USD). */

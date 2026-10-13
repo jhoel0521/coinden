@@ -81,4 +81,23 @@ class CaptureDemoPresenterTest {
 
             assertTrue(presenter.state.value.cards.isEmpty())
         }
+
+    @Test
+    fun `al abrir muestra los borradores pendientes guardados, mas recientes primero`() =
+        runTest {
+            val container = testContainer()
+            DemoSeed.seed(container)
+            val yesterday = CaptureDemoPresenter(container)
+            yesterday.onTextChange("page 3 bs para trasmporte")
+            yesterday.onCapture()
+            yesterday.onTextChange("almuerzo 45 qr")
+            yesterday.onCapture()
+
+            // La app se vuelve a abrir: un presentador nuevo sobre el mismo almacenamiento
+            val today = CaptureDemoPresenter(container)
+            today.load()
+
+            assertEquals(listOf("almuerzo 45 qr", "page 3 bs para trasmporte"), today.state.value.cards.map { it.evidenceText })
+            assertEquals(yesterday.state.value.cards, today.state.value.cards)
+        }
 }

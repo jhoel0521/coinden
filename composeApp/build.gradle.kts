@@ -29,6 +29,7 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
+            implementation(project(":core:data-local"))
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

@@ -17,4 +17,5 @@ rootProject.name = "coinden"
 
 include(":core:domain")
 include(":core:data-memory")
+include(":core:data-local")
 include(":composeApp")

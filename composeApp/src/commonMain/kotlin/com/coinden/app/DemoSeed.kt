@@ -6,12 +6,13 @@ import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
 
 /**
- * Billeteras de ejemplo para la demostración, creadas con los casos de uso del dominio.
- * Desaparece cuando exista la pantalla de billeteras (onboarding-wallets-ui).
+ * Billeteras de ejemplo para la demostración, creadas con los casos de uso del dominio, solo
+ * si el usuario todavía no tiene billeteras. Desaparece con la pantalla de billeteras (onboarding-wallets-ui).
  */
 object DemoSeed {
     suspend fun seed(container: AppContainer) {
         val owner = container.ownerId
+        if (container.drafts.wallets.listWallets(owner).isNotEmpty()) return
         val cash = create(container, "Billetera", WalletType.CASH, "100")
         val bank = create(container, "BNB Bs", WalletType.BANK, "500")
         container.setDefaultWallet(owner, cash)

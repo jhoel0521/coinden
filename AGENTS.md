@@ -10,7 +10,7 @@ Si una tarea las contradice, detente y pregunta.
 
 1. **Sin servidores de CoinDen ni de terceros.** No agregues backend propio, telemetría, analítica, publicidad ni APIs de IA remotas. La red solo se usa para: (a) consultar las cotizaciones públicas que el usuario configuró, (b) sincronizar P2P entre sus propios dispositivos, (c) en el futuro, el respaldo cifrado opcional en la nube del propio usuario, y (d) descargar paquetes de idioma y plantillas de comprobantes (datos públicos; nunca se envían datos del usuario). Las opciones (b) y (c) son siempre explícitas y van cifradas de extremo a extremo.
 2. **El dominio es determinista.** Parser, categorizador y cálculos son lógica pura que se puede probar en `core/domain`. Los modelos (voz a texto, OCR) se usan solo como adaptadores detrás de un puerto: todo origen llega como texto al `TextDraftInterpreter`. Las palabras de cada idioma y los formatos de cada banco viven en paquetes y plantillas como datos, nunca en el código.
-3. **Dinero exacto y encapsulado.** Opera solo con `Money`: `Money + Money` y `Money - Money` en la misma moneda, y `Money * ExchangeRate` para cruzar monedas (por ejemplo `bs + (usd * usdToBs)`). Nunca leas su representación interna ni uses `Double` para dinero o tasas; un desbordamiento lanza `ArithmeticException`. Para persistir, usa la forma canónica (`"1188.00 BOB"`).
+3. **Dinero exacto y encapsulado.** Opera solo con `Money`: `Money + Money` y `Money - Money` en la misma moneda, y `Money * ExchangeRate` para cruzar monedas (por ejemplo `bs + (usd * usdToBs)`). Nunca leas su representación interna ni uses `Double` para dinero o tasas; un desbordamiento lanza `ArithmeticException`. Para persistir, usa la forma canónica exacta: el monto con su moneda (`"1188.00"` + `BOB`) y la tasa como fracción de unidades mínimas (`ExchangeRate.toCanonical()`, por ejemplo `"112/11"`).
 4. **Categoría ≠ medio de pago.** "QR", "efectivo" o "Meru" indican la *billetera*, no la *categoría*.
 5. **Capturar ≠ confirmar.** Un borrador no afecta saldos hasta que el usuario lo confirma.
 6. **Sync-ready.** Las entidades usan IDs UUID (nunca autoincrementales); los movimientos son append-only y una corrección es un nuevo evento, no se pisa el anterior. Nada del dominio puede asumir un solo dispositivo.
@@ -45,7 +45,9 @@ core/domain/src/
 ```
 
 ```
-core/data-memory/   adaptadores en memoria de los puertos (hasta local-persistence)
+core/data-memory/   adaptadores en memoria de los puertos (pruebas y referencia)
+core/data-local/    base local cifrada: SQLDelight + SQLCipher, eventos versionados (sobre + JSON)
+  jvmTest/          batería de contrato que corren memoria y base local por igual
 composeApp/         app Compose Multiplatform (hoy solo Android)
   commonMain/       UI, presentadores sin Compose y AppContainer (DI manual)
   androidMain/      Application, MainActivity
@@ -67,7 +69,8 @@ composeApp/         app Compose Multiplatform (hoy solo Android)
 
 | Acción | Comando |
 |--------|---------|
-| Pruebas | `npm test` (= `./gradlew :core:domain:jvmTest :core:data-memory:jvmTest :composeApp:testDebugUnitTest`) |
+| Pruebas | `npm test` (= `./gradlew :core:domain:jvmTest :core:data-memory:jvmTest :core:data-local:jvmTest :composeApp:testDebugUnitTest`) |
+| Pruebas de cifrado (emulador) | `./gradlew :core:data-local:connectedDebugAndroidTest` |
 | APK de depuración | `npm run build:android` (= `./gradlew :composeApp:assembleDebug`) |
 | Lint | `npm run lint` (= `./gradlew ktlintCheck`) |
 | Formato | `npm run format` (= `./gradlew ktlintFormat`) |

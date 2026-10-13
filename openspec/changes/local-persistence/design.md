@@ -25,6 +25,7 @@ Ver proposal.md (Why) y los specs `local-persistence` y `app-shell`. Hoy la app 
 | AndroidX SQLite | 2.4.x | requerido por SQLCipher y por el driver Android de SQLDelight |
 | kotlinx.serialization JSON | 1.7.3 + plugin `org.jetbrains.kotlin.plugin.serialization` 2.0.21 | JSON del contenido de los eventos, multiplataforma |
 | Driver JVM de SQLDelight | `app.cash.sqldelight:sqlite-driver` 2.0.2 | pruebas de contrato en la JVM (sin cifrado) |
+| Dialecto SQLDelight | `sqlite-3-25-dialect` 2.0.2 | el dialecto por defecto (3.18) no admite `ON CONFLICT ... DO UPDATE`; SQLCipher 4.6 trae SQLite 3.46 y el driver JDBC uno reciente |
 
 Alternativas descartadas: Room KMP (más acoplado a Android y su soporte multiplataforma es más reciente), Realm (discontinuado), ObjectBox (el cifrado es comercial) y archivos JSON propios (habría que inventar atomicidad, índices y cifrado). Si alguna versión no compila con Kotlin 2.0.21/AGP 8.5.2 se ajusta la versión menor y se documenta aquí.
 
@@ -100,7 +101,7 @@ Se unifica la redacción en `MANIFIESTO.md` (principio 6), `AGENTS.md` (regla 3)
 ## Risks / Trade-offs
 - [Las migraciones del contenido pasan a Kotlin] → `version` por evento desde el día 1 y pruebas con JSON de cada versión.
 - [SQL no valida el contenido JSON] → el dominio valida antes de guardar; las pruebas de ida y vuelta cubren todos los tipos.
-- [SQLCipher agrega algunos MB al APK y un costo de CPU pequeño] → aceptable para datos financieros; se mide el tamaño del APK en la verificación.
+- [SQLCipher agrega peso al APK y un costo de CPU pequeño] → medido: el APK de depuración pasó de 9 MB a 31 MB por las librerías nativas de las 4 arquitecturas. En la publicación se reparte por arquitectura (App Bundle), así que cada teléfono descarga solo la suya.
 - [El cifrado no se prueba en CI] → prueba instrumentada local y verificación en el emulador antes de archivar.
 - [Si se borran los datos de la app o se pierde el Keystore, los datos son irrecuperables] → es el comportamiento esperado sin respaldo; lo resuelve `cloud-backup`.
 - [`runBlocking` al iniciar] → base pequeña y local; se revisa al llegar las pantallas reales.

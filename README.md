@@ -152,8 +152,9 @@ npm run format
 npm run build:android
 ```
 
-`npm test` corre las pruebas del dominio (unitarias y de feature con las personas), las de los adaptadores en
-memoria y las de la app en la JVM. `npm run build:android` genera el APK de depuración en
+`npm test` corre las pruebas del dominio (unitarias y de feature con las personas), la batería de contrato de los
+almacenamientos (en memoria y base local) y las de la app en la JVM. El cifrado de la base se prueba en un emulador
+o teléfono conectado con `./gradlew :core:data-local:connectedDebugAndroidTest`. `npm run build:android` genera el APK de depuración en
 `composeApp/build/outputs/apk/debug/`; el CI lo publica como artefacto en cada push.
 
 Si trabajas con agentes de IA, lee [AGENTS.md](AGENTS.md).

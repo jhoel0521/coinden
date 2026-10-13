@@ -45,7 +45,7 @@ Es corto a propósito: si una regla no cabe aquí, pertenece a un spec.
 3. **Tasas reales:** se usa la tasa que el usuario realmente usa (paralelo, Meru, manual), no la oficial impuesta.
 4. **Inteligencia determinista y local:** la categorización y la interpretación son reglas que se pueden probar y explicar. Los modelos (voz a texto, OCR) solo *perciben*, corren on-device y nunca deciden.
 5. **Capturar rápido, confirmar con calma:** registrar toma segundos y genera borradores. La precisión llega en la revisión.
-6. **Dinero exacto:** los montos se guardan como enteros en unidades mínimas. Nunca se usan flotantes para guardar dinero.
+6. **Dinero exacto:** nunca se usan flotantes para el dinero ni para las tasas. En memoria, un monto es un entero en unidades mínimas y una tasa es una fracción de enteros; al guardarlos se usa su forma canónica exacta (`"1188.00"` con su moneda, `"297/25"`), que equivale a esas unidades.
 7. **Listo para sincronizar desde el día 1:** IDs globales (UUID), movimientos append-only y correcciones como nuevos eventos. Ninguna decisión de hoy puede impedir la sincronización P2P ni el respaldo de mañana.
 8. **Sostenible sin traicionar al usuario:** el núcleo es gratis para siempre y el proyecto vive de donaciones. Lo premium solo agrega comodidad (por ejemplo, respaldo en tu nube), nunca encierra tus datos. Sin publicidad ni venta de datos.
 9. **Mundial desde el día 1:** el dominio no contiene textos de idioma ni formatos regionales. Devuelve enums, códigos e IDs, y la presentación traduce y formatea según el locale. La app empieza en español y luego suma idiomas; el proyecto (specs, commits, docs) se escribe en español.

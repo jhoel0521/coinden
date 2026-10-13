@@ -66,6 +66,15 @@ class CaptureDemoPresenter(
         mutableState.update { it.copy(text = text) }
     }
 
+    /** Al abrir: los borradores pendientes guardados, más recientes primero. */
+    suspend fun load() {
+        val owner = container.ownerId
+        val directory = container.drafts.directory(owner)
+        val pending = container.draftInbox(owner).pending.sortedByDescending { it.header.capturedAtEpochMs }
+        val cards = pending.map { card(it, directory) }
+        mutableState.update { it.copy(cards = cards) }
+    }
+
     suspend fun onCapture() {
         val text = state.value.text.trim()
         if (text.isEmpty()) return

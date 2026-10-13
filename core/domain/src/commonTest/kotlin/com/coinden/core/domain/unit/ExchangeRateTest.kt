@@ -117,4 +117,47 @@ class ExchangeRateTest {
     fun `representacion canonica de la tasa`() {
         assertEquals("1 USD = 11.88 BOB", usdToBs.toString())
     }
+
+    // --- Forma canónica para persistir: fracción exacta de unidades mínimas ---
+
+    @Test
+    fun `la forma canonica es la fraccion reducida de unidades minimas`() {
+        // 11.00 USD -> 112.00 BOB: 11200 / 1100 centavos = 112/11
+        assertEquals("112/11", ExchangeRate.of(usd("11"), bs("112")).toCanonical())
+        assertEquals("297/25", ExchangeRate.parse(Currency.USD, Currency.BOB, "11.88").toCanonical())
+        assertEquals("1/1", ExchangeRate.identity(Currency.BOB).toCanonical())
+    }
+
+    @Test
+    fun `ida y vuelta exacta de tasas decimales, fraccionarias, inversas e identidad`() {
+        val vale = Currency(code = "VALE", decimals = 0, isCustom = true)
+        val rates =
+            listOf(
+                ExchangeRate.parse(Currency.USD, Currency.BOB, "11.88"),
+                ExchangeRate.of(usd("11"), bs("112")),
+                // 1 USD = 1/3 de VALE: no tiene decimal exacto
+                ExchangeRate.of(usd("3"), Money.parseCanonical("1", vale)),
+                ExchangeRate.of(usd("11"), bs("112")).inverse(),
+                ExchangeRate.of(btc("1"), usd("62345.67")),
+                ExchangeRate.identity(Currency.USD),
+            )
+        rates.forEach { rate ->
+            assertEquals(rate, ExchangeRate.parseCanonical(rate.toCanonical(), rate.from, rate.to))
+        }
+    }
+
+    @Test
+    fun `la forma canonica se reduce al leerla`() {
+        assertEquals(ExchangeRate.of(usd("11"), bs("112")), ExchangeRate.parseCanonical("224/22", Currency.USD, Currency.BOB))
+    }
+
+    @Test
+    fun `rechaza formas canonicas invalidas`() {
+        listOf("", "11.88", "112", "/11", "112/", "-112/11", "112/-11", "0/11", "112/0", "a/b", "1 12/11").forEach { text ->
+            assertFailsWith<IllegalArgumentException>(text) { ExchangeRate.parseCanonical(text, Currency.USD, Currency.BOB) }
+        }
+        // una moneda consigo misma solo admite la identidad
+        assertFailsWith<IllegalArgumentException> { ExchangeRate.parseCanonical("112/11", Currency.BOB, Currency.BOB) }
+        assertEquals(ExchangeRate.identity(Currency.BOB), ExchangeRate.parseCanonical("1/1", Currency.BOB, Currency.BOB))
+    }
 }

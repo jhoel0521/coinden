@@ -19,7 +19,7 @@ context: |
   Categoría (en qué) y medio de pago (de qué billetera) son ejes distintos.
   Capturar ≠ confirmar: los borradores no afectan saldos hasta que el usuario los confirma.
   Mundial: el dominio no contiene textos de idioma ni formatos regionales (solo enums/códigos/IDs); la UI traduce. La app inicia en español; los artefactos se escriben en español.
-  Montos como enteros en unidades mínimas; nunca Double para dinero.
+  Dinero exacto: nunca Double para dinero ni tasas; en memoria, enteros en unidades mínimas y tasas como fracciones; al persistir, forma canónica exacta (monto con su moneda, tasa como fracción).
   Cada escenario WHEN/THEN debe poder probarse; las pruebas de feature usan las personas John, Carlos, Facundo, Sophie y Wei.
   Cada proposal declara explícitamente qué queda fuera de alcance (Non-Goals).
 

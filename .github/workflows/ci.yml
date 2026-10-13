@@ -50,7 +50,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run test suite
-        run: ./gradlew :core:domain:jvmTest :core:data-memory:jvmTest :composeApp:testDebugUnitTest
+        run: ./gradlew :core:domain:jvmTest :core:data-memory:jvmTest :core:data-local:jvmTest :composeApp:testDebugUnitTest
 
   build:
     name: Build Artifacts Check

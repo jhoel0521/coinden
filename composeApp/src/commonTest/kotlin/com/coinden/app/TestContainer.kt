@@ -13,9 +13,14 @@ class SteppingClock(
     override fun nowEpochMs(): Long = now.also { now += 1_000 }
 }
 
-/** Contenedor como el de un teléfono de Carlos en Bolivia (es-BO, UTC-4). */
-fun testContainer(): AppContainer =
+/** Contenedor como el de un teléfono de Carlos en Bolivia (es-BO, UTC-4), en memoria. */
+fun testContainer(
+    storage: AppStorage = AppStorage.inMemory(),
+    ownerId: String = "carlos-${storage.hashCode()}",
+): AppContainer =
     AppContainer(
+        storage = storage,
+        ownerId = ownerId,
         regional = StaticRegionalSettings(RegionalSettings(UserLocale("es", "BO"), utcOffsetMinutes = -240)),
         device = FixedDeviceIdentity("device-carlos"),
         clock = SteppingClock(),

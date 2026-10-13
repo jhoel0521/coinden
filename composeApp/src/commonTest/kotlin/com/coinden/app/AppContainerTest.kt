@@ -22,4 +22,20 @@ class AppContainerTest {
             assertEquals(cash.id, directory.defaultWalletId)
             assertEquals(bank, directory.byHint("qr"))
         }
+
+    @Test
+    fun `al reabrir con datos guardados no se vuelven a sembrar las billeteras`() =
+        runTest {
+            val storage = AppStorage.inMemory()
+            val firstStart = testContainer(storage)
+            DemoSeed.seed(firstStart)
+
+            // Mismo almacenamiento y mismo dueño: como reabrir la app sobre la base guardada
+            val secondStart = testContainer(storage, ownerId = firstStart.ownerId)
+            DemoSeed.seed(secondStart)
+
+            val directory = secondStart.drafts.directory(secondStart.ownerId)
+            assertEquals(2, directory.wallets.size)
+            assertEquals(mapOf("qr" to directory.wallets.single { it.type == WalletType.BANK }.id), directory.aliases)
+        }
 }
