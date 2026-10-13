@@ -87,8 +87,8 @@ Los principios completos están en [MANIFIESTO.md](MANIFIESTO.md). En resumen:
 | 2 | `draft-inbox` | borradores como máquina de estados, bandeja y confirmación idempotente | dominio | — | ✅ |
 | 2b | `text-interpreter` | frases y comprobantes de cualquier banco, en/es/pt, confianza ALTA/MEDIA/BAJA | dominio | — | ✅ |
 | 3 | `expense-categorization` | **¿en qué se me fue?**: categorías que aprenden de tus correcciones | dominio | L | ✅ |
-| 4 | `android-app-shell` | módulo Android con Compose, dominio compilado para Android, inyección de dependencias | infraestructura | M | 🔜 siguiente |
-| 5 | `local-persistence` | SQLDelight + SQLCipher: billeteras, libro, borradores y alias, cifrados | adaptador | L | |
+| 4 | `android-app-shell` | módulo Android con Compose, dominio compilado para Android, inyección de dependencias | infraestructura | M | ✅ |
+| 5 | `local-persistence` | SQLDelight + SQLCipher: billeteras, libro, borradores y alias, cifrados | adaptador | L | 🔜 siguiente |
 | 6 | `onboarding-wallets-ui` | moneda local y tasa, billeteras, alias y billetera por defecto | UI | M | |
 | 7 | `capture-ui` + compartir a CoinDen | captura rápida y comprobantes compartidos desde Yape o el banco | UI + adaptador | M | |
 | 8 | `perception-adapters` | voz a texto y OCR on-device → texto para el intérprete | adaptador | M | |
