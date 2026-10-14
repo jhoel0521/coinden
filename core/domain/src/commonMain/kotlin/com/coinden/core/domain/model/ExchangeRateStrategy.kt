@@ -82,3 +82,13 @@ sealed interface ExchangeRateStrategy {
         val isDegraded: Boolean get() = selector.status == SelectorStatus.NEEDS_RECONFIRMATION
     }
 }
+
+/** La tasa que aplica hoy cada estrategia. */
+val ExchangeRateStrategy.currentRate: ExchangeRate
+    get() =
+        when (this) {
+            is ExchangeRateStrategy.Fixed -> rate
+            is ExchangeRateStrategy.ManualDaily -> rate
+            is ExchangeRateStrategy.Verified -> currentRate
+            is ExchangeRateStrategy.CustomSelector -> currentRate
+        }

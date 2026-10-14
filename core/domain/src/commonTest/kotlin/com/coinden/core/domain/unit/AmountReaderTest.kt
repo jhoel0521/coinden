@@ -5,16 +5,17 @@ import com.coinden.core.domain.model.interpret.AmountReader
 import com.coinden.core.domain.model.interpret.MoneyScanner
 import com.coinden.core.domain.model.interpret.ReadAmount
 import com.coinden.core.domain.model.interpret.UserLocale
+import com.coinden.core.domain.support.testLocale
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class AmountReaderTest {
-    private val bo = UserLocale("es", "BO")
-    private val ar = UserLocale("es", "AR")
-    private val us = UserLocale("en", "US")
-    private val br = UserLocale("pt", "BR")
+    private val bo = testLocale("es", "BO")
+    private val ar = testLocale("es", "AR")
+    private val us = testLocale("en", "US")
+    private val br = testLocale("pt", "BR")
 
     @Test
     fun `decimales con coma o punto`() {

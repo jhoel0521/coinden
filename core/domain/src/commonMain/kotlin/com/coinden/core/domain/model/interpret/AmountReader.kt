@@ -3,42 +3,16 @@ package com.coinden.core.domain.model.interpret
 import com.coinden.core.domain.model.Currency
 
 /**
- * Locale del usuario: idioma y país. El país decide el separador decimal y la moneda de "$".
+ * Locale del usuario como datos, sin tablas de países: el idioma elegido, el país de la región,
+ * la moneda de esa región (la usa "$" o "pesos") y su separador decimal. Los llena el adaptador
+ * de configuración regional con el catálogo de monedas y el formato numérico de la plataforma.
  */
 data class UserLocale(
     val language: String,
     val country: String,
-) {
-    val decimalSeparator: Char get() = if (country.uppercase() in COMMA_DECIMAL_COUNTRIES) ',' else '.'
-
-    /** Moneda local del país, usada para "$" y "pesos". */
-    val currency: Currency get() = Currency.of(COUNTRY_CURRENCY[country.uppercase()] ?: "USD")
-
-    private companion object {
-        val COMMA_DECIMAL_COUNTRIES = setOf("AR", "BR", "CL", "CO", "UY", "PY", "VE", "ES", "PT", "DE", "FR", "IT")
-        val COUNTRY_CURRENCY =
-            mapOf(
-                "US" to "USD",
-                "BO" to "BOB",
-                "AR" to "ARS",
-                "BR" to "BRL",
-                "CL" to "CLP",
-                "MX" to "MXN",
-                "CO" to "COP",
-                "PE" to "PEN",
-                "UY" to "UYU",
-                "PY" to "PYG",
-                "EC" to "USD",
-                "ES" to "EUR",
-                "PT" to "EUR",
-                "DE" to "EUR",
-                "FR" to "EUR",
-                "IT" to "EUR",
-                "GB" to "GBP",
-                "CN" to "CNY",
-            )
-    }
-}
+    val currency: Currency,
+    val decimalSeparator: Char,
+)
 
 /** Configuración regional del dispositivo: locale y desplazamiento horario en minutos (UTC-4 = -240). */
 data class RegionalSettings(

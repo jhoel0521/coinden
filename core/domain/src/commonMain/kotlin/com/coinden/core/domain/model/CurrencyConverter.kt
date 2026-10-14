@@ -51,6 +51,8 @@ data class ConsolidatedPortfolio(
     val totalUnifiedAmount: Money,
     val holdings: List<PortfolioHoldingItem>,
     val primaryProviderStamp: ProviderStamp?,
+    /** Saldos en monedas sin tasa de referencia: no se suman y se muestran aparte. */
+    val unconverted: List<Money> = emptyList(),
 )
 
 /**
@@ -62,15 +64,17 @@ data class ConsolidatedPortfolio(
  */
 class CurrencyConverter(
     rates: Collection<ExchangeRate> = emptyList(),
+    /** Moneda puente: todas las tasas deben involucrarla (USD por defecto; la local en un perfil). */
+    private val pivot: Currency = Currency.USD,
 ) {
-    private val fromUsd: Map<String, ExchangeRate> =
+    private val fromPivot: Map<String, ExchangeRate> =
         rates
             .filterNot { it.isIdentity }
             .map { rate ->
                 when {
-                    rate.from.isSameAs(PIVOT) -> rate
-                    rate.to.isSameAs(PIVOT) -> rate.inverse()
-                    else -> throw IllegalArgumentException("La tasa ${rate.from.code}->${rate.to.code} no involucra a USD")
+                    rate.from.isSameAs(pivot) -> rate
+                    rate.to.isSameAs(pivot) -> rate.inverse()
+                    else -> throw IllegalArgumentException("La tasa ${rate.from.code}->${rate.to.code} no involucra a ${pivot.code}")
                 }
             }.associateBy { it.to.code }
 
@@ -80,8 +84,8 @@ class CurrencyConverter(
         target: Currency,
     ): ExchangeRate? {
         if (source.isSameAs(target)) return null
-        val toUsd = if (source.isSameAs(PIVOT)) null else usdRateFor(source).inverse()
-        val usdToTarget = if (target.isSameAs(PIVOT)) null else usdRateFor(target)
+        val toUsd = if (source.isSameAs(pivot)) null else pivotRateFor(source).inverse()
+        val usdToTarget = if (target.isSameAs(pivot)) null else pivotRateFor(target)
         return when {
             toUsd == null -> usdToTarget
             usdToTarget == null -> toUsd
@@ -107,8 +111,9 @@ class CurrencyConverter(
         providerStamp: ProviderStamp? = null,
     ): ConsolidatedPortfolio {
         var total = Money.zero(targetCurrency)
+        val (convertible, unconverted) = holdings.partition { canConvert(it.currency, targetCurrency) }
         val items =
-            holdings.map { holding ->
+            convertible.map { holding ->
                 val rate = rateBetween(holding.currency, targetCurrency)
                 val converted = if (rate == null) holding else holding * rate
                 total += converted
@@ -125,14 +130,19 @@ class CurrencyConverter(
             totalUnifiedAmount = total,
             holdings = items,
             primaryProviderStamp = providerStamp,
+            unconverted = unconverted,
         )
     }
 
-    private fun usdRateFor(currency: Currency): ExchangeRate =
-        fromUsd[currency.code]
-            ?: throw IllegalArgumentException("No hay tasa de cambio registrada entre USD y ${currency.code}")
+    /** ¿Hay forma de convertir [source] a [target] con las tasas registradas? */
+    fun canConvert(
+        source: Currency,
+        target: Currency,
+    ): Boolean =
+        source.isSameAs(target) ||
+            ((source.isSameAs(pivot) || source.code in fromPivot) && (target.isSameAs(pivot) || target.code in fromPivot))
 
-    private companion object {
-        val PIVOT = Currency.USD
-    }
+    private fun pivotRateFor(currency: Currency): ExchangeRate =
+        fromPivot[currency.code]
+            ?: throw IllegalArgumentException("No hay tasa de cambio registrada entre ${pivot.code} y ${currency.code}")
 }

@@ -16,6 +16,7 @@ import com.coinden.core.domain.model.interpret.merged
 import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.testLocale
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -32,7 +33,7 @@ class PhraseReaderTest {
     private fun read(
         text: String,
         pack: LanguagePack = es,
-        locale: UserLocale = UserLocale("es", "BO"),
+        locale: UserLocale = testLocale("es", "BO"),
         wallets: WalletDirectory = directory,
     ) = PhraseReader.read(text, InterpretContext(pack, locale, -240, wallets))
 
@@ -230,7 +231,7 @@ class PhraseReaderTest {
         text: String,
         wallets: WalletDirectory,
         pack: LanguagePack = es,
-        locale: UserLocale = UserLocale("es", "BO"),
+        locale: UserLocale = testLocale("es", "BO"),
     ) = read(text, pack, locale, wallets).single() as MovementProposal.Expense
 
     @Test
@@ -269,7 +270,7 @@ class PhraseReaderTest {
         val nubank = Wallet("nubank", "ana", "Nubank", Currency.BRL, WalletType.DIGITAL)
         val inter = Wallet("inter", "ana", "Inter", Currency.BRL, WalletType.DIGITAL)
         val ana = WalletDirectory(listOf(carteira, nubank, inter), emptyMap(), defaultWalletId = "carteira")
-        val proposal = expense("paguei 30 reais no pix", ana, pack = pt, locale = UserLocale("pt", "BR"))
+        val proposal = expense("paguei 30 reais no pix", ana, pack = pt, locale = testLocale("pt", "BR"))
         assertEquals(WalletRef.ById("nubank"), proposal.wallet)
         assertEquals(FieldOrigin.SUGGESTED, proposal.origins[DraftField.WALLET])
         assertEquals(PaymentMethod.TRANSFER, proposal.paymentMethod)
@@ -314,6 +315,65 @@ class PhraseReaderTest {
         assertEquals(null, proposal.wallet)
     }
 
+    // --- Billeteras reconocidas por su nombre, sin apodos configurados ---
+
+    private val economico = Wallet("be", "u", "Banco Económico", Currency.BOB, WalletType.BANK)
+    private val dolaresBancoNombre = Wallet("dolares-banco", "u", "Dólares banco", Currency.USD, WalletType.BANK)
+    private val porNombre =
+        WalletDirectory(listOf(billetera, bnb, economico, colchon, dolaresBancoNombre), emptyMap(), defaultWalletId = "billetera")
+
+    private fun byName(text: String) = read(text, wallets = porNombre).single() as MovementProposal.Expense
+
+    @Test
+    fun `la sigla del nombre identifica al banco como dicho`() {
+        val proposal = byName("almuerzo 45 bnb")
+        assertEquals(WalletRef.ById("bnb"), proposal.wallet)
+        assertEquals(FieldOrigin.STATED, proposal.origins[DraftField.WALLET])
+        assertEquals("almuerzo", proposal.note)
+    }
+
+    @Test
+    fun `la palabra generica no identifica, la propia si`() {
+        assertEquals(WalletRef.ById("be"), byName("pague 20 economico").wallet)
+        assertEquals(WalletRef.ById("billetera"), byName("pague 20 banco").wallet)
+    }
+
+    @Test
+    fun `tolera un error de tipeo en el nombre`() {
+        assertEquals(WalletRef.ById("be"), byName("pague 20 economco").wallet)
+    }
+
+    @Test
+    fun `una palabra compartida no identifica, la propia si`() {
+        val proposal = byName("pague 20 colchon")
+        assertEquals(WalletRef.ById("colchon"), proposal.wallet)
+        assertEquals(FieldOrigin.STATED, proposal.origins[DraftField.WALLET])
+    }
+
+    @Test
+    fun `bs sigue siendo la moneda aunque este en el nombre de una billetera`() {
+        val proposal = byName("page 3 bs para trasmporte")
+        assertEquals(ProposedAmount("3", Currency.BOB), proposal.amount)
+        assertEquals(suggestedCash, proposal.wallet)
+        assertEquals(FieldOrigin.SUGGESTED, proposal.origins[DraftField.WALLET])
+    }
+
+    // --- La moneda de la región sale del catálogo, no de una tabla del dominio ---
+
+    @Test
+    fun `pesos en Argentina son pesos argentinos inferidos`() {
+        val proposal = read("pague 5000 pesos", locale = testLocale("es", "AR")).single() as MovementProposal.Expense
+        assertEquals(ProposedAmount("5000", Currency.ARS), proposal.amount)
+        assertEquals(FieldOrigin.INFERRED, proposal.origins[DraftField.CURRENCY])
+    }
+
+    @Test
+    fun `pesos en Republica Dominicana son pesos dominicanos`() {
+        val proposal = read("pague 500 pesos", locale = testLocale("es", "DO")).single() as MovementProposal.Expense
+        assertEquals("DOP", proposal.amount?.currency?.code)
+        assertEquals(FieldOrigin.INFERRED, proposal.origins[DraftField.CURRENCY])
+    }
+
     @Test
     fun `recibi 500 bs sin verbo de cambio sigue siendo un ingreso`() {
         val income = read("recibí 500 bs").single() as MovementProposal.Income
@@ -347,20 +407,20 @@ class PhraseReaderTest {
             )
         assertEquals(
             listOf<MovementProposal>(expected),
-            read("I pay 3 dollars for transportation", pack = en, locale = UserLocale("en", "US")),
+            read("I pay 3 dollars for transportation", pack = en, locale = testLocale("en", "US")),
         )
     }
 
     @Test
     fun `paid 12 usd for lunch`() {
-        val proposal = read("paid 12 usd for lunch", pack = en, locale = UserLocale("en", "US")).single() as MovementProposal.Expense
+        val proposal = read("paid 12 usd for lunch", pack = en, locale = testLocale("en", "US")).single() as MovementProposal.Expense
         assertEquals(ProposedAmount("12", Currency.USD), proposal.amount)
         assertEquals("lunch", proposal.note)
     }
 
     @Test
     fun `two expenses joined with and`() {
-        val proposals = read("coffee 4 usd and taxi 15 usd", pack = en, locale = UserLocale("en", "US"))
+        val proposals = read("coffee 4 usd and taxi 15 usd", pack = en, locale = testLocale("en", "US"))
         assertEquals(listOf("coffee", "taxi"), proposals.map { (it as MovementProposal.Expense).note })
     }
 
@@ -368,7 +428,7 @@ class PhraseReaderTest {
 
     @Test
     fun `paguei 15 reais de almoco`() {
-        val proposal = read("paguei 15 reais de almoço", pack = pt, locale = UserLocale("pt", "BR")).single() as MovementProposal.Expense
+        val proposal = read("paguei 15 reais de almoço", pack = pt, locale = testLocale("pt", "BR")).single() as MovementProposal.Expense
         assertEquals(ProposedAmount("15", Currency.of("BRL")), proposal.amount)
         assertEquals("almoço", proposal.note)
         assertEquals(FieldOrigin.STATED, proposal.origins[DraftField.KIND])
@@ -376,7 +436,7 @@ class PhraseReaderTest {
 
     @Test
     fun `recebi 200 reais e gastei 30 no mercado`() {
-        val proposals = read("recebi 200 reais e gastei 30 reais com mercado", pack = pt, locale = UserLocale("pt", "BR"))
+        val proposals = read("recebi 200 reais e gastei 30 reais com mercado", pack = pt, locale = testLocale("pt", "BR"))
         assertEquals(2, proposals.size)
         assertEquals(ProposedAmount("200", Currency.of("BRL")), (proposals[0] as MovementProposal.Income).amount)
         assertEquals("mercado", (proposals[1] as MovementProposal.Expense).note)

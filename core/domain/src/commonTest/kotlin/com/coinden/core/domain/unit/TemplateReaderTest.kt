@@ -15,10 +15,10 @@ import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.interpret.ReceiptTemplate
 import com.coinden.core.domain.model.interpret.ReceiptTemplates
 import com.coinden.core.domain.model.interpret.TemplateReader
-import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.interpret.merged
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.testLocale
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -39,7 +39,7 @@ class TemplateReaderTest {
             defaultWalletId = "billetera",
         )
     private val ctx =
-        InterpretContext(listOf(LanguagePacks.ENGLISH, LanguagePacks.SPANISH).merged(), UserLocale("es", "BO"), -240, directory)
+        InterpretContext(listOf(LanguagePacks.ENGLISH, LanguagePacks.SPANISH).merged(), testLocale("es", "BO"), -240, directory)
 
     /** Instante UTC de una hora local de Bolivia (UTC-4) de octubre de 2026. */
     private fun boliviaTime(

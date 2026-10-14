@@ -6,6 +6,7 @@ import com.coinden.core.domain.model.interpret.RegionalSettings
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.port.output.InstalledPacksPort
 import com.coinden.core.domain.port.output.RegionalSettingsPort
+import com.coinden.core.domain.support.testLocale
 
 /** Paquetes y plantillas "instalados" para las pruebas. */
 class FakeInstalledPacks(
@@ -19,7 +20,7 @@ class FakeInstalledPacks(
 
 /** Locale y zona horaria fijos para las pruebas (por defecto Bolivia, UTC-4). */
 class FixedRegionalSettings(
-    var locale: UserLocale = UserLocale("es", "BO"),
+    var locale: UserLocale = testLocale("es", "BO"),
     var utcOffsetMinutes: Int = -240,
 ) : RegionalSettingsPort {
     override fun settings(): RegionalSettings = RegionalSettings(locale, utcOffsetMinutes)

@@ -175,9 +175,15 @@ object PhraseReader {
         val aliasIndex = words.indices.firstOrNull { it !in used && ctx.directory.byHint(words[it].normalized) != null }
         val wallet: WalletRef?
         val walletOrigin: FieldOrigin?
+        val named = if (aliasIndex == null) walletByName(words, used, ctx) else null
         if (aliasIndex != null) {
             used += aliasIndex
             wallet = WalletRef.ByHint(words[aliasIndex].normalized)
+            walletOrigin = FieldOrigin.STATED
+        } else if (named != null) {
+            // Una palabra del nombre de la billetera ("bnb" de "BNB Bs"): cuenta como dicha.
+            used += named.first
+            wallet = WalletRef.ById(named.second)
             walletOrigin = FieldOrigin.STATED
         } else {
             wallet = null
@@ -282,6 +288,26 @@ object PhraseReader {
                 words.filterIndexed { i, _ -> i !in used }
             }
         return noteWords.joinToString(" ") { it.original }.ifBlank { null }
+    }
+
+    /**
+     * Billetera nombrada por una palabra de su nombre (ver [WalletNameHints]): primero exacta y
+     * después con la tolerancia de tipeo de los verbos. Devuelve la posición de la palabra y el id.
+     */
+    private fun walletByName(
+        words: List<Word>,
+        used: Set<Int>,
+        ctx: InterpretContext,
+    ): Pair<Int, String>? {
+        val hints = WalletNameHints.derive(ctx.directory.wallets, ctx.pack, ctx.locale)
+        if (hints.isEmpty()) return null
+        val free = words.indices.filter { it !in used }
+        free.firstOrNull { words[it].normalized in hints }?.let { return it to hints.getValue(words[it].normalized) }
+        for (i in free) {
+            val key = hints.keys.firstOrNull { TextNormalizer.matches(words[i].normalized, setOf(it), fuzzy = true) } ?: continue
+            return i to hints.getValue(key)
+        }
+        return null
     }
 
     /**

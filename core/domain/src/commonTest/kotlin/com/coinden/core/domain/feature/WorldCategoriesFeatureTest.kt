@@ -15,6 +15,7 @@ import com.coinden.core.domain.model.interpret.TextDraftInterpreter
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.testLocale
 import com.coinden.core.domain.usecase.ConfigureLocalCurrencyUseCase
 import com.coinden.core.domain.usecase.category.CategorizationContext
 import com.coinden.core.domain.usecase.category.SpendingByCategoryUseCase
@@ -83,7 +84,7 @@ class WorldCategoriesFeatureTest {
     @Test
     fun `John en ingles`() =
         runTest {
-            val john = Person("john", UserLocale("en", "US"), emptyList())
+            val john = Person("john", testLocale("en", "US"), emptyList())
             john.cash(Money.parseCanonical("200", Currency.USD))
 
             val suggested = john.dictateAndConfirm("lunch 12 usd", "uber 8 usd")
@@ -101,7 +102,7 @@ class WorldCategoriesFeatureTest {
     @Test
     fun `Ana en portugues`() =
         runTest {
-            val ana = Person("ana", UserLocale("pt", "BR"), listOf(LanguagePacks.PORTUGUESE))
+            val ana = Person("ana", testLocale("pt", "BR"), listOf(LanguagePacks.PORTUGUESE))
             val brl = Currency.of("BRL")
             ConfigureLocalCurrencyUseCase(
                 ana.profiles,

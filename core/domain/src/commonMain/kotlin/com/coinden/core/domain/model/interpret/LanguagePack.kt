@@ -33,6 +33,8 @@ data class LanguagePack(
     val receivedMarkers: Set<String> = emptySet(),
     /** Palabras de medio de pago ("qr", "pix", "efectivo"): filtran billeteras, no las nombran. */
     val paymentMethodWords: Map<String, PaymentMethod> = emptyMap(),
+    /** Palabras genéricas de un nombre de billetera ("banco", "cuenta"): no sirven como apodo. */
+    val genericWalletWords: Set<String> = emptySet(),
 )
 
 /** Une varios paquetes activos en uno solo para buscar en todos a la vez. */
@@ -55,6 +57,7 @@ fun List<LanguagePack>.merged(): LanguagePack =
         categoryWords = fold(emptyMap()) { acc, pack -> acc + pack.categoryWords },
         receivedMarkers = flatMap { it.receivedMarkers }.toSet(),
         paymentMethodWords = fold(emptyMap()) { acc, pack -> acc + pack.paymentMethodWords },
+        genericWalletWords = flatMap { it.genericWalletWords }.toSet(),
     )
 
 /**
@@ -97,6 +100,7 @@ object LanguagePacks {
                     "card" to PaymentMethod.CARD,
                     "debit" to PaymentMethod.CARD,
                 ),
+            genericWalletWords = setOf("bank", "account", "my", "savings", "checking"),
             months =
                 months(
                     listOf("jan", "january") to 1,
@@ -168,6 +172,7 @@ object LanguagePacks {
                     "tarjeta" to PaymentMethod.CARD,
                     "debito" to PaymentMethod.CARD,
                 ),
+            genericWalletWords = setOf("banco", "cuenta", "caja", "mi", "mis", "ahorro", "ahorros"),
             months =
                 months(
                     listOf("ene", "enero") to 1,
@@ -253,6 +258,7 @@ object LanguagePacks {
                     "cartao" to PaymentMethod.CARD,
                     "debito" to PaymentMethod.CARD,
                 ),
+            genericWalletWords = setOf("banco", "conta", "minha", "meu", "poupanca"),
             months =
                 months(
                     listOf("jan", "janeiro") to 1,

@@ -18,6 +18,7 @@ import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.testLocale
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
 import com.coinden.core.domain.usecase.draft.ConfirmDraftUseCase
 import com.coinden.core.domain.usecase.draft.DraftContext
@@ -76,7 +77,7 @@ class WorldReceiptsFeatureTest {
     @Test
     fun `Facundo en Argentina con un banco desconocido`() =
         runTest {
-            val facundo = Person("facundo", UserLocale("es", "AR"), -180, listOf(LanguagePacks.SPANISH))
+            val facundo = Person("facundo", testLocale("es", "AR"), -180, listOf(LanguagePacks.SPANISH))
             val galicia = facundo.wallet("Banco Galicia", Money.parseCanonical("50000", Currency.ARS), WalletType.BANK)
             facundo.wallet("Efectivo", Money.parseCanonical("1000", Currency.ARS), WalletType.CASH)
             SetWalletAliasesUseCase(facundo.ctx)("facundo", galicia.id, setOf("4444555566"))
@@ -90,7 +91,7 @@ class WorldReceiptsFeatureTest {
     @Test
     fun `John en EEUU con un comprobante en ingles y una frase dictada`() =
         runTest {
-            val john = Person("john", UserLocale("en", "US"), -240, emptyList())
+            val john = Person("john", testLocale("en", "US"), -240, emptyList())
             val chase = john.wallet("Chase", Money.parseCanonical("500", Currency.USD), WalletType.BANK)
             val cash = john.wallet("Cash", Money.parseCanonical("40", Currency.USD), WalletType.CASH)
 
@@ -113,7 +114,7 @@ class WorldReceiptsFeatureTest {
     @Test
     fun `Ana en Brasil con Pix y una frase en portugues`() =
         runTest {
-            val ana = Person("ana", UserLocale("pt", "BR"), -180, listOf(LanguagePacks.PORTUGUESE))
+            val ana = Person("ana", testLocale("pt", "BR"), -180, listOf(LanguagePacks.PORTUGUESE))
             val nubank = ana.wallet("Nubank", Money.parseCanonical("300", Currency.of("BRL")), WalletType.BANK)
             val carteira = ana.wallet("Carteira", Money.parseCanonical("50", Currency.of("BRL")), WalletType.CASH)
 

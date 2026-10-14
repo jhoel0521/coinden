@@ -49,12 +49,38 @@ data class ProfileRates(
                 }
             }
 
+            val localCurrency = profile?.localCurrency ?: AnchorCurrencies.USD
             return ProfileRates(
-                localCurrency = profile?.localCurrency ?: AnchorCurrencies.USD,
+                localCurrency = localCurrency,
                 localRate = localRate,
                 stamp = ProviderStamp(kind, reference, localRate, asOfEpochMs, isDegraded),
-                converter = CurrencyConverter(cryptoRates + localRate),
+                converter = converterFor(profile, localCurrency, cryptoRates),
             )
+        }
+
+        /**
+         * Conversor con la moneda local como puente: cada moneda con su tasa de referencia hacia la
+         * local, y las cripto (cotizadas en USD) solo si hay tasa del dólar. Sin perfil, el puente es USD.
+         */
+        private fun converterFor(
+            profile: UserCurrencyProfile?,
+            localCurrency: Currency,
+            cryptoRates: List<ExchangeRate>,
+        ): CurrencyConverter {
+            if (profile == null || localCurrency.isSameAs(Currency.USD)) {
+                return CurrencyConverter(cryptoRates + (profile?.referenceExchangeRates().orEmpty()), pivot = Currency.USD)
+            }
+            val references = profile.referenceExchangeRates()
+            val usdToLocal = references.firstOrNull { it.from.isSameAs(Currency.USD) }
+            val crypto =
+                if (usdToLocal ==
+                    null
+                ) {
+                    emptyList()
+                } else {
+                    cryptoRates.filter { it.to.isSameAs(Currency.USD) }.map { it * usdToLocal }
+                }
+            return CurrencyConverter(references + crypto, pivot = localCurrency)
         }
     }
 }

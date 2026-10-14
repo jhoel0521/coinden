@@ -3,6 +3,7 @@ package com.coinden.core.domain.unit
 import com.coinden.core.domain.model.interpret.DateTimeReader
 import com.coinden.core.domain.model.interpret.ReadDateTime
 import com.coinden.core.domain.model.interpret.UserLocale
+import com.coinden.core.domain.support.testLocale
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -21,8 +22,8 @@ class DateTimeReaderTest {
             "dez" to 12,
             "dec" to 12,
         )
-    private val bo = UserLocale("es", "BO")
-    private val us = UserLocale("en", "US")
+    private val bo = testLocale("es", "BO")
+    private val us = testLocale("en", "US")
     private val utcMinus4 = -240
 
     /** Epoch ms UTC de una fecha y hora UTC (referencia independiente del lector). */
