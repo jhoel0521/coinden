@@ -70,5 +70,7 @@ Se eliminan `DemoSeed` y su prueba. `CoinDenApplication` ya no siembra nada. Las
 - [Cambiar el idioma sin reiniciar depende de la plataforma] → hoy solo Android; Desktop e iOS tendrán su propia implementación del mismo `CompositionLocal`.
 - [Traducciones hechas por el agente] → son textos cortos de interfaz; se revisan en las capturas de verificación.
 
+- [El separador decimal ahora sale de la plataforma] → en es-BO la plataforma usa coma (CLDR), así que los montos se muestran "3.547,80 BOB" y no "3,547.80 BOB" como con la tabla anterior del dominio. El lector de montos sigue aceptando punto o coma; si en Bolivia se prefiere el punto, se decide como ajuste de la persona, no como tabla del dominio.
+
 ## Migration Plan
 Las instalaciones de prueba con la demo anterior tienen billeteras de ejemplo y no tienen perfil: verán el onboarding. Para empezar limpio basta con borrar los datos de la app.
