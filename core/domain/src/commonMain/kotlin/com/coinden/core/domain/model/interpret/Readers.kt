@@ -9,6 +9,8 @@ import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.WalletDirectory
 import com.coinden.core.domain.model.draft.WalletRef
+import com.coinden.core.domain.model.wallet.PaymentMethod
+import com.coinden.core.domain.model.wallet.WalletType
 
 /** Todo lo que un lector necesita, además del texto. */
 data class InterpretContext(
@@ -169,7 +171,7 @@ object PhraseReader {
         // Monto entregado o gastado: el primer número que no sea la tasa ni lo recibido ("3", "45,50", "$20", "Bs25").
         val amount = amountAt(words.indices.firstOrNull(isAmount) ?: return null)
 
-        // Billetera por alias; si no se nombra, la sugerida por defecto.
+        // Billetera por alias: nombra una cuenta concreta y gana sobre el medio de pago.
         val aliasIndex = words.indices.firstOrNull { it !in used && ctx.directory.byHint(words[it].normalized) != null }
         val wallet: WalletRef?
         val walletOrigin: FieldOrigin?
@@ -182,23 +184,31 @@ object PhraseReader {
             walletOrigin = null
         }
 
+        // Medio de pago ("qr", "pix", "efectivo"): no nombra billetera, filtra las candidatas.
+        val methodIndex = words.indices.firstOrNull { it !in used && words[it].normalized in pack.paymentMethodWords }
+        val method =
+            methodIndex?.let {
+                used += it
+                pack.paymentMethodWords.getValue(words[it].normalized)
+            }
+
         val note = note(words, used, pack)
         val default = defaultWallet(ctx.directory)
 
         return when (kind) {
             Kind.EXPENSE, Kind.INCOME -> {
-                val w = wallet ?: default
+                val w = wallet ?: suggestWallet(method, amount.proposed.currency, ctx)
                 val origins =
                     originsOf(
                         DraftField.KIND to kindOrigin,
                         DraftField.AMOUNT to amount.amountOrigin,
                         DraftField.CURRENCY to amount.currencyOrigin,
-                        DraftField.WALLET to (walletOrigin ?: default?.let { FieldOrigin.SUGGESTED }),
+                        DraftField.WALLET to (walletOrigin ?: w?.let { FieldOrigin.SUGGESTED }),
                     )
                 if (kind == Kind.EXPENSE) {
-                    MovementProposal.Expense(amount.proposed, w, note = note, origins = origins)
+                    MovementProposal.Expense(amount.proposed, w, note = note, origins = origins, paymentMethod = method)
                 } else {
-                    MovementProposal.Income(amount.proposed, w, note = note, origins = origins)
+                    MovementProposal.Income(amount.proposed, w, note = note, origins = origins, paymentMethod = method)
                 }
             }
             Kind.WITHDRAWAL ->
@@ -229,6 +239,7 @@ object PhraseReader {
                     into = into,
                     to = to,
                     note = note,
+                    paymentMethod = method,
                     origins =
                         originsOf(
                             DraftField.KIND to kindOrigin,
@@ -271,6 +282,35 @@ object PhraseReader {
                 words.filterIndexed { i, _ -> i !in used }
             }
         return noteWords.joinToString(" ") { it.original }.ifBlank { null }
+    }
+
+    /**
+     * Billetera sugerida cuando la frase no nombra ninguna:
+     * - con medio de pago: candidatas = activas que lo aceptan (y la moneda dicha);
+     * - sin medio, con una moneda que la billetera por defecto no acepta: las de esa moneda, primero efectivo;
+     * - si no: la billetera por defecto.
+     * Entre candidatas: la por defecto, si no la de la moneda local, si no la primera. Siempre sugerida.
+     */
+    private fun suggestWallet(
+        method: PaymentMethod?,
+        currency: Currency?,
+        ctx: InterpretContext,
+    ): WalletRef? {
+        val directory = ctx.directory
+        val default = directory.defaultWalletId?.let(directory::byId)
+        val active = directory.wallets.filter { it.isActive }
+        val candidates =
+            when {
+                method != null -> active.filter { method in it.type.acceptedMethods && (currency == null || it.accepts(currency)) }
+                currency != null && default != null && !default.accepts(currency) ->
+                    active.filter { it.accepts(currency) }.let { same -> same.filter { it.type == WalletType.CASH }.ifEmpty { same } }
+                else -> return default?.let { WalletRef.ById(it.id) }
+            }
+        val chosen =
+            candidates.firstOrNull { it.id == default?.id }
+                ?: candidates.firstOrNull { it.currency.isSameAs(ctx.locale.currency) }
+                ?: candidates.firstOrNull()
+        return chosen?.let { WalletRef.ById(it.id) }
     }
 
     /** La única billetera activa en [currency]; null si hay varias, ninguna o no se sabe la moneda. */

@@ -137,12 +137,12 @@ abstract class WalletAliasRepositoryContract {
     fun `los alias de una billetera se reemplazan y la billetera por defecto se puede borrar`() =
         runTest {
             val repo = repo()
-            repo.setAliases("carlos", "bnb", setOf("qr", "bnb"))
+            repo.setAliases("carlos", "bnb", setOf("banco", "bnb"))
             repo.setAliases("carlos", "yape", setOf("yape"))
-            repo.setAliases("carlos", "bnb", setOf("qr"))
+            repo.setAliases("carlos", "bnb", setOf("bnb"))
             repo.setAliases("ana", "nubank", setOf("pix"))
 
-            assertEquals(mapOf("qr" to "bnb", "yape" to "yape"), repo.aliasesFor("carlos"))
+            assertEquals(mapOf("bnb" to "bnb", "yape" to "yape"), repo.aliasesFor("carlos"))
 
             assertNull(repo.defaultWalletFor("carlos"))
             repo.setDefaultWallet("carlos", "billetera")

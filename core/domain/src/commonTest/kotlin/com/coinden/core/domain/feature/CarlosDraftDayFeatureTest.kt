@@ -59,9 +59,9 @@ class CarlosDraftDayFeatureTest {
     private fun script(): Map<String, List<MovementProposal>> =
         mapOf(
             "almuerzo 45 efectivo" to
-                listOf(MovementProposal.Expense(ProposedAmount("45"), WalletRef.ByHint("efectivo"), note = "almuerzo")),
+                listOf(MovementProposal.Expense(ProposedAmount("45"), WalletRef.ByHint("billetera"), note = "almuerzo")),
             "micro 3 efectivo" to
-                listOf(MovementProposal.Expense(ProposedAmount("3"), WalletRef.ByHint("efectivo"), note = "micro")),
+                listOf(MovementProposal.Expense(ProposedAmount("3"), WalletRef.ByHint("billetera"), note = "micro")),
             "foto-ticket" to listOf(MovementProposal.Unknown("HIPERMAXI")),
             "créame un pago recurrente de netflix de 12 dólares" to
                 listOf(MovementProposal.NotAMovement(NonMovementIntent.RECURRING_PAYMENT, "netflix 12 usd")),
@@ -71,15 +71,15 @@ class CarlosDraftDayFeatureTest {
                         out = ProposedAmount("50", Currency.USD),
                         from = WalletRef.ByHint("colchon"),
                         into = ProposedAmount("594"),
-                        to = WalletRef.ByHint("efectivo"),
+                        to = WalletRef.ByHint("billetera"),
                     ),
                 ),
             "saqué 200 del cajero a las 11" to
                 listOf(
                     MovementProposal.Transfer(
                         out = ProposedAmount("200"),
-                        from = WalletRef.ByHint("qr"),
-                        to = WalletRef.ByHint("efectivo"),
+                        from = WalletRef.ByHint("bnb"),
+                        to = WalletRef.ByHint("billetera"),
                         occurredAtEpochMs = at(11),
                     ),
                 ),
@@ -119,8 +119,8 @@ class CarlosDraftDayFeatureTest {
             colchon = wallet("Dólares colchón", usd("500"), WalletType.CASH)
             meru = wallet("Meru", usd("100"), WalletType.DIGITAL)
             val setAliases = SetWalletAliasesUseCase(ctx)
-            setAliases("carlos", billetera.id, setOf("efectivo", "billetera"))
-            setAliases("carlos", bnb.id, setOf("qr"))
+            setAliases("carlos", billetera.id, setOf("billetera"))
+            setAliases("carlos", bnb.id, setOf("bnb"))
             setAliases("carlos", colchon.id, setOf("colchon"))
             setAliases("carlos", meru.id, setOf("meru"))
 
@@ -164,7 +164,7 @@ class CarlosDraftDayFeatureTest {
             // Completa la foto del ticket y convierte el "recurrente" en el gasto que sí pagó
             clock.nowEpochMs = at(21, 5)
             assertIs<DraftResult.Ok>(
-                revise(ticket.id, MovementProposal.Expense(ProposedAmount("18.50"), WalletRef.ByHint("efectivo"), note = "HIPERMAXI")),
+                revise(ticket.id, MovementProposal.Expense(ProposedAmount("18.50"), WalletRef.ByHint("billetera"), note = "HIPERMAXI")),
             )
             assertIs<DraftResult.Ok>(
                 revise(

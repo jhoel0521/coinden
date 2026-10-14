@@ -1,6 +1,7 @@
 package com.coinden.core.domain.model.draft
 
 import com.coinden.core.domain.model.Currency
+import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
 
@@ -108,6 +109,8 @@ sealed interface MovementProposal {
         val occurredAtEpochMs: Long? = null,
         val note: String? = null,
         override val origins: Map<DraftField, FieldOrigin> = emptyMap(),
+        /** Medio de pago dicho ("qr", "efectivo"): contexto para elegir la billetera en la revisión. */
+        val paymentMethod: PaymentMethod? = null,
     ) : MovementProposal {
         override val presentFields: Set<DraftField> get() = singleWalletFields(amount, wallet, occurredAtEpochMs)
     }
@@ -118,6 +121,8 @@ sealed interface MovementProposal {
         val occurredAtEpochMs: Long? = null,
         val note: String? = null,
         override val origins: Map<DraftField, FieldOrigin> = emptyMap(),
+        /** Medio de pago dicho ("qr", "efectivo"): contexto para elegir la billetera en la revisión. */
+        val paymentMethod: PaymentMethod? = null,
     ) : MovementProposal {
         override val presentFields: Set<DraftField> get() = singleWalletFields(amount, wallet, occurredAtEpochMs)
     }
@@ -131,6 +136,8 @@ sealed interface MovementProposal {
         val occurredAtEpochMs: Long? = null,
         val note: String? = null,
         override val origins: Map<DraftField, FieldOrigin> = emptyMap(),
+        /** Medio de pago dicho para el origen. */
+        val paymentMethod: PaymentMethod? = null,
     ) : MovementProposal {
         override val presentFields: Set<DraftField>
             get() =

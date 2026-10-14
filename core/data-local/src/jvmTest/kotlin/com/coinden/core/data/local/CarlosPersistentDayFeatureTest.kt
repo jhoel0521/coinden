@@ -45,7 +45,7 @@ import kotlin.test.assertIs
 /**
  * Escenario de Feature: el día de Carlos (Bolivia) con la base local.
  *
- * De mañana crea sus billeteras, configura su tasa fija, captura "almuerzo 45 qr" (lo deja para
+ * De mañana crea sus billeteras, configura su tasa fija, captura "almuerzo 45 bnb" (lo deja para
  * la noche) y "page 3 bs para trasmporte", que confirma como transporte. Cierra la app.
  * De noche la reabre: saldos, borrador pendiente, regla aprendida y perfil siguen ahí.
  */
@@ -114,11 +114,11 @@ class CarlosPersistentDayFeatureTest {
                     morning.createWallet(owner, "BNB Bs", Currency.BOB, WalletType.BANK, bs("500")),
                 ).wallet
             morning.setDefault(owner, billetera.id)
-            morning.setAliases(owner, bnb.id, setOf("qr"))
+            morning.setAliases(owner, bnb.id, setOf("bnb"))
             val fixed = ExchangeRateStrategy.Fixed(ExchangeRate.parse(Currency.USD, Currency.BOB, "11.20"))
             val profile = ConfigureLocalCurrencyUseCase(morning.profiles)(owner, Currency.BOB, fixed)
 
-            val almuerzo = assertIs<Draft.Ready>(morning.capture(owner, Evidence(EvidenceSource.TEXT, "almuerzo 45 qr")).single())
+            val almuerzo = assertIs<Draft.Ready>(morning.capture(owner, Evidence(EvidenceSource.TEXT, "almuerzo 45 bnb")).single())
             val micro = assertIs<Draft.Ready>(morning.capture(owner, Evidence(EvidenceSource.VOICE, "page 3 bs para trasmporte")).single())
             assertIs<DraftResult.Ok>(morning.confirm(micro.id, CategoryRef.Base(BaseCategory.TRANSPORT)))
             morningDriver.close()

@@ -28,6 +28,7 @@ import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.draft.WalletRef
 import com.coinden.core.domain.model.wallet.LedgerEvent
+import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletStatus
 import com.coinden.core.domain.model.wallet.WalletType
@@ -68,8 +69,10 @@ class EventCodecTest {
         val origins = mapOf(DraftField.KIND to FieldOrigin.STATED, DraftField.WALLET to FieldOrigin.SUGGESTED)
         val proposals =
             listOf(
-                MovementProposal.Expense(ProposedAmount("45", Currency.BOB), WalletRef.ByHint("qr"), t, "almuerzo", origins),
+                MovementProposal.Expense(ProposedAmount("45", Currency.BOB), WalletRef.ByHint("bnb"), t, "almuerzo", origins),
                 MovementProposal.Income(ProposedAmount("200.5"), WalletRef.ById("w1"), null, null, emptyMap()),
+                MovementProposal.Expense(ProposedAmount("45"), WalletRef.ById("w2"), null, "almuerzo", origins, PaymentMethod.TRANSFER),
+                MovementProposal.Expense(ProposedAmount("20", Currency.USD), null, null, null, emptyMap(), PaymentMethod.CASH),
                 MovementProposal.Transfer(
                     ProposedAmount("11", Currency.USD),
                     WalletRef.ById("w3"),
@@ -188,5 +191,17 @@ class EventCodecTest {
         assertEquals(null, EventCodec.decodeLedger(stored.type, EventCodec.VERSION + 1, stored.payload))
         assertEquals(null, EventCodec.decodeDraft("draft.voice_note", 1, "{}"))
         assertEquals(null, EventCodec.decodeClassification("classification.split", 1, "{}"))
+    }
+
+    @Test
+    fun `una propuesta guardada antes de existir el medio de pago se sigue leyendo`() {
+        // JSON versión 1 tal como lo guardaba local-persistence, sin el campo paymentMethod
+        val payload =
+            """{"draft":{"id":"i1","draftId":"draft","ownerId":"carlos","deviceId":"dev","occurredAt":1,"recordedAt":1},""" +
+                """"proposal":{"kind":"expense","amount":{"value":"45"},"wallet":{"hint":"qr"},"note":"almuerzo"}}"""
+        val event = EventCodec.decodeDraft("draft.interpreted", 1, payload) as DraftEvent.Interpreted
+        val proposal = event.proposal as MovementProposal.Expense
+        assertEquals(null, proposal.paymentMethod)
+        assertEquals(WalletRef.ByHint("qr"), proposal.wallet)
     }
 }

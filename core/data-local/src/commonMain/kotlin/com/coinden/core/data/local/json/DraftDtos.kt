@@ -13,6 +13,7 @@ import com.coinden.core.domain.model.draft.NonMovementIntent
 import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.draft.WalletRef
+import com.coinden.core.domain.model.wallet.PaymentMethod
 import kotlinx.serialization.Serializable
 
 /*
@@ -67,6 +68,8 @@ internal data class ProposalDto(
     val note: String? = null,
     val intent: String? = null,
     val origins: Map<String, String> = emptyMap(),
+    /** Medio de pago dicho (opcional: los datos guardados antes no lo traen). */
+    val paymentMethod: String? = null,
 )
 
 private object ProposalKinds {
@@ -93,6 +96,7 @@ internal fun MovementProposal.toDto(): ProposalDto =
                 occurredAt = occurredAtEpochMs,
                 note = note,
                 origins = origins.toDto(),
+                paymentMethod = paymentMethod?.name,
             )
         is MovementProposal.Income ->
             ProposalDto(
@@ -102,6 +106,7 @@ internal fun MovementProposal.toDto(): ProposalDto =
                 occurredAt = occurredAtEpochMs,
                 note = note,
                 origins = origins.toDto(),
+                paymentMethod = paymentMethod?.name,
             )
         is MovementProposal.Transfer ->
             ProposalDto(
@@ -113,6 +118,7 @@ internal fun MovementProposal.toDto(): ProposalDto =
                 occurredAtEpochMs,
                 note,
                 origins = origins.toDto(),
+                paymentMethod = paymentMethod?.name,
             )
         is MovementProposal.AdjustTo ->
             ProposalDto(
@@ -127,10 +133,28 @@ internal fun MovementProposal.toDto(): ProposalDto =
         is MovementProposal.Unknown -> ProposalDto(ProposalKinds.UNKNOWN, note = note)
     }
 
+private fun ProposalDto.method(): PaymentMethod? = paymentMethod?.let { PaymentMethod.valueOf(it) }
+
 internal fun ProposalDto.toDomain(): MovementProposal =
     when (kind) {
-        ProposalKinds.EXPENSE -> MovementProposal.Expense(amount?.toDomain(), wallet?.toDomain(), occurredAt, note, origins.toOrigins())
-        ProposalKinds.INCOME -> MovementProposal.Income(amount?.toDomain(), wallet?.toDomain(), occurredAt, note, origins.toOrigins())
+        ProposalKinds.EXPENSE ->
+            MovementProposal.Expense(
+                amount?.toDomain(),
+                wallet?.toDomain(),
+                occurredAt,
+                note,
+                origins.toOrigins(),
+                method(),
+            )
+        ProposalKinds.INCOME ->
+            MovementProposal.Income(
+                amount?.toDomain(),
+                wallet?.toDomain(),
+                occurredAt,
+                note,
+                origins.toOrigins(),
+                method(),
+            )
         ProposalKinds.TRANSFER ->
             MovementProposal.Transfer(
                 amount?.toDomain(),
@@ -140,6 +164,7 @@ internal fun ProposalDto.toDomain(): MovementProposal =
                 occurredAt,
                 note,
                 origins.toOrigins(),
+                method(),
             )
         ProposalKinds.ADJUST_TO -> MovementProposal.AdjustTo(amount?.toDomain(), wallet?.toDomain(), occurredAt, note, origins.toOrigins())
         ProposalKinds.NOT_A_MOVEMENT -> MovementProposal.NotAMovement(NonMovementIntent.valueOf(requireNotNull(intent)), note)

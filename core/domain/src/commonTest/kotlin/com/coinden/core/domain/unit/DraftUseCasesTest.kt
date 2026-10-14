@@ -110,9 +110,9 @@ class DraftUseCasesTest {
         runTest {
             val bnb = wallet("BNB Bs", bs("100"), WalletType.BANK)
             val billetera = wallet("Billetera", bs("10"))
-            assertNull(setAliases("carlos", bnb.id, setOf(" QR ", "bnb")))
-            assertEquals(mapOf("qr" to bnb.id, "bnb" to bnb.id), aliases.aliasesFor("carlos"))
-            assertEquals(DraftError.AliasAlreadyUsed("qr", bnb.id), setAliases("carlos", billetera.id, setOf("Qr")))
+            assertNull(setAliases("carlos", bnb.id, setOf(" BNB ", "banco")))
+            assertEquals(mapOf("bnb" to bnb.id, "banco" to bnb.id), aliases.aliasesFor("carlos"))
+            assertEquals(DraftError.AliasAlreadyUsed("bnb", bnb.id), setAliases("carlos", billetera.id, setOf("Bnb")))
             assertEquals(DraftError.NotFound, setAliases("otro", bnb.id, setOf("x")))
         }
 
@@ -122,13 +122,13 @@ class DraftUseCasesTest {
     fun `captura entendida queda Lista con su evidencia`() =
         runTest {
             val bnb = wallet("BNB Bs", bs("100"), WalletType.BANK)
-            setAliases("carlos", bnb.id, setOf("qr"))
-            text["almuerzo 45 qr"] = listOf(expense("45", WalletRef.ByHint("qr"), "almuerzo"))
+            setAliases("carlos", bnb.id, setOf("bnb"))
+            text["almuerzo 45 bnb"] = listOf(expense("45", WalletRef.ByHint("bnb"), "almuerzo"))
 
-            val draft = assertIs<Draft.Ready>(capture("carlos", textEvidence("almuerzo 45 qr")).single())
+            val draft = assertIs<Draft.Ready>(capture("carlos", textEvidence("almuerzo 45 bnb")).single())
             assertEquals(at(12, 58), draft.header.capturedAtEpochMs)
-            assertEquals("almuerzo 45 qr", draft.header.evidence.text)
-            assertEquals(setOf("qr"), interpreter.lastDirectory!!.aliases.keys)
+            assertEquals("almuerzo 45 bnb", draft.header.evidence.text)
+            assertEquals(setOf("bnb"), interpreter.lastDirectory!!.aliases.keys)
         }
 
     @Test

@@ -14,6 +14,32 @@ enum class WalletType {
     ;
 
     val allowsNegativeByDefault: Boolean get() = this == CREDIT
+
+    /** Medios de pago con los que puede salir dinero de este tipo de billetera. */
+    val acceptedMethods: Set<PaymentMethod>
+        get() =
+            when (this) {
+                CASH -> setOf(PaymentMethod.CASH)
+                BANK -> setOf(PaymentMethod.TRANSFER, PaymentMethod.CARD)
+                DIGITAL -> setOf(PaymentMethod.TRANSFER)
+                CRYPTO -> setOf(PaymentMethod.TRANSFER)
+                CREDIT -> setOf(PaymentMethod.CARD)
+            }
+}
+
+/**
+ * Medio de pago: de dónde puede salir el dinero, no por qué canal. Un medio no identifica una
+ * billetera: filtra las candidatas. "QR", "Pix", banca por internet o ventanilla son [TRANSFER].
+ */
+enum class PaymentMethod {
+    /** Efectivo, en la moneda de la billetera. */
+    CASH,
+
+    /** Transferencia desde una cuenta: QR, Pix, banca por internet o ventanilla. */
+    TRANSFER,
+
+    /** Tarjeta de débito o de crédito. */
+    CARD,
 }
 
 /**

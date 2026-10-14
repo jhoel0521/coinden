@@ -1,6 +1,7 @@
 package com.coinden.core.domain.model.interpret
 
 import com.coinden.core.domain.model.category.BaseCategory
+import com.coinden.core.domain.model.wallet.PaymentMethod
 
 /**
  * Paquete de idioma: las palabras clave que el intérprete reconoce, como datos. Agregar un idioma
@@ -30,6 +31,8 @@ data class LanguagePack(
      * varias palabras. Solo cuentan dentro de un cambio y delante de un monto.
      */
     val receivedMarkers: Set<String> = emptySet(),
+    /** Palabras de medio de pago ("qr", "pix", "efectivo"): filtran billeteras, no las nombran. */
+    val paymentMethodWords: Map<String, PaymentMethod> = emptyMap(),
 )
 
 /** Une varios paquetes activos en uno solo para buscar en todos a la vez. */
@@ -51,6 +54,7 @@ fun List<LanguagePack>.merged(): LanguagePack =
         currencyWords = fold(emptyMap()) { acc, pack -> acc + pack.currencyWords },
         categoryWords = fold(emptyMap()) { acc, pack -> acc + pack.categoryWords },
         receivedMarkers = flatMap { it.receivedMarkers }.toSet(),
+        paymentMethodWords = fold(emptyMap()) { acc, pack -> acc + pack.paymentMethodWords },
     )
 
 /**
@@ -85,6 +89,14 @@ object LanguagePacks {
             conjunctions = setOf("and"),
             rateMarkers = setOf("at"),
             receivedMarkers = setOf("got", "received", "for"),
+            paymentMethodWords =
+                mapOf(
+                    "cash" to PaymentMethod.CASH,
+                    "qr" to PaymentMethod.TRANSFER,
+                    "transfer" to PaymentMethod.TRANSFER,
+                    "card" to PaymentMethod.CARD,
+                    "debit" to PaymentMethod.CARD,
+                ),
             months =
                 months(
                     listOf("jan", "january") to 1, listOf("feb", "february") to 2, listOf("mar", "march") to 3,
@@ -131,6 +143,14 @@ object LanguagePacks {
             conjunctions = setOf("y", "e"),
             rateMarkers = setOf("a"),
             receivedMarkers = setOf("me dieron", "me dio", "recibi", "por"),
+            paymentMethodWords =
+                mapOf(
+                    "efectivo" to PaymentMethod.CASH,
+                    "qr" to PaymentMethod.TRANSFER,
+                    "transferencia" to PaymentMethod.TRANSFER,
+                    "tarjeta" to PaymentMethod.CARD,
+                    "debito" to PaymentMethod.CARD,
+                ),
             months =
                 months(
                     listOf("ene", "enero") to 1, listOf("feb", "febrero") to 2, listOf("mar", "marzo") to 3,
@@ -187,6 +207,16 @@ object LanguagePacks {
             conjunctions = setOf("e"),
             rateMarkers = setOf("a"),
             receivedMarkers = setOf("me deram", "recebi", "por"),
+            paymentMethodWords =
+                mapOf(
+                    "dinheiro" to PaymentMethod.CASH,
+                    "pix" to PaymentMethod.TRANSFER,
+                    "qr" to PaymentMethod.TRANSFER,
+                    "transferencia" to PaymentMethod.TRANSFER,
+                    "ted" to PaymentMethod.TRANSFER,
+                    "cartao" to PaymentMethod.CARD,
+                    "debito" to PaymentMethod.CARD,
+                ),
             months =
                 months(
                     listOf("jan", "janeiro") to 1, listOf("fev", "fevereiro") to 2, listOf("mar", "marco") to 3,

@@ -13,6 +13,7 @@ import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.interpret.PhraseReader
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.interpret.merged
+import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
 import kotlin.test.Test
@@ -22,7 +23,7 @@ class PhraseReaderTest {
     private val billetera = Wallet("billetera", "u", "Billetera", Currency.BOB, WalletType.CASH)
     private val bnb = Wallet("bnb", "u", "BNB Bs", Currency.BOB, WalletType.BANK)
     private val colchon = Wallet("colchon", "u", "Dólares colchón", Currency.USD, WalletType.CASH)
-    private val directory = WalletDirectory(listOf(billetera, bnb, colchon), mapOf("qr" to "bnb"), defaultWalletId = "billetera")
+    private val directory = WalletDirectory(listOf(billetera, bnb, colchon), mapOf("bnb" to "bnb"), defaultWalletId = "billetera")
 
     private val en = listOf(LanguagePacks.ENGLISH).merged()
     private val es = listOf(LanguagePacks.ENGLISH, LanguagePacks.SPANISH).merged()
@@ -76,11 +77,11 @@ class PhraseReaderTest {
     }
 
     @Test
-    fun `almuerzo 45 qr usa el alias y la nota son las palabras sueltas`() {
+    fun `almuerzo 45 bnb usa el alias y la nota son las palabras sueltas`() {
         val expected =
             MovementProposal.Expense(
                 ProposedAmount("45"),
-                WalletRef.ByHint("qr"),
+                WalletRef.ByHint("bnb"),
                 note = "almuerzo",
                 origins =
                     mapOf(
@@ -89,7 +90,7 @@ class PhraseReaderTest {
                         DraftField.WALLET to FieldOrigin.STATED,
                     ),
             )
-        assertEquals(listOf<MovementProposal>(expected), read("almuerzo 45 qr"))
+        assertEquals(listOf<MovementProposal>(expected), read("almuerzo 45 bnb"))
     }
 
     @Test
@@ -213,6 +214,106 @@ class PhraseReaderTest {
         assertEquals(WalletRef.ById("colchon"), transfer.from)
     }
 
+    // --- Medio de pago: filtra billeteras candidatas, no nombra una billetera ---
+
+    private val be = Wallet("be", "u", "BE Bs", Currency.BOB, WalletType.BANK)
+    private val yape = Wallet("yape", "u", "Yape", Currency.BOB, WalletType.DIGITAL)
+    private val dolaresBanco = Wallet("dolares-banco", "u", "Dólares banco", Currency.USD, WalletType.BANK)
+
+    private fun carlos(
+        vararg wallets: Wallet,
+        default: String = "billetera",
+        aliases: Map<String, String> = emptyMap(),
+    ) = WalletDirectory(wallets.toList(), aliases, defaultWalletId = default)
+
+    private fun expense(
+        text: String,
+        wallets: WalletDirectory,
+        pack: LanguagePack = es,
+        locale: UserLocale = UserLocale("es", "BO"),
+    ) = read(text, pack, locale, wallets).single() as MovementProposal.Expense
+
+    @Test
+    fun `con varias cuentas que aceptan QR recomienda la primera, sugerida`() {
+        val proposal = expense("almuerzo 45 qr", carlos(billetera, bnb, be, yape))
+        assertEquals(WalletRef.ById("bnb"), proposal.wallet)
+        assertEquals(FieldOrigin.SUGGESTED, proposal.origins[DraftField.WALLET])
+        assertEquals(PaymentMethod.TRANSFER, proposal.paymentMethod)
+        assertEquals("almuerzo", proposal.note)
+    }
+
+    @Test
+    fun `con una sola cuenta que acepta QR la sugiere`() {
+        val proposal = expense("almuerzo 45 qr", carlos(billetera, bnb))
+        assertEquals(WalletRef.ById("bnb"), proposal.wallet)
+        assertEquals(FieldOrigin.SUGGESTED, proposal.origins[DraftField.WALLET])
+    }
+
+    @Test
+    fun `si la billetera por defecto acepta el medio la recomienda`() {
+        val proposal = expense("almuerzo 45 qr", carlos(billetera, bnb, be, default = "be"))
+        assertEquals(WalletRef.ById("be"), proposal.wallet)
+    }
+
+    @Test
+    fun `si ninguna billetera acepta el medio queda sin billetera`() {
+        val proposal = expense("almuerzo 45 qr", carlos(billetera, colchon))
+        assertEquals(null, proposal.wallet)
+        assertEquals(null, proposal.origins[DraftField.WALLET])
+        assertEquals(PaymentMethod.TRANSFER, proposal.paymentMethod)
+    }
+
+    @Test
+    fun `paguei 30 reais no pix recomienda una cuenta de Ana`() {
+        val carteira = Wallet("carteira", "ana", "Carteira", Currency.BRL, WalletType.CASH)
+        val nubank = Wallet("nubank", "ana", "Nubank", Currency.BRL, WalletType.DIGITAL)
+        val inter = Wallet("inter", "ana", "Inter", Currency.BRL, WalletType.DIGITAL)
+        val ana = WalletDirectory(listOf(carteira, nubank, inter), emptyMap(), defaultWalletId = "carteira")
+        val proposal = expense("paguei 30 reais no pix", ana, pack = pt, locale = UserLocale("pt", "BR"))
+        assertEquals(WalletRef.ById("nubank"), proposal.wallet)
+        assertEquals(FieldOrigin.SUGGESTED, proposal.origins[DraftField.WALLET])
+        assertEquals(PaymentMethod.TRANSFER, proposal.paymentMethod)
+    }
+
+    @Test
+    fun `el alias gana sobre el medio`() {
+        val proposal = expense("almuerzo 45 qr bnb", carlos(billetera, bnb, be, aliases = mapOf("bnb" to "bnb")))
+        assertEquals(WalletRef.ByHint("bnb"), proposal.wallet)
+        assertEquals(FieldOrigin.STATED, proposal.origins[DraftField.WALLET])
+        assertEquals(PaymentMethod.TRANSFER, proposal.paymentMethod)
+    }
+
+    // --- Efectivo y moneda separan billeteras ---
+
+    @Test
+    fun `efectivo sin moneda sugiere el efectivo por defecto`() {
+        val proposal = expense("pague 20 en efectivo", carlos(billetera, colchon))
+        assertEquals(WalletRef.ById("billetera"), proposal.wallet)
+        assertEquals(PaymentMethod.CASH, proposal.paymentMethod)
+        assertEquals(null, proposal.note)
+    }
+
+    @Test
+    fun `efectivo en dolares sugiere el efectivo en dolares`() {
+        val proposal = expense("pague 20 dolares en efectivo", carlos(billetera, colchon))
+        assertEquals(WalletRef.ById("colchon"), proposal.wallet)
+        assertEquals(FieldOrigin.SUGGESTED, proposal.origins[DraftField.WALLET])
+    }
+
+    @Test
+    fun `una moneda que la billetera por defecto no acepta recomienda el efectivo de esa moneda`() {
+        val proposal = expense("pague 20 dolares", carlos(billetera, dolaresBanco, colchon))
+        assertEquals(WalletRef.ById("colchon"), proposal.wallet)
+        assertEquals(FieldOrigin.SUGGESTED, proposal.origins[DraftField.WALLET])
+        assertEquals(null, proposal.paymentMethod)
+    }
+
+    @Test
+    fun `efectivo en una moneda que no tiene queda sin billetera`() {
+        val proposal = expense("pague 30 reales en efectivo", carlos(billetera, colchon))
+        assertEquals(null, proposal.wallet)
+    }
+
     @Test
     fun `recibi 500 bs sin verbo de cambio sigue siendo un ingreso`() {
         val income = read("recibí 500 bs").single() as MovementProposal.Income
@@ -230,10 +331,11 @@ class PhraseReaderTest {
 
     @Test
     fun `I pay 3 dollars for transportation`() {
+        // La billetera por defecto es en bolivianos: los dólares salen del efectivo en dólares
         val expected =
             MovementProposal.Expense(
                 ProposedAmount("3", Currency.USD),
-                suggestedCash,
+                WalletRef.ById("colchon"),
                 note = "transportation",
                 origins =
                     mapOf(

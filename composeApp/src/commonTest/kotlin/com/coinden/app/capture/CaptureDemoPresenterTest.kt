@@ -43,9 +43,23 @@ class CaptureDemoPresenterTest {
         }
 
     @Test
-    fun `gasto con alias va al banco con confianza media y comida por almuerzo`() =
+    fun `gasto por qr va al banco sugerido, unico que acepta transferencias, con confianza baja`() =
         runTest {
             val card = capture("almuerzo 45 qr")
+
+            assertEquals(MovementKindView.EXPENSE, card.kind)
+            assertEquals(Money.parseCanonical("45", Currency.BOB), card.amount)
+            assertEquals("BNB Bs", card.walletName)
+            assertTrue(card.walletSuggested)
+            assertEquals(Confidence.LOW, card.confidence)
+            assertEquals(CategoryRef.Base(BaseCategory.FOOD), card.category?.ref)
+            assertEquals(SuggestionReason.PackWord("almuerzo"), card.category?.reason)
+        }
+
+    @Test
+    fun `gasto con alias va al banco con confianza media y comida por almuerzo`() =
+        runTest {
+            val card = capture("almuerzo 45 bnb")
 
             assertEquals(MovementKindView.EXPENSE, card.kind)
             assertEquals(Money.parseCanonical("45", Currency.BOB), card.amount)

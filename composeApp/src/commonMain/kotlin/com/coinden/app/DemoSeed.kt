@@ -16,7 +16,7 @@ object DemoSeed {
         val cash = create(container, "Billetera", WalletType.CASH, "100")
         val bank = create(container, "BNB Bs", WalletType.BANK, "500")
         container.setDefaultWallet(owner, cash)
-        container.setWalletAliases(owner, bank, setOf("qr"))
+        container.setWalletAliases(owner, bank, setOf("bnb"))
     }
 
     private suspend fun create(

@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 
 class AppContainerTest {
     @Test
-    fun `al iniciar existen la billetera de efectivo por defecto y la de banco con el alias qr`() =
+    fun `al iniciar existen la billetera de efectivo por defecto y la de banco con el alias bnb`() =
         runTest {
             val container = testContainer()
             DemoSeed.seed(container)
@@ -20,7 +20,7 @@ class AppContainerTest {
             assertEquals(Currency.BOB, cash.currency)
             assertEquals(Currency.BOB, bank.currency)
             assertEquals(cash.id, directory.defaultWalletId)
-            assertEquals(bank, directory.byHint("qr"))
+            assertEquals(bank, directory.byHint("bnb"))
         }
 
     @Test
@@ -36,6 +36,6 @@ class AppContainerTest {
 
             val directory = secondStart.drafts.directory(secondStart.ownerId)
             assertEquals(2, directory.wallets.size)
-            assertEquals(mapOf("qr" to directory.wallets.single { it.type == WalletType.BANK }.id), directory.aliases)
+            assertEquals(mapOf("bnb" to directory.wallets.single { it.type == WalletType.BANK }.id), directory.aliases)
         }
 }

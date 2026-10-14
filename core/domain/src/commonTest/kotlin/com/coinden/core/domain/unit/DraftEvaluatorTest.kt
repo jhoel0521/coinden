@@ -32,10 +32,10 @@ class DraftEvaluatorTest {
     private val directory =
         WalletDirectory(
             wallets = listOf(billetera, bnb, colchon, viejo),
-            aliases = mapOf("qr" to "bnb", "efectivo" to "billetera"),
+            aliases = mapOf("bnb" to "bnb", "billetera" to "billetera"),
         )
 
-    private val header = DraftHeader("d-1", "carlos", Evidence(EvidenceSource.TEXT, "almuerzo 45 qr"), at(12, 58))
+    private val header = DraftHeader("d-1", "carlos", Evidence(EvidenceSource.TEXT, "almuerzo 45 bnb"), at(12, 58))
 
     private fun evaluate(proposal: MovementProposal) = DraftEvaluator.evaluate(header, proposal, directory)
 
@@ -58,7 +58,7 @@ class DraftEvaluatorTest {
 
     @Test
     fun `alias en mayusculas se resuelve`() {
-        val ready = assertIs<Draft.Ready>(evaluate(MovementProposal.Expense(ProposedAmount("45"), WalletRef.ByHint(" QR "))))
+        val ready = assertIs<Draft.Ready>(evaluate(MovementProposal.Expense(ProposedAmount("45"), WalletRef.ByHint(" BNB "))))
         assertEquals("bnb", (ready.movement as ReadyMovement.Expense).walletId)
     }
 
@@ -109,7 +109,7 @@ class DraftEvaluatorTest {
                 out = ProposedAmount("50", Currency.USD),
                 from = WalletRef.ById("colchon"),
                 into = ProposedAmount("594"),
-                to = WalletRef.ByHint("efectivo"),
+                to = WalletRef.ByHint("billetera"),
             )
         val ready = assertIs<Draft.Ready>(evaluate(proposal))
         val transfer = assertIs<ReadyMovement.Transfer>(ready.movement)
@@ -136,7 +136,7 @@ class DraftEvaluatorTest {
         val same =
             assertIs<Draft.Incomplete>(
                 evaluate(
-                    MovementProposal.Transfer(ProposedAmount("10"), WalletRef.ById("bnb"), ProposedAmount("10"), WalletRef.ByHint("qr")),
+                    MovementProposal.Transfer(ProposedAmount("10"), WalletRef.ById("bnb"), ProposedAmount("10"), WalletRef.ByHint("bnb")),
                 ),
             )
         assertEquals(setOf(DraftIssue.SAME_WALLET), same.issues)

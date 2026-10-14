@@ -53,7 +53,7 @@ flowchart TD
 
 - **Todo termina en texto.** Voz a texto y OCR solo *perciben* (on-device); un único intérprete determinista convierte ese texto en borradores. Entiende frases ("page 3 bs para trasmporte") y comprobantes de cualquier banco por su estructura; las palabras de cada idioma (inglés base; español y portugués instalables) y los formatos de bancos conocidos (Yape, Banco Económico...) son datos, no código.
 - **Todo borrador es una recomendación.** Cada campo dice de dónde salió (el comprobante, lo que dijiste, una regla, una sugerencia) y el borrador tiene confianza ALTA, MEDIA o BAJA. Una frase sin billetera sugiere efectivo; si fue con QR, habrías compartido el comprobante.
-- **Categoría y medio de pago son ejes distintos.** "Almuerzo 45 Bs con QR": la *categoría* es Comida y el *medio* es la billetera Banco.
+- **Categoría, medio de pago y billetera son cosas distintas.** "Almuerzo 45 Bs con QR": la *categoría* es Comida y el *medio* es QR, que no dice de qué cuenta salió (todos los bancos aceptan QR). CoinDen te sugiere una de tus cuentas que aceptan QR, con confianza baja, y la confirmas en la revisión; si dices "bnb" o compartes el comprobante, ya sabe cuál fue. El efectivo en Bs y en dólares son billeteras distintas.
 - **El cambio de moneda es una operación con su propia tasa.** "Vendí 50 USD a 11.88" mueve dinero de una billetera en USD a una en BOB con *esa* tasa.
 - **Dinero libre** = saldo confirmado − recurrentes pendientes − cuotas de préstamos + cobros esperados − aportes a metas.
 - **La categorización aprende de tus correcciones.** Cada corrección en la revisión se convierte en una regla local, que se puede explicar y vive solo en tus dispositivos.
