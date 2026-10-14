@@ -86,9 +86,11 @@ Los principios completos están en [MANIFIESTO.md](MANIFIESTO.md). En resumen:
 | — | `domain-i18n-cleanup` · `money-precision` | dominio sin idioma y dinero exacto (`Money * ExchangeRate`) | dominio | — | ✅ |
 | 2 | `draft-inbox` | borradores como máquina de estados, bandeja y confirmación idempotente | dominio | — | ✅ |
 | 2b | `text-interpreter` | frases y comprobantes de cualquier banco, en/es/pt, confianza ALTA/MEDIA/BAJA | dominio | — | ✅ |
+| — | `exchange-phrases` | cambios de moneda por entrada y salida ("vendí 11 dólares, me dieron 112 bs") | dominio | S | ✅ |
 | 3 | `expense-categorization` | **¿en qué se me fue?**: categorías que aprenden de tus correcciones | dominio | L | ✅ |
 | 4 | `android-app-shell` | módulo Android con Compose, dominio compilado para Android, inyección de dependencias | infraestructura | M | ✅ |
-| 5 | `local-persistence` | SQLDelight + SQLCipher: billeteras, libro, borradores y alias, cifrados | adaptador | L | 🔜 siguiente |
+| 5 | `local-persistence` | SQLDelight + SQLCipher: billeteras, libro, borradores y alias, cifrados | adaptador | L | ✅ |
+| — | `payment-method-hints` | QR, Pix o efectivo son medios de pago, no billeteras: filtran candidatas | dominio | S | 🔜 siguiente |
 | 6 | `onboarding-wallets-ui` | moneda local y tasa, billeteras, alias y billetera por defecto | UI | M | |
 | 7 | `capture-ui` + compartir a CoinDen | captura rápida y comprobantes compartidos desde Yape o el banco | UI + adaptador | M | |
 | 8 | `perception-adapters` | voz a texto y OCR on-device → texto para el intérprete | adaptador | M | |
