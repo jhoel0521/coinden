@@ -11,7 +11,7 @@ class MainActivity : ComponentActivity() {
         // targetSdk 36 dibuja de borde a borde; la pantalla respeta las barras del sistema.
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        val container = (application as CoinDenApplication).container
-        setContent { App(container) }
+        val app = application as CoinDenApplication
+        setContent { App(app.container, app.deviceLanguage, app.deviceCountry) }
     }
 }

@@ -15,39 +15,32 @@
     <string name="drafts_title">Tus borradores</string>
     <string name="draft_not_counted">No cambia tus saldos hasta que lo confirmes.</string>
     <string name="evidence_quote">«%1$s»</string>
-
     <string name="kind_expense">Gasto</string>
     <string name="kind_income">Ingreso</string>
     <string name="kind_transfer">Transferencia</string>
     <string name="kind_adjustment">Ajuste de saldo</string>
     <string name="kind_not_a_movement">No es un movimiento</string>
     <string name="kind_unknown">Tipo sin definir</string>
-
     <string name="status_captured">Capturado sin propuesta</string>
     <string name="status_incomplete">Incompleto</string>
     <string name="status_ready">Listo para confirmar</string>
     <string name="status_unsupported">No soportado todavía</string>
-
     <string name="confidence_low">Confianza baja · revisar</string>
     <string name="confidence_medium">Confianza media</string>
     <string name="confidence_high">Confianza alta</string>
-
     <string name="amount_missing">Sin monto</string>
     <string name="wallet_missing">Sin billetera</string>
     <string name="suggested_tag">sugerida</string>
     <string name="field_wallet">Billetera</string>
     <string name="field_method">Medio</string>
     <string name="field_category">Categoría</string>
-
     <string name="method_cash">Efectivo</string>
     <string name="method_transfer">Transferencia o QR</string>
     <string name="method_card">Tarjeta</string>
-
     <string name="category_none">Sin categoría</string>
     <string name="category_custom">Categoría propia</string>
     <string name="category_by_word">%1$s, por la palabra «%2$s»</string>
     <string name="category_by_rule">%1$s, por tu regla «%2$s»</string>
-
     <string name="category_food">Comida</string>
     <string name="category_groceries">Supermercado</string>
     <string name="category_transport">Transporte</string>
@@ -60,4 +53,59 @@
     <string name="category_education">Educación</string>
     <string name="category_people">Personas</string>
     <string name="category_fees">Comisiones</string>
+    <string name="welcome_greeting_es">Tu guarida de monedas</string>
+    <string name="welcome_greeting_en">Your coin den</string>
+    <string name="welcome_greeting_pt">Sua toca de moedas</string>
+    <string name="language_es">Español</string>
+    <string name="language_en">English</string>
+    <string name="language_pt">Português</string>
+    <string name="welcome_subtitle">Anota en segundos lo que gastas y revísalo con calma en la noche.</string>
+    <string name="welcome_language">Elige tu idioma</string>
+    <string name="welcome_no_account">Sin cuenta, sin registro y sin publicidad.</string>
+    <string name="welcome_start">Empezar</string>
+    <string name="step_counter">Paso %1$d de %2$d</string>
+    <string name="back">Atrás</string>
+    <string name="next">Continuar</string>
+    <string name="finish">Listo, entrar</string>
+    <string name="currencies_title">¿Qué monedas usas?</string>
+    <string name="currencies_main">Tu moneda principal</string>
+    <string name="currencies_others">¿Usas otras? Toca las que uses</string>
+    <string name="currencies_search">Buscar moneda por nombre o código</string>
+    <string name="currencies_add_custom">Agregar moneda propia o cripto</string>
+    <string name="custom_code">Código (3 a 6 letras)</string>
+    <string name="custom_name">Nombre</string>
+    <string name="custom_symbol">Símbolo</string>
+    <string name="custom_decimals">Decimales (0 a 8)</string>
+    <string name="custom_add">Agregar moneda</string>
+    <string name="rates_title">¿A cuánto las cambias?</string>
+    <string name="rates_note">Solo para mostrarte un total. Cada cambio que registres usa la tasa real de ese cambio.</string>
+    <string name="rate_label">1 %1$s en %2$s</string>
+    <string name="rate_later">La pongo después</string>
+    <string name="rate_later_set">Sin tasa por ahora</string>
+    <string name="rate_set">Poner tasa</string>
+    <string name="error_invalid_rate">Revisa la tasa de %1$s</string>
+    <string name="error_custom_currency">Revisa la moneda: código de 3 a 6 letras y de 0 a 8 decimales</string>
+    <string name="wallets_title">¿Dónde guardas tu dinero?</string>
+    <string name="wallets_subtitle">Crea una billetera por cada lugar y pon cuánto tiene hoy.</string>
+    <string name="wallet_name">Nombre</string>
+    <string name="wallet_name_hint">BNB Bs, Billetera, Yape…</string>
+    <string name="wallet_opening">Saldo de hoy</string>
+    <string name="wallet_add">Agregar billetera</string>
+    <string name="wallet_remove">Quitar %1$s</string>
+    <string name="wallet_type_cash">Efectivo</string>
+    <string name="wallet_type_bank">Banco</string>
+    <string name="wallet_type_digital">Digital</string>
+    <string name="wallet_type_crypto">Cripto</string>
+    <string name="wallet_type_credit">Tarjeta de crédito</string>
+    <string name="wallets_hint">Para dictar basta con una palabra del nombre: «almuerzo 45 bnb».</string>
+    <string name="error_invalid_wallet">Revisa el nombre y el saldo</string>
+    <string name="error_no_wallets">Crea al menos una billetera</string>
+    <string name="home_total">Patrimonio total</string>
+    <string name="home_unconverted">Sin tasa: %1$s</string>
+    <string name="home_pending">Borradores por revisar: %1$d</string>
+    <string name="home_pending_note">No cambian tus saldos hasta que los confirmes.</string>
+    <string name="home_wallets">Billeteras</string>
+    <string name="home_default">Por defecto</string>
+    <string name="home_capture">Capturar gasto</string>
+    <string name="home_language">Idioma</string>
 </resources>

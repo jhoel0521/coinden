@@ -26,6 +26,7 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.navigation.compose)
         }
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)

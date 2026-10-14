@@ -1,15 +1,15 @@
 package com.coinden.app.format
 
+import com.coinden.app.testLocale
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.Money
-import com.coinden.core.domain.model.interpret.UserLocale
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class MoneyFormatterTest {
-    private val bolivia = UserLocale("es", "BO")
-    private val argentina = UserLocale("es", "AR")
-    private val usa = UserLocale("en", "US")
+    private val bolivia = testLocale("es", "BO")
+    private val argentina = testLocale("es", "AR")
+    private val usa = testLocale("en", "US")
 
     @Test
     fun `coma decimal y punto de miles en un locale con coma`() {

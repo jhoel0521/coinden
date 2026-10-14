@@ -1,6 +1,6 @@
 package com.coinden.app.capture
 
-import com.coinden.app.DemoSeed
+import com.coinden.app.seedCarlos
 import com.coinden.app.testContainer
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.Money
@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 class CaptureDemoPresenterTest {
     private suspend fun capture(text: String): DraftCard {
         val container = testContainer()
-        DemoSeed.seed(container)
+        seedCarlos(container)
         val presenter = CaptureDemoPresenter(container)
         presenter.onTextChange(text)
         presenter.onCapture()
@@ -87,7 +87,7 @@ class CaptureDemoPresenterTest {
     fun `texto vacio no captura nada`() =
         runTest {
             val container = testContainer()
-            DemoSeed.seed(container)
+            seedCarlos(container)
             val presenter = CaptureDemoPresenter(container)
 
             presenter.onTextChange("   ")
@@ -103,7 +103,7 @@ class CaptureDemoPresenterTest {
     fun `al abrir muestra los borradores pendientes guardados, mas recientes primero`() =
         runTest {
             val container = testContainer()
-            DemoSeed.seed(container)
+            seedCarlos(container)
             val yesterday = CaptureDemoPresenter(container)
             yesterday.onTextChange("page 3 bs para trasmporte")
             yesterday.onCapture()

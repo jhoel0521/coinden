@@ -1,6 +1,6 @@
 package com.coinden.app.capture
 
-import com.coinden.app.DemoSeed
+import com.coinden.app.seedCarlos
 import com.coinden.app.testContainer
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.core.domain.model.draft.Confidence
@@ -34,7 +34,7 @@ class DraftPresentationTest {
 
     private suspend fun cardFor(text: String): DraftCard {
         val container = testContainer()
-        DemoSeed.seed(container)
+        seedCarlos(container)
         val presenter = CaptureDemoPresenter(container)
         presenter.onTextChange(text)
         presenter.onCapture()
