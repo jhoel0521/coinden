@@ -36,6 +36,9 @@ kotlin {
         jvmMain.dependencies {
             implementation(libs.sqldelight.sqlite.driver)
         }
+        // Código que usa APIs de Java presentes en Android y en la JVM (catálogo de monedas).
+        jvmMain { kotlin.srcDir("src/jvmShared/kotlin") }
+        androidMain { kotlin.srcDir("src/jvmShared/kotlin") }
         jvmTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)

@@ -65,4 +65,14 @@ class InMemoryAdaptersTest {
             assertEquals(mapOf("qr" to "bnb"), repo.aliasesFor("carlos"))
             assertEquals("billetera", repo.defaultWalletFor("carlos"))
         }
+
+    @Test
+    fun `el idioma elegido se guarda y se puede cambiar`() =
+        runTest {
+            val preferences = InMemoryPreferencesRepository()
+            assertEquals(null, preferences.languageCode())
+            preferences.setLanguageCode("pt")
+            preferences.setLanguageCode("es")
+            assertEquals("es", preferences.languageCode())
+        }
 }

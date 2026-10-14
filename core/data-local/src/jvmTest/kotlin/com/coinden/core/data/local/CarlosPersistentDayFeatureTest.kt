@@ -84,7 +84,7 @@ class CarlosPersistentDayFeatureTest {
         private val ledger = LedgerContext(walletRepo, ids, clock, device)
         private val drafts =
             DraftContext(LocalDraftRepository(db, io), walletRepo, LocalWalletAliasRepository(db, io), ids, clock, device, categorization)
-        private val regional = StaticRegionalSettings(RegionalSettings(UserLocale("es", "BO"), -240))
+        private val regional = StaticRegionalSettings(RegionalSettings(UserLocale("es", "BO", Currency.BOB, '.'), -240))
 
         val profiles = LocalCurrencyProfileRepository(db, io)
         val createWallet = CreateWalletUseCase(ledger)

@@ -17,6 +17,7 @@ import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.category.CategoryRule
 import com.coinden.core.domain.model.category.ClassificationEvent
 import com.coinden.core.domain.model.category.CustomCategory
+import com.coinden.core.domain.model.currentRate
 import com.coinden.core.domain.model.draft.DraftEvent
 import com.coinden.core.domain.model.draft.DraftField
 import com.coinden.core.domain.model.draft.Evidence
@@ -209,5 +210,32 @@ class EventCodecTest {
         val proposal = event.proposal as MovementProposal.Expense
         assertEquals(null, proposal.paymentMethod)
         assertEquals(WalletRef.ByHint("qr"), proposal.wallet)
+    }
+
+    @Test
+    fun `perfil con varias monedas, moneda propia y tasas de referencia`() {
+        val vale = Currency(code = "VALE", symbol = "vl", decimals = 0, name = "Vale del súper", isCustom = true)
+        val profile =
+            UserCurrencyProfile(
+                userId = "carlos",
+                localCurrency = Currency.BOB,
+                currencies = listOf(Currency.USD, Currency.BRL, vale),
+                referenceRates =
+                    mapOf(
+                        "USD" to ExchangeRateStrategy.ManualDaily(ExchangeRate.of(usd("11"), bs("112")), t),
+                        "VALE" to ExchangeRateStrategy.Fixed(ExchangeRate.of(Money.parseCanonical("1", vale), bs("10"))),
+                    ),
+            )
+        assertEquals(profile, StateCodec.decodeProfile(StateCodec.encodeProfile(profile)))
+    }
+
+    @Test
+    fun `un perfil guardado antes de las tasas por moneda se sigue leyendo`() {
+        val legacy =
+            """{"userId":"carlos","anchor":{"code":"USD","decimals":2},"local":{"code":"BOB","decimals":2},""" +
+                """"strategy":{"kind":"fixed","rate":{"from":{"code":"USD","decimals":2},"to":{"code":"BOB","decimals":2},"fraction":"56/5"}}}"""
+        val profile = StateCodec.decodeProfile(legacy)
+        assertEquals(emptyList(), profile.currencies)
+        assertEquals("1 USD = 11.20 BOB", profile.referenceRateFor(Currency.USD)?.currentRate.toString())
     }
 }

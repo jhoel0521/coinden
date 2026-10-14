@@ -14,6 +14,7 @@ import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.port.output.CategorizationRepositoryPort
 import com.coinden.core.domain.port.output.CurrencyProfileRepositoryPort
 import com.coinden.core.domain.port.output.DraftRepositoryPort
+import com.coinden.core.domain.port.output.PreferencesRepositoryPort
 import com.coinden.core.domain.port.output.WalletAliasRepositoryPort
 import com.coinden.core.domain.port.output.WalletRepositoryPort
 import kotlinx.coroutines.CoroutineDispatcher
@@ -215,6 +216,19 @@ class LocalCurrencyProfileRepository(
 
     override suspend fun getProfile(userId: String): UserCurrencyProfile? =
         withContext(dispatcher) { q.profileByUser(userId).executeAsOneOrNull()?.let(StateCodec::decodeProfile) }
+}
+
+class LocalPreferencesRepository(
+    private val db: CoinDenDatabase,
+    private val dispatcher: CoroutineDispatcher,
+) : PreferencesRepositoryPort {
+    override suspend fun languageCode(): String? = withContext(dispatcher) { db.coinDenQueries.settingValue(LANGUAGE).executeAsOneOrNull() }
+
+    override suspend fun setLanguageCode(code: String) = write(dispatcher) { db.coinDenQueries.upsertSetting(LANGUAGE, code) }
+
+    private companion object {
+        const val LANGUAGE = "language"
+    }
 }
 
 /**

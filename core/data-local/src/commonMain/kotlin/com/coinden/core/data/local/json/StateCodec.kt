@@ -51,12 +51,26 @@ object StateCodec {
     fun encodeProfile(profile: UserCurrencyProfile): String =
         CoinDenJson.encodeToString(
             ProfileDto.serializer(),
-            ProfileDto(profile.userId, profile.anchorCurrency.toDto(), profile.localCurrency.toDto(), profile.strategy.toDto()),
+            ProfileDto(
+                profile.userId,
+                profile.anchorCurrency.toDto(),
+                profile.localCurrency.toDto(),
+                profile.strategy.toDto(),
+                profile.currencies.map { it.toDto() },
+                profile.referenceRates.mapValues { it.value.toDto() },
+            ),
         )
 
     fun decodeProfile(json: String): UserCurrencyProfile =
         CoinDenJson.decodeFromString(ProfileDto.serializer(), json).let {
-            UserCurrencyProfile(it.userId, it.anchor.toDomain(), it.local.toDomain(), it.strategy.toDomain())
+            UserCurrencyProfile(
+                it.userId,
+                it.anchor.toDomain(),
+                it.local.toDomain(),
+                it.strategy.toDomain(),
+                it.currencies.map { currency -> currency.toDomain() },
+                it.referenceRates.mapValues { rate -> rate.value.toDomain() },
+            )
         }
 }
 
@@ -92,6 +106,10 @@ internal data class ProfileDto(
     val anchor: CurrencyDto,
     val local: CurrencyDto,
     val strategy: StrategyDto,
+    /** Otras monedas que usa (opcional: los perfiles guardados antes no lo traen). */
+    val currencies: List<CurrencyDto> = emptyList(),
+    /** Tasa de referencia por código de moneda (opcional, igual que [currencies]). */
+    val referenceRates: Map<String, StrategyDto> = emptyMap(),
 )
 
 @Serializable

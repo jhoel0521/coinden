@@ -3,6 +3,7 @@ package com.coinden.core.data.local
 import com.coinden.core.data.memory.InMemoryCategorizationRepository
 import com.coinden.core.data.memory.InMemoryCurrencyProfileRepository
 import com.coinden.core.data.memory.InMemoryDraftRepository
+import com.coinden.core.data.memory.InMemoryPreferencesRepository
 import com.coinden.core.data.memory.InMemoryWalletAliasRepository
 import com.coinden.core.data.memory.InMemoryWalletRepository
 import com.coinden.core.domain.model.AnchorCurrencies
@@ -26,6 +27,7 @@ import com.coinden.core.domain.model.wallet.WalletType
 import com.coinden.core.domain.port.output.CategorizationRepositoryPort
 import com.coinden.core.domain.port.output.CurrencyProfileRepositoryPort
 import com.coinden.core.domain.port.output.DraftRepositoryPort
+import com.coinden.core.domain.port.output.PreferencesRepositoryPort
 import com.coinden.core.domain.port.output.WalletAliasRepositoryPort
 import com.coinden.core.domain.port.output.WalletRepositoryPort
 import kotlinx.coroutines.Dispatchers
@@ -216,6 +218,20 @@ abstract class CurrencyProfileRepositoryContract {
         }
 }
 
+abstract class PreferencesRepositoryContract {
+    abstract fun repo(): PreferencesRepositoryPort
+
+    @Test
+    fun `el idioma elegido se guarda y se reemplaza`() =
+        runTest {
+            val repo = repo()
+            assertNull(repo.languageCode())
+            repo.setLanguageCode("pt")
+            repo.setLanguageCode("en")
+            assertEquals("en", repo.languageCode())
+        }
+}
+
 // --- Implementaciones: memoria y base local ----------------------------------------
 
 class InMemoryWalletRepositoryContractTest : WalletRepositoryContract() {
@@ -256,4 +272,14 @@ class InMemoryCurrencyProfileRepositoryContractTest : CurrencyProfileRepositoryC
 
 class LocalCurrencyProfileRepositoryContractTest : CurrencyProfileRepositoryContract() {
     override fun repo() = LocalCurrencyProfileRepository(freshDatabase(), Dispatchers.Unconfined)
+}
+
+class InMemoryPreferencesRepositoryContractTest : PreferencesRepositoryContract() {
+    override fun repo() =
+        com.coinden.core.data.memory
+            .InMemoryPreferencesRepository()
+}
+
+class LocalPreferencesRepositoryContractTest : PreferencesRepositoryContract() {
+    override fun repo() = LocalPreferencesRepository(freshDatabase(), Dispatchers.Unconfined)
 }

@@ -1,0 +1,5 @@
+-- Versión 1 -> 2: preferencias de la app (idioma elegido).
+CREATE TABLE app_settings (
+    name TEXT NOT NULL PRIMARY KEY,
+    value TEXT NOT NULL
+);

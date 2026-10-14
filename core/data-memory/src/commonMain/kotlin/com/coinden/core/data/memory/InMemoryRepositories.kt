@@ -10,6 +10,7 @@ import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.port.output.CategorizationRepositoryPort
 import com.coinden.core.domain.port.output.CurrencyProfileRepositoryPort
 import com.coinden.core.domain.port.output.DraftRepositoryPort
+import com.coinden.core.domain.port.output.PreferencesRepositoryPort
 import com.coinden.core.domain.port.output.WalletAliasRepositoryPort
 import com.coinden.core.domain.port.output.WalletRepositoryPort
 import kotlinx.coroutines.sync.Mutex
@@ -117,4 +118,13 @@ class InMemoryCurrencyProfileRepository : CurrencyProfileRepositoryPort {
     override suspend fun saveProfile(profile: UserCurrencyProfile) = mutex.withLock { profiles[profile.userId] = profile }
 
     override suspend fun getProfile(userId: String): UserCurrencyProfile? = mutex.withLock { profiles[userId] }
+}
+
+class InMemoryPreferencesRepository : PreferencesRepositoryPort {
+    private val mutex = Mutex()
+    private var language: String? = null
+
+    override suspend fun languageCode(): String? = mutex.withLock { language }
+
+    override suspend fun setLanguageCode(code: String) = mutex.withLock { language = code }
 }
