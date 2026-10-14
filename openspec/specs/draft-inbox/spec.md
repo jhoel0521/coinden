@@ -39,7 +39,7 @@ El sistema DEBE (MUST) recibir del intérprete propuestas tipadas en las que el 
 El sistema DEBE (MUST) aceptar la billetera de una propuesta por su id o por una pista de texto, y resolver las pistas con alias definidos por el usuario para cada billetera, sin distinguir mayúsculas. Una pista sin coincidencia deja la billetera como faltante.
 
 #### Scenario: Alias definido por el usuario
-- **WHEN** Carlos definió el alias "qr" para "BNB Bs" y una propuesta trae la pista "QR"
+- **WHEN** Carlos definió el alias "bnb" para "BNB Bs" y una propuesta trae la pista "BNB"
 - **THEN** el borrador usa la billetera "BNB Bs"
 
 #### Scenario: Pista desconocida
@@ -80,7 +80,7 @@ Un borrador DEBE (MUST) estar Listo solo cuando su propuesta tiene todos los dat
 Confirmar un borrador Listo DEBE (MUST) registrar su movimiento en el libro aplicando todas las reglas de `wallet-management`, con el momento de ocurrencia de la propuesta o, si falta, el de la captura. Si el libro rechaza el movimiento, el borrador sigue Listo con el motivo del rechazo. Solo un borrador Listo puede confirmarse. Al confirmar un gasto, el usuario puede indicar una categoría; el sistema registra la clasificación con la nota del borrador como descripción y, si no se indicó categoría, el gasto queda Sin categoría. La categoría nunca bloquea la confirmación.
 
 #### Scenario: Confirmar el almuerzo
-- **WHEN** Carlos confirma a las 21:00 el borrador "almuerzo 45 qr" capturado a las 12:58
+- **WHEN** Carlos confirma a las 21:00 el borrador "almuerzo 45 bnb" capturado a las 12:58
 - **THEN** el libro registra un gasto de 45.00 Bs en "BNB Bs" ocurrido a las 12:58 y el borrador queda Confirmado con el id del movimiento
 
 #### Scenario: Rechazo por saldo
