@@ -15,6 +15,7 @@ import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.draft.WalletDirectory
 import com.coinden.core.domain.model.draft.WalletRef
+import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.Wallet
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,6 +45,8 @@ data class DraftCard(
     val walletSuggested: Boolean,
     val confidence: Confidence,
     val category: CategoryView?,
+    /** Medio de pago dicho ("qr", "efectivo"); null si no se dijo. */
+    val paymentMethod: PaymentMethod? = null,
 )
 
 data class CaptureDemoState(
@@ -107,9 +110,18 @@ class CaptureDemoPresenter(
             walletName = wallet?.name,
             walletSuggested = proposal?.origins?.get(DraftField.WALLET) == FieldOrigin.SUGGESTED,
             confidence = draft.confidence,
+            paymentMethod = proposal?.let(::paymentMethodOf),
             category = suggestion?.let { CategoryView(it.category, it.reason) },
         )
     }
+
+    private fun paymentMethodOf(proposal: MovementProposal): PaymentMethod? =
+        when (proposal) {
+            is MovementProposal.Expense -> proposal.paymentMethod
+            is MovementProposal.Income -> proposal.paymentMethod
+            is MovementProposal.Transfer -> proposal.paymentMethod
+            else -> null
+        }
 
     private fun statusOf(draft: Draft): DraftStatusView =
         when (draft) {

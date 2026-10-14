@@ -113,7 +113,13 @@ class EventCodecTest {
         val events =
             listOf(
                 ClassificationEvent(
-                    "k1", "m1", "carlos", "dev", t, t, "almuerzo",
+                    "k1",
+                    "m1",
+                    "carlos",
+                    "dev",
+                    t,
+                    t,
+                    "almuerzo",
                     CategoryRef.Base(
                         BaseCategory.FOOD,
                     ),

@@ -34,7 +34,12 @@ class JsonDotNotationExtractor : RateResponseExtractor {
     ): String? {
         if (payload.isBlank() || selector.isBlank()) return null
 
-        val pathSegments = selector.trim().split(".").map { it.trim() }.filter { it.isNotEmpty() }
+        val pathSegments =
+            selector
+                .trim()
+                .split(".")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
         if (pathSegments.isEmpty()) return null
 
         var currentScope = payload

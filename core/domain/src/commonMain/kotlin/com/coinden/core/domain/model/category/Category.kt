@@ -23,9 +23,13 @@ enum class BaseCategory {
 
 /** Referencia a una categoría: base o propia del usuario. */
 sealed interface CategoryRef {
-    data class Base(val category: BaseCategory) : CategoryRef
+    data class Base(
+        val category: BaseCategory,
+    ) : CategoryRef
 
-    data class Custom(val id: String) : CategoryRef
+    data class Custom(
+        val id: String,
+    ) : CategoryRef
 }
 
 /** Categoría creada por el usuario; su nombre se guarda tal como lo escribió. Nunca se borra. */
@@ -57,9 +61,13 @@ data class CategoryRule(
 
 /** Por qué se recomendó una categoría, para poder explicarlo. */
 sealed interface SuggestionReason {
-    data class UserRule(val key: String) : SuggestionReason
+    data class UserRule(
+        val key: String,
+    ) : SuggestionReason
 
-    data class PackWord(val word: String) : SuggestionReason
+    data class PackWord(
+        val word: String,
+    ) : SuggestionReason
 }
 
 data class CategorySuggestion(

@@ -93,7 +93,10 @@ class CaptureDemoPresenterTest {
             presenter.onTextChange("   ")
             presenter.onCapture()
 
-            assertTrue(presenter.state.value.cards.isEmpty())
+            assertTrue(
+                presenter.state.value.cards
+                    .isEmpty(),
+            )
         }
 
     @Test
@@ -111,7 +114,11 @@ class CaptureDemoPresenterTest {
             val today = CaptureDemoPresenter(container)
             today.load()
 
-            assertEquals(listOf("almuerzo 45 qr", "page 3 bs para trasmporte"), today.state.value.cards.map { it.evidenceText })
+            assertEquals(
+                listOf("almuerzo 45 qr", "page 3 bs para trasmporte"),
+                today.state.value.cards
+                    .map { it.evidenceText },
+            )
             assertEquals(yesterday.state.value.cards, today.state.value.cards)
         }
 }

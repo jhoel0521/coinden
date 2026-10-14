@@ -12,7 +12,12 @@ import com.coinden.core.domain.model.wallet.WalletType
 object DemoSeed {
     suspend fun seed(container: AppContainer) {
         val owner = container.ownerId
-        if (container.drafts.wallets.listWallets(owner).isNotEmpty()) return
+        if (container.drafts.wallets
+                .listWallets(owner)
+                .isNotEmpty()
+        ) {
+            return
+        }
         val cash = create(container, "Billetera", WalletType.CASH, "100")
         val bank = create(container, "BNB Bs", WalletType.BANK, "500")
         container.setDefaultWallet(owner, cash)

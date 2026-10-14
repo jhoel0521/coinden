@@ -60,9 +60,14 @@ class ConfigureLocalCurrencyUseCase(
  * Resultado de la prueba de extracción y confirmación del selector web.
  */
 sealed interface SelectorConfirmationResult {
-    data class Success(val extractedRate: ExchangeRate, val selector: SavedRateSelector) : SelectorConfirmationResult
+    data class Success(
+        val extractedRate: ExchangeRate,
+        val selector: SavedRateSelector,
+    ) : SelectorConfirmationResult
 
-    data class Failure(val reason: SelectorFailure) : SelectorConfirmationResult
+    data class Failure(
+        val reason: SelectorFailure,
+    ) : SelectorConfirmationResult
 }
 
 /**

@@ -14,9 +14,7 @@ class InMemoryCurrencyProfileRepository : CurrencyProfileRepositoryPort {
         profiles[profile.userId] = profile
     }
 
-    override suspend fun getProfile(userId: String): UserCurrencyProfile? {
-        return profiles[userId]
-    }
+    override suspend fun getProfile(userId: String): UserCurrencyProfile? = profiles[userId]
 
     fun clear() {
         profiles.clear()
@@ -36,7 +34,5 @@ class FakeWebFetcher : RemoteWebFetcherPort {
         responses[url] = content
     }
 
-    override suspend fun fetchUrl(url: String): String {
-        return responses[url] ?: throw IllegalStateException("404 Not Found simulado para: $url")
-    }
+    override suspend fun fetchUrl(url: String): String = responses[url] ?: throw IllegalStateException("404 Not Found simulado para: $url")
 }

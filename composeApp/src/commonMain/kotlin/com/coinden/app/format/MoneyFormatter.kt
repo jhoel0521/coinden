@@ -24,7 +24,12 @@ object MoneyFormatter {
         val unsigned = canonical.removePrefix("-")
         val integer = unsigned.substringBefore('.')
         val fraction = unsigned.substringAfter('.', "")
-        val grouped = integer.reversed().chunked(3).joinToString(groupSeparator.toString()).reversed()
+        val grouped =
+            integer
+                .reversed()
+                .chunked(3)
+                .joinToString(groupSeparator.toString())
+                .reversed()
         return if (fraction.isEmpty()) "$sign$grouped" else "$sign$grouped$decimalSeparator$fraction"
     }
 }

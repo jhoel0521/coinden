@@ -342,18 +342,19 @@ class GetDraftInboxUseCase(
                 ProjectedBalance(walletId, current.getValue(walletId), balance, !wallet.allowsNegative && balance.isNegative)
             }
         val suggestions =
-            ctx.categorization?.let { categorization ->
-                pending
-                    .mapNotNull { draft ->
-                        val proposal =
-                            when (draft) {
-                                is Draft.Ready -> draft.proposal
-                                is Draft.Incomplete -> draft.proposal
-                                else -> null
-                            } as? MovementProposal.Expense
-                        proposal?.note?.let { note -> categorization.suggest(ownerId, note)?.let { draft.id to it } }
-                    }.toMap()
-            }.orEmpty()
+            ctx.categorization
+                ?.let { categorization ->
+                    pending
+                        .mapNotNull { draft ->
+                            val proposal =
+                                when (draft) {
+                                    is Draft.Ready -> draft.proposal
+                                    is Draft.Incomplete -> draft.proposal
+                                    else -> null
+                                } as? MovementProposal.Expense
+                            proposal?.note?.let { note -> categorization.suggest(ownerId, note)?.let { draft.id to it } }
+                        }.toMap()
+                }.orEmpty()
         return DraftInbox(pending, projections, suggestions)
     }
 }

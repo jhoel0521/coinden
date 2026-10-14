@@ -51,7 +51,16 @@ data class Currency(
 
         private val PREDEFINED_MAP: Map<String, Currency> =
             listOf(
-                USD, EUR, CNY, BTC, BOB, ARS, CLP, COP, PEN, BRL,
+                USD,
+                EUR,
+                CNY,
+                BTC,
+                BOB,
+                ARS,
+                CLP,
+                COP,
+                PEN,
+                BRL,
             ).associateBy { it.code }
 
         fun of(

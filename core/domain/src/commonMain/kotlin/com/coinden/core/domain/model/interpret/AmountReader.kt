@@ -18,9 +18,24 @@ data class UserLocale(
         val COMMA_DECIMAL_COUNTRIES = setOf("AR", "BR", "CL", "CO", "UY", "PY", "VE", "ES", "PT", "DE", "FR", "IT")
         val COUNTRY_CURRENCY =
             mapOf(
-                "US" to "USD", "BO" to "BOB", "AR" to "ARS", "BR" to "BRL", "CL" to "CLP", "MX" to "MXN",
-                "CO" to "COP", "PE" to "PEN", "UY" to "UYU", "PY" to "PYG", "EC" to "USD", "ES" to "EUR",
-                "PT" to "EUR", "DE" to "EUR", "FR" to "EUR", "IT" to "EUR", "GB" to "GBP", "CN" to "CNY",
+                "US" to "USD",
+                "BO" to "BOB",
+                "AR" to "ARS",
+                "BR" to "BRL",
+                "CL" to "CLP",
+                "MX" to "MXN",
+                "CO" to "COP",
+                "PE" to "PEN",
+                "UY" to "UYU",
+                "PY" to "PYG",
+                "EC" to "USD",
+                "ES" to "EUR",
+                "PT" to "EUR",
+                "DE" to "EUR",
+                "FR" to "EUR",
+                "IT" to "EUR",
+                "GB" to "GBP",
+                "CN" to "CNY",
             )
     }
 }
@@ -106,8 +121,15 @@ object MoneyScanner {
     private val SYMBOL_BEFORE = Regex("""(US[$]|U[$]S|R[$]|Bs\.?|S/\.?|€|£|[$])\s*$""", RegexOption.IGNORE_CASE)
     private val SYMBOLS =
         mapOf(
-            "us$" to "USD", "u\$s" to "USD", "r$" to "BRL", "bs" to "BOB", "bs." to "BOB",
-            "s/" to "PEN", "s/." to "PEN", "€" to "EUR", "£" to "GBP",
+            "us$" to "USD",
+            "u\$s" to "USD",
+            "r$" to "BRL",
+            "bs" to "BOB",
+            "bs." to "BOB",
+            "s/" to "PEN",
+            "s/." to "PEN",
+            "€" to "EUR",
+            "£" to "GBP",
         )
     private val ISO_CODES =
         setOf("USD", "EUR", "BOB", "BRL", "ARS", "CLP", "COP", "PEN", "MXN", "UYU", "PYG", "GBP", "CNY", "BTC", "USDT")
@@ -117,38 +139,45 @@ object MoneyScanner {
         locale: UserLocale,
         currencyWords: Map<String, String?>,
     ): List<MoneyMatch> =
-        NUMBER.findAll(line).mapNotNull { number ->
-            val amount = AmountReader.read(number.value, locale) ?: return@mapNotNull null
-            val before = line.substring(0, number.range.first)
-            val after = line.substring(number.range.last + 1)
+        NUMBER
+            .findAll(line)
+            .mapNotNull { number ->
+                val amount = AmountReader.read(number.value, locale) ?: return@mapNotNull null
+                val before = line.substring(0, number.range.first)
+                val after = line.substring(number.range.last + 1)
 
-            var currency: Currency? = null
-            var inferred = false
-            var start = number.range.first
-            SYMBOL_BEFORE.find(before)?.let { symbol ->
-                val key = symbol.groupValues[1].lowercase()
-                if (key == "$") {
-                    currency = locale.currency
-                    inferred = true
-                } else {
-                    currency = Currency.of(SYMBOLS.getValue(key))
+                var currency: Currency? = null
+                var inferred = false
+                var start = number.range.first
+                SYMBOL_BEFORE.find(before)?.let { symbol ->
+                    val key = symbol.groupValues[1].lowercase()
+                    if (key == "$") {
+                        currency = locale.currency
+                        inferred = true
+                    } else {
+                        currency = Currency.of(SYMBOLS.getValue(key))
+                    }
+                    start = symbol.range.first
                 }
-                start = symbol.range.first
-            }
-            val nextWord = Regex("""^\s*([\p{L}$]+)""").find(after)?.groupValues?.get(1)
-            if (currency == null && nextWord != null) {
-                val normalized = TextNormalizer.normalize(nextWord)
-                when {
-                    nextWord.uppercase() in ISO_CODES -> currency = Currency.of(nextWord.uppercase())
-                    normalized in SYMBOLS -> currency = Currency.of(SYMBOLS.getValue(normalized))
-                    normalized in currencyWords -> {
-                        val code = currencyWords[normalized]
-                        currency = if (code != null) Currency.of(code) else locale.currency
-                        inferred = code == null
+                val nextWord = Regex("""^\s*([\p{L}$]+)""").find(after)?.groupValues?.get(1)
+                if (currency == null && nextWord != null) {
+                    val normalized = TextNormalizer.normalize(nextWord)
+                    when {
+                        nextWord.uppercase() in ISO_CODES -> currency = Currency.of(nextWord.uppercase())
+                        normalized in SYMBOLS -> currency = Currency.of(SYMBOLS.getValue(normalized))
+                        normalized in currencyWords -> {
+                            val code = currencyWords[normalized]
+                            currency = if (code != null) Currency.of(code) else locale.currency
+                            inferred = code == null
+                        }
                     }
                 }
-            }
-            val negative = before.trimEnd().removeSuffix(SYMBOL_BEFORE.find(before)?.value?.trim() ?: "").trimEnd().endsWith("-")
-            MoneyMatch(amount, currency, inferred, negative, start, number.range.last + 1)
-        }.toList()
+                val negative =
+                    before
+                        .trimEnd()
+                        .removeSuffix(SYMBOL_BEFORE.find(before)?.value?.trim() ?: "")
+                        .trimEnd()
+                        .endsWith("-")
+                MoneyMatch(amount, currency, inferred, negative, start, number.range.last + 1)
+            }.toList()
 }

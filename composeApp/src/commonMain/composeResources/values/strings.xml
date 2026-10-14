@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_title">CoinDen</string>
-    <string name="demo_notice">Demostración: tus datos se guardan cifrados en este teléfono.</string>
-    <string name="capture_hint">Escribe un gasto, por ejemplo: almuerzo 45 qr</string>
+    <string name="logo_description">CoinDen</string>
+    <string name="wordmark_coin">Coin</string>
+    <string name="wordmark_den">Den</string>
+    <string name="privacy_badge">Privado</string>
+    <string name="privacy_note">Cifrado en este teléfono. Nada sale de aquí.</string>
+    <string name="capture_title">Captura rápida</string>
+    <string name="capture_subtitle">Escríbelo como lo dirías. Lo revisas con calma en la noche.</string>
+    <string name="capture_field_label">¿Qué gastaste?</string>
+    <string name="capture_hint">almuerzo 45 qr</string>
     <string name="capture_button">Capturar</string>
     <string name="capture_empty">Todavía no hay borradores. Escribe una frase y captúrala.</string>
+    <string name="drafts_title">Tus borradores</string>
+    <string name="draft_not_counted">No cambia tus saldos hasta que lo confirmes.</string>
+    <string name="evidence_quote">«%1$s»</string>
 
     <string name="kind_expense">Gasto</string>
     <string name="kind_income">Ingreso</string>
@@ -18,13 +28,20 @@
     <string name="status_ready">Listo para confirmar</string>
     <string name="status_unsupported">No soportado todavía</string>
 
-    <string name="confidence_low">Confianza baja</string>
+    <string name="confidence_low">Confianza baja · revisar</string>
     <string name="confidence_medium">Confianza media</string>
     <string name="confidence_high">Confianza alta</string>
 
     <string name="amount_missing">Sin monto</string>
     <string name="wallet_missing">Sin billetera</string>
-    <string name="wallet_suggested">%1$s (sugerida)</string>
+    <string name="suggested_tag">sugerida</string>
+    <string name="field_wallet">Billetera</string>
+    <string name="field_method">Medio</string>
+    <string name="field_category">Categoría</string>
+
+    <string name="method_cash">Efectivo</string>
+    <string name="method_transfer">Transferencia o QR</string>
+    <string name="method_card">Tarjeta</string>
 
     <string name="category_none">Sin categoría</string>
     <string name="category_custom">Categoría propia</string>

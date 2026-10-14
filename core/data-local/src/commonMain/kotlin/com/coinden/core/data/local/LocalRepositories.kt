@@ -31,6 +31,12 @@ private object Streams {
     const val CLASSIFICATION = "classification"
 }
 
+/** Escribe en el hilo de la base. Lo que devuelve el driver no se expone: los puertos devuelven Unit. */
+private suspend fun write(
+    dispatcher: CoroutineDispatcher,
+    block: () -> Unit,
+) = withContext(dispatcher) { block() }
+
 /** Agrega un evento con sus referencias en una transacción; rechaza un id ya guardado. */
 private fun CoinDenDatabase.append(
     id: String,
@@ -54,7 +60,7 @@ class LocalWalletRepository(
     private val q get() = db.coinDenQueries
 
     override suspend fun saveWallet(wallet: Wallet) =
-        withContext(dispatcher) {
+        write(dispatcher) {
             q.upsertWallet(wallet.id, wallet.ownerId, StateCodec.encodeWallet(wallet))
         }
 
@@ -143,7 +149,7 @@ class LocalWalletAliasRepository(
     override suspend fun setDefaultWallet(
         ownerId: String,
         walletId: String?,
-    ) = withContext(dispatcher) { q.upsertDefaultWallet(ownerId, walletId) }
+    ) = write(dispatcher) { q.upsertDefaultWallet(ownerId, walletId) }
 
     override suspend fun defaultWalletFor(ownerId: String): String? =
         withContext(dispatcher) { q.defaultWallet(ownerId).executeAsOneOrNull()?.wallet_id }
@@ -184,7 +190,7 @@ class LocalCategorizationRepository(
         }
 
     override suspend fun saveRule(rule: CategoryRule) =
-        withContext(dispatcher) {
+        write(dispatcher) {
             q.upsertRule(rule.ownerId, rule.key, StateCodec.encodeRule(rule))
         }
 
@@ -192,7 +198,7 @@ class LocalCategorizationRepository(
         withContext(dispatcher) { q.rulesByOwner(ownerId).executeAsList().map(StateCodec::decodeRule) }
 
     override suspend fun saveCustomCategory(category: CustomCategory) =
-        withContext(dispatcher) { q.upsertCustomCategory(category.id, category.ownerId, StateCodec.encodeCustomCategory(category)) }
+        write(dispatcher) { q.upsertCustomCategory(category.id, category.ownerId, StateCodec.encodeCustomCategory(category)) }
 
     override suspend fun customCategoriesOf(ownerId: String): List<CustomCategory> =
         withContext(dispatcher) { q.customCategoriesByOwner(ownerId).executeAsList().map(StateCodec::decodeCustomCategory) }
@@ -205,7 +211,7 @@ class LocalCurrencyProfileRepository(
     private val q get() = db.coinDenQueries
 
     override suspend fun saveProfile(profile: UserCurrencyProfile) =
-        withContext(dispatcher) { q.upsertProfile(profile.userId, StateCodec.encodeProfile(profile)) }
+        write(dispatcher) { q.upsertProfile(profile.userId, StateCodec.encodeProfile(profile)) }
 
     override suspend fun getProfile(userId: String): UserCurrencyProfile? =
         withContext(dispatcher) { q.profileByUser(userId).executeAsOneOrNull()?.let(StateCodec::decodeProfile) }

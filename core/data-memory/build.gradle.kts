@@ -34,7 +34,7 @@ kotlin {
 
 android {
     namespace = "com.coinden.core.data.memory"
-    compileSdk = 34
+    compileSdk = 36
     defaultConfig {
         minSdk = 26
     }

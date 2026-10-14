@@ -64,7 +64,7 @@ sqldelight {
 
 android {
     namespace = "com.coinden.core.data.local"
-    compileSdk = 34
+    compileSdk = 36
     defaultConfig {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

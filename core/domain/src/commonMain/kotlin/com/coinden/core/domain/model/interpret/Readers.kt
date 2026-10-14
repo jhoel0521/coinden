@@ -387,8 +387,7 @@ private fun accountWallet(
 ): WalletRef? {
     val digits = accountText?.let { Regex("""\d{4,}""").findAll(it).maxByOrNull { m -> m.value.length }?.value } ?: return null
     val alias =
-        directory.aliases.keys.firstOrNull {
-                key ->
+        directory.aliases.keys.firstOrNull { key ->
             key.length >= 4 && key.all(Char::isDigit) && digits.contains(key)
         } ?: return null
     return WalletRef.ByHint(alias)
@@ -491,9 +490,11 @@ object GenericReceiptReader {
         val all = MoneyScanner.scan(text, ctx.locale, pack.currencyWords)
 
         val labeled =
-            lines.firstLabel(
-                pack.amountLabels,
-            )?.first?.let { MoneyScanner.scan(it, ctx.locale, pack.currencyWords).firstOrNull() }
+            lines
+                .firstLabel(
+                    pack.amountLabels,
+                )?.first
+                ?.let { MoneyScanner.scan(it, ctx.locale, pack.currencyWords).firstOrNull() }
         val amount =
             when {
                 labeled != null -> labeled.toRead(FieldOrigin.EVIDENCE)
@@ -544,7 +545,15 @@ object GenericReceiptReader {
     /** Orden por valor de un decimal canónico sin coma flotante: parte entera y luego decimales. */
     private val BY_VALUE: Comparator<MoneyMatch> =
         compareBy<MoneyMatch>(
-            { it.amount.canonical.substringBefore('.').toLong() },
-            { it.amount.canonical.substringAfter('.', "").padEnd(8, '0') },
+            {
+                it.amount.canonical
+                    .substringBefore('.')
+                    .toLong()
+            },
+            {
+                it.amount.canonical
+                    .substringAfter('.', "")
+                    .padEnd(8, '0')
+            },
         )
 }

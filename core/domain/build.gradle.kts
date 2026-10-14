@@ -37,7 +37,7 @@ kotlin {
 
 android {
     namespace = "com.coinden.core.domain"
-    compileSdk = 34
+    compileSdk = 36
     defaultConfig {
         minSdk = 26
     }

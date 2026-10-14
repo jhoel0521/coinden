@@ -36,9 +36,13 @@ data class ProposedAmount(
 
 /** Billetera indicada por su id o por una pista de texto ("qr", "meru") que se resuelve con alias. */
 sealed interface WalletRef {
-    data class ById(val walletId: String) : WalletRef
+    data class ById(
+        val walletId: String,
+    ) : WalletRef
 
-    data class ByHint(val hint: String) : WalletRef
+    data class ByHint(
+        val hint: String,
+    ) : WalletRef
 }
 
 /** Intenciones reconocibles que no son movimientos de dinero (se guardan como No soportado). */

@@ -46,7 +46,12 @@ class CategorizationContext(
         description: String?,
     ): CategorySuggestion? {
         val pack = (listOf(LanguagePacks.ENGLISH) + packs.languagePacks().filter { it.code != LanguagePacks.ENGLISH.code }).merged()
-        val archived = repository.customCategoriesOf(ownerId).filter { it.archived }.map { it.id }.toSet()
+        val archived =
+            repository
+                .customCategoriesOf(ownerId)
+                .filter { it.archived }
+                .map { it.id }
+                .toSet()
         return Categorizer.suggest(description, repository.rulesOf(ownerId), pack, archived)
     }
 

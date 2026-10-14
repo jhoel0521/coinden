@@ -10,8 +10,16 @@ import kotlin.test.assertNull
 class DateTimeReaderTest {
     private val months =
         mapOf(
-            "oct" to 10, "octubre" to 10, "out" to 10, "outubro" to 10, "october" to 10,
-            "ene" to 1, "jan" to 1, "dic" to 12, "dez" to 12, "dec" to 12,
+            "oct" to 10,
+            "octubre" to 10,
+            "out" to 10,
+            "outubro" to 10,
+            "october" to 10,
+            "ene" to 1,
+            "jan" to 1,
+            "dic" to 12,
+            "dez" to 12,
+            "dec" to 12,
         )
     private val bo = UserLocale("es", "BO")
     private val us = UserLocale("en", "US")

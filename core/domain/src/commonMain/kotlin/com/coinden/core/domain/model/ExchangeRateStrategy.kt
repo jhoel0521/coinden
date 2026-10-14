@@ -38,13 +38,12 @@ data class SavedRateSelector(
     fun updateRate(
         newRate: ExchangeRate,
         fetchEpochMs: Long,
-    ): SavedRateSelector {
-        return copy(
+    ): SavedRateSelector =
+        copy(
             lastKnownRate = newRate,
             lastSuccessfulFetchEpochMs = fetchEpochMs,
             status = SelectorStatus.ACTIVE,
         )
-    }
 }
 
 /**
@@ -55,7 +54,9 @@ data class SavedRateSelector(
  */
 sealed interface ExchangeRateStrategy {
     /** Tasa fija invariable (ej. 1 USD = 1.0 USD o paridad fija). */
-    data class Fixed(val rate: ExchangeRate) : ExchangeRateStrategy
+    data class Fixed(
+        val rate: ExchangeRate,
+    ) : ExchangeRateStrategy
 
     /** Tasa introducida manualmente por el usuario día a día. */
     data class ManualDaily(

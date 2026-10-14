@@ -46,9 +46,15 @@ sealed interface WalletOperationResult {
         val openingBalance: LedgerEvent.OpeningBalance,
     ) : WalletOperationResult
 
-    data class WalletUpdated(val wallet: Wallet) : WalletOperationResult
+    data class WalletUpdated(
+        val wallet: Wallet,
+    ) : WalletOperationResult
 
-    data class EventRecorded(val event: LedgerEvent) : WalletOperationResult
+    data class EventRecorded(
+        val event: LedgerEvent,
+    ) : WalletOperationResult
 
-    data class Rejected(val error: WalletError) : WalletOperationResult
+    data class Rejected(
+        val error: WalletError,
+    ) : WalletOperationResult
 }

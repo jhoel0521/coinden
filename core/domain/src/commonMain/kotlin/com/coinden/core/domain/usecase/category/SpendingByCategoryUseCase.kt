@@ -57,22 +57,23 @@ class SpendingByCategoryUseCase(
         val byCategory = expenses.groupBy { ctx.current(it.id)?.category }
 
         val rows =
-            byCategory.map { (category, items) ->
-                val byCurrency =
-                    items
-                        .groupBy { it.amount.currency.code }
-                        .values
-                        .map { same -> same.map { it.amount }.reduce { acc, m -> acc + m } }
-                        .sortedBy { it.currency.code != local.code }
-                var consolidated = Money.zero(local)
-                var unconverted = false
-                byCurrency.forEach { amount ->
-                    runCatching { rates.converter.convert(amount, local) }
-                        .onSuccess { consolidated += it }
-                        .onFailure { unconverted = true }
-                }
-                CategoryTotal(category, byCurrency, consolidated, unconverted)
-            }.sortedByDescending { it.consolidated }
+            byCategory
+                .map { (category, items) ->
+                    val byCurrency =
+                        items
+                            .groupBy { it.amount.currency.code }
+                            .values
+                            .map { same -> same.map { it.amount }.reduce { acc, m -> acc + m } }
+                            .sortedBy { it.currency.code != local.code }
+                    var consolidated = Money.zero(local)
+                    var unconverted = false
+                    byCurrency.forEach { amount ->
+                        runCatching { rates.converter.convert(amount, local) }
+                            .onSuccess { consolidated += it }
+                            .onFailure { unconverted = true }
+                    }
+                    CategoryTotal(category, byCurrency, consolidated, unconverted)
+                }.sortedByDescending { it.consolidated }
 
         val total = rows.fold(Money.zero(local)) { acc, row -> acc + row.consolidated }
         return SpendingReport(local, rows, total)

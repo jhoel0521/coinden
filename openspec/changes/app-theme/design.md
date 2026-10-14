@@ -14,6 +14,22 @@ Ver proposal.md (Why) y el spec `app-theme`. La fuente de verdad visual es el li
 
 ## Decisions
 
+### D0. Versiones
+| Pieza | De | A | Motivo |
+|---|---|---|---|
+| Kotlin (+ plugins compose y serialization) | 2.0.21 | 2.4.21 | última estable; requisito de CMP 1.12 (mínimo 2.1) |
+| Compose Multiplatform | 1.7.3 | 1.11.1 | fuentes variables con peso (`variationSettings`). La 1.12.1 (Jetpack Compose 1.12) exige AGP 9.1 y compileSdk 37: llega con el cambio de AGP 9 |
+| Android Gradle Plugin | 8.5.2 | 8.13.2 | último AGP 8; Kotlin 2.4.21 admite AGP 8.5.2–9.3.1 |
+| Gradle | 8.14.3 | 8.14.3 | ya cumple AGP 8.13 y Kotlin 2.4 (7.6.3–9.7.0) |
+| compileSdk / targetSdk | 34 | 36 | requerido por las librerías AndroidX nuevas; plataforma 36 ya instalada |
+| SQLDelight | 2.0.2 | 2.4.1 | compatible con Kotlin 2.4 |
+| SQLCipher / AndroidX SQLite | 4.6.1 / 2.4.0 | 4.19.1 / 2.7.1 | al día |
+| kotlinx.serialization / coroutines | 1.7.3 / 1.9.0 | 1.11.0 / 1.11.0 | al día |
+| Activity Compose | 1.9.3 | 1.13.0 | al día |
+| ktlint Gradle | 12.1.2 | 14.2.0 | al día |
+
+Fuente de compatibilidad: guía de compatibilidad de Kotlin Multiplatform y tabla de versiones de Compose Multiplatform. AGP 9 se descarta aquí: con él, el plugin de Kotlin Multiplatform deja de ser compatible con `com.android.application` y `com.android.library` en el mismo módulo, lo que obliga a separar la app y migrar las librerías (cambio propio). Si alguna librería no compila con esta combinación, se baja solo esa pieza a la versión compatible más alta y se anota aquí.
+
 ### D1. Paletas como datos
 `CoinDenPalette` (data class en `commonMain/.../theme`) con los roles de Material 3 que usa el diseño más `success`, `onSuccess`, `successContainer`, `onSuccessContainer`, `warning`, `warningContainer` y `onWarningContainer`. Dos instancias, `Cobre` y `CobreNoche`, con los hex del lienzo:
 
