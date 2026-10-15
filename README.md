@@ -92,8 +92,8 @@ Los principios completos están en [MANIFIESTO.md](MANIFIESTO.md). En resumen:
 | 5 | `local-persistence` | SQLDelight + SQLCipher: billeteras, libro, borradores y alias, cifrados | adaptador | L | ✅ |
 | — | `payment-method-hints` | QR, Pix o efectivo son medios de pago, no billeteras: filtran candidatas | dominio | S | ✅ |
 | — | `app-theme` | identidad visual Cobre (claro y oscuro), tipografías y tarjeta de borrador | UI | M | ✅ |
-| 6 | `onboarding-wallets-ui` | moneda local y tasa, billeteras, alias y billetera por defecto | UI | M | 🔜 siguiente |
-| 7 | `capture-ui` + compartir a CoinDen | captura rápida y comprobantes compartidos desde Yape o el banco | UI + adaptador | M | |
+| 6 | `onboarding` | idioma (es/en/pt), monedas que usas con tasas de referencia, billeteras con apodos automáticos e Inicio | UI | L | ✅ |
+| 7 | `capture-ui` + compartir a CoinDen | captura rápida y comprobantes compartidos desde Yape o el banco | UI + adaptador | M | 🔜 siguiente |
 | 8 | `perception-adapters` | voz a texto y OCR on-device → texto para el intérprete | adaptador | M | |
 | 9 | `review-inbox-ui` | la bandeja de la noche: lo dudoso primero, completar y confirmar | UI | M | |
 | 10 | `insights-ui` | saldos, patrimonio consolidado y gasto del mes por categoría | UI | M | |
