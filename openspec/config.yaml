@@ -11,10 +11,10 @@ schema: spec-driven
 context: |
   Escribe todos los artefactos (proposal, specs, design, tasks) en español.
   Respeta MANIFIESTO.md: ningún artefacto puede contradecir sus principios del producto.
-  Local-first y cero servidores de CoinDen: sin backend propio, cuenta obligatoria, telemetría ni APIs de IA remotas; los datos solo viajan entre dispositivos del usuario (sync P2P) o a su propia nube (respaldo futuro), cifrados y por decisión explícita; descargar paquetes de idioma o plantillas no envía datos del usuario.
+  Local-first y cero servidores de CoinDen: sin backend propio, cuenta obligatoria, telemetría ni APIs de IA remotas; los datos solo viajan entre dispositivos del usuario (sync P2P) o a su propia nube (respaldo futuro), cifrados y por decisión explícita; descargar paquetes de idioma, plantillas o modelos on-device no envía datos del usuario.
   Agnóstico: ningún país, idioma ni banco es especial; palabras clave y formatos de comprobante son datos (paquetes y plantillas), el inglés es la base.
   Sync-ready desde el día 1: IDs UUID, movimientos append-only y correcciones como nuevos eventos; ningún diseño puede asumir un único dispositivo.
-  Inteligencia determinista: parsing, categorización y cálculos son reglas puras y testeables en core/domain; voz y OCR son adaptadores on-device detrás de puertos.
+  Inteligencia local y verificable: parsing, categorización y cálculos son reglas puras y testeables en core/domain; voz, OCR y modelos de lenguaje son adaptadores on-device detrás de puertos; un modelo de lenguaje solo propone con el contrato del intérprete (prompt fijo, temperatura 0, formato cerrado), entra cuando las reglas no entienden y el dominio valida todo; nunca APIs de IA remotas.
   Tasas reales: las operaciones de cambio guardan su propia tasa; la tasa configurada solo sirve para valorar el patrimonio.
   Categoría (en qué) y medio de pago (de qué billetera) son ejes distintos.
   Capturar ≠ confirmar: los borradores no afectan saldos hasta que el usuario los confirma.
