@@ -1,5 +1,7 @@
 package com.coinden.app
 
+import com.coinden.app.capture.AttachmentStore
+import com.coinden.app.capture.InMemoryAttachmentStore
 import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.i18n.LanguageAwarePacks
 import com.coinden.core.data.memory.InMemoryCategorizationRepository
@@ -9,12 +11,16 @@ import com.coinden.core.data.memory.InMemoryPreferencesRepository
 import com.coinden.core.data.memory.InMemoryWalletAliasRepository
 import com.coinden.core.data.memory.InMemoryWalletRepository
 import com.coinden.core.data.memory.UuidIdGenerator
+import com.coinden.core.domain.model.draft.Evidence
+import com.coinden.core.domain.model.draft.MovementProposal
+import com.coinden.core.domain.model.draft.WalletDirectory
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
 import com.coinden.core.domain.port.output.CategorizationRepositoryPort
 import com.coinden.core.domain.port.output.ClockPort
 import com.coinden.core.domain.port.output.CurrencyCatalogPort
 import com.coinden.core.domain.port.output.CurrencyProfileRepositoryPort
 import com.coinden.core.domain.port.output.DeviceIdentityPort
+import com.coinden.core.domain.port.output.DraftInterpreterPort
 import com.coinden.core.domain.port.output.DraftRepositoryPort
 import com.coinden.core.domain.port.output.PreferencesRepositoryPort
 import com.coinden.core.domain.port.output.RegionalSettingsPort
@@ -23,8 +29,10 @@ import com.coinden.core.domain.port.output.WalletRepositoryPort
 import com.coinden.core.domain.usecase.GetConsolidatedPortfolioUseCase
 import com.coinden.core.domain.usecase.category.CategorizationContext
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
+import com.coinden.core.domain.usecase.draft.ConfirmDraftUseCase
 import com.coinden.core.domain.usecase.draft.DraftContext
 import com.coinden.core.domain.usecase.draft.GetDraftInboxUseCase
+import com.coinden.core.domain.usecase.draft.ReviseDraftUseCase
 import com.coinden.core.domain.usecase.draft.SetDefaultWalletUseCase
 import com.coinden.core.domain.usecase.wallet.CreateWalletUseCase
 import com.coinden.core.domain.usecase.wallet.GetActiveWalletBalancesUseCase
@@ -69,6 +77,8 @@ class AppContainer(
     val catalog: CurrencyCatalogPort,
     val currencyNames: CurrencyNames,
     initialLanguage: String = "es",
+    /** Fotos, PDF y audios de las evidencias: cifrados en el teléfono, en memoria en las pruebas. */
+    val attachments: AttachmentStore = InMemoryAttachmentStore(),
 ) {
     private val languageState = MutableStateFlow(initialLanguage)
 
@@ -96,7 +106,21 @@ class AppContainer(
     val createWallet = CreateWalletUseCase(ledger)
     val setDefaultWallet = SetDefaultWalletUseCase(drafts)
     val captureDraft = CaptureDraftUseCase(drafts, interpreter)
+
+    /** Captura del formulario: guarda la evidencia sin interpretarla; la propuesta la da el formulario. */
+    val captureManual =
+        CaptureDraftUseCase(
+            drafts,
+            object : DraftInterpreterPort {
+                override suspend fun interpret(
+                    evidence: Evidence,
+                    wallets: WalletDirectory,
+                ): List<MovementProposal> = emptyList()
+            },
+        )
     val draftInbox = GetDraftInboxUseCase(drafts)
+    val reviseDraft = ReviseDraftUseCase(drafts)
+    val confirmDraft = ConfirmDraftUseCase(drafts, ledger)
     val walletBalances = GetActiveWalletBalancesUseCase(storage.wallets)
     val portfolio = GetConsolidatedPortfolioUseCase(storage.profiles)
 

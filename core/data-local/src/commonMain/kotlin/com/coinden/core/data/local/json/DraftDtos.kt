@@ -13,6 +13,8 @@ import com.coinden.core.domain.model.draft.NonMovementIntent
 import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.draft.WalletRef
+import com.coinden.core.domain.model.draft.WalletSuggestion
+import com.coinden.core.domain.model.draft.WalletSuggestionReason
 import com.coinden.core.domain.model.wallet.PaymentMethod
 import kotlinx.serialization.Serializable
 
@@ -70,7 +72,19 @@ internal data class ProposalDto(
     val origins: Map<String, String> = emptyMap(),
     /** Medio de pago dicho (opcional: los datos guardados antes no lo traen). */
     val paymentMethod: String? = null,
+    /** Motivo de la billetera sugerida (opcional: los datos guardados antes no lo traen). */
+    val walletSuggestion: WalletSuggestionDto? = null,
 )
+
+@Serializable
+internal data class WalletSuggestionDto(
+    val reason: String,
+    val candidates: Int,
+)
+
+private fun WalletSuggestion.toDto() = WalletSuggestionDto(reason.name, candidates)
+
+private fun WalletSuggestionDto.toDomain() = WalletSuggestion(WalletSuggestionReason.valueOf(reason), candidates)
 
 private object ProposalKinds {
     const val EXPENSE = "expense"
@@ -97,6 +111,7 @@ internal fun MovementProposal.toDto(): ProposalDto =
                 note = note,
                 origins = origins.toDto(),
                 paymentMethod = paymentMethod?.name,
+                walletSuggestion = walletSuggestion?.toDto(),
             )
         is MovementProposal.Income ->
             ProposalDto(
@@ -107,6 +122,7 @@ internal fun MovementProposal.toDto(): ProposalDto =
                 note = note,
                 origins = origins.toDto(),
                 paymentMethod = paymentMethod?.name,
+                walletSuggestion = walletSuggestion?.toDto(),
             )
         is MovementProposal.Transfer ->
             ProposalDto(
@@ -145,6 +161,7 @@ internal fun ProposalDto.toDomain(): MovementProposal =
                 note,
                 origins.toOrigins(),
                 method(),
+                walletSuggestion?.toDomain(),
             )
         ProposalKinds.INCOME ->
             MovementProposal.Income(
@@ -154,6 +171,7 @@ internal fun ProposalDto.toDomain(): MovementProposal =
                 note,
                 origins.toOrigins(),
                 method(),
+                walletSuggestion?.toDomain(),
             )
         ProposalKinds.TRANSFER ->
             MovementProposal.Transfer(

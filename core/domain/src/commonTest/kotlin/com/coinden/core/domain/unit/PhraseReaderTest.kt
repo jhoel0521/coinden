@@ -7,6 +7,8 @@ import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.WalletDirectory
 import com.coinden.core.domain.model.draft.WalletRef
+import com.coinden.core.domain.model.draft.WalletSuggestion
+import com.coinden.core.domain.model.draft.WalletSuggestionReason
 import com.coinden.core.domain.model.interpret.InterpretContext
 import com.coinden.core.domain.model.interpret.LanguagePack
 import com.coinden.core.domain.model.interpret.LanguagePacks
@@ -56,6 +58,7 @@ class PhraseReaderTest {
                         DraftField.CURRENCY to FieldOrigin.STATED,
                         DraftField.WALLET to FieldOrigin.SUGGESTED,
                     ),
+                walletSuggestion = WalletSuggestion(WalletSuggestionReason.DEFAULT_WALLET, candidates = 1),
             )
         assertEquals(listOf<MovementProposal>(expected), read("page 3 bs para trasmporte"))
     }
@@ -73,6 +76,7 @@ class PhraseReaderTest {
                         DraftField.AMOUNT to FieldOrigin.STATED,
                         DraftField.WALLET to FieldOrigin.SUGGESTED,
                     ),
+                walletSuggestion = WalletSuggestion(WalletSuggestionReason.DEFAULT_WALLET, candidates = 1),
             )
         assertEquals(listOf<MovementProposal>(expected), read("gaste 2 para un semillita"))
     }
@@ -284,6 +288,32 @@ class PhraseReaderTest {
         assertEquals(PaymentMethod.TRANSFER, proposal.paymentMethod)
     }
 
+    // --- Motivo de la billetera sugerida ---
+
+    @Test
+    fun `la unica cuenta que acepta qr se sugiere con ese motivo`() {
+        val proposal = expense("almuerzo 45 qr", carlos(billetera, bnb))
+        assertEquals(WalletSuggestion(WalletSuggestionReason.ONLY_CANDIDATE, candidates = 1), proposal.walletSuggestion)
+    }
+
+    @Test
+    fun `entre varias cuentas que aceptan qr se recomienda una y se dice cuantas habia`() {
+        val proposal = expense("almuerzo 45 qr", carlos(billetera, bnb, be, yape))
+        assertEquals(WalletSuggestion(WalletSuggestionReason.RECOMMENDED_AMONG_SEVERAL, candidates = 3), proposal.walletSuggestion)
+    }
+
+    @Test
+    fun `sin billetera ni medio se sugiere la por defecto`() {
+        val proposal = expense("page 3 bs para trasmporte", carlos(billetera, bnb))
+        assertEquals(WalletSuggestion(WalletSuggestionReason.DEFAULT_WALLET, candidates = 1), proposal.walletSuggestion)
+    }
+
+    @Test
+    fun `la billetera dicha no trae motivo de sugerencia`() {
+        val proposal = expense("almuerzo 45 bnb", carlos(billetera, bnb))
+        assertEquals(null, proposal.walletSuggestion)
+    }
+
     // --- Efectivo y moneda separan billeteras ---
 
     @Test
@@ -404,6 +434,7 @@ class PhraseReaderTest {
                         DraftField.CURRENCY to FieldOrigin.STATED,
                         DraftField.WALLET to FieldOrigin.SUGGESTED,
                     ),
+                walletSuggestion = WalletSuggestion(WalletSuggestionReason.ONLY_CANDIDATE, candidates = 1),
             )
         assertEquals(
             listOf<MovementProposal>(expected),

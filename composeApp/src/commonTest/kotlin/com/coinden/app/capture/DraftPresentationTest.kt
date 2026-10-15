@@ -9,6 +9,12 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+private object NoDictation : DictationPort {
+    override suspend fun listen(languageCode: String) = DictationOutcome.NothingHeard
+
+    override fun cancel() = Unit
+}
+
 /** La confianza se ve con color, ícono y texto; nunca solo con color. */
 class DraftPresentationTest {
     @Test
@@ -35,10 +41,10 @@ class DraftPresentationTest {
     private suspend fun cardFor(text: String): DraftCard {
         val container = testContainer()
         seedCarlos(container)
-        val presenter = CaptureDemoPresenter(container)
-        presenter.onTextChange(text)
-        presenter.onCapture()
-        return presenter.state.value.cards
+        val presenter = CapturePresenter(container, NoDictation)
+        presenter.shared(SharedContent.Text(text))
+        return presenter.state.value.result!!
+            .cards
             .single()
     }
 

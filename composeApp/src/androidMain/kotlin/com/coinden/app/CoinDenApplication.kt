@@ -1,6 +1,7 @@
 package com.coinden.app
 
 import android.app.Application
+import com.coinden.app.capture.EncryptedAttachmentStore
 import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.i18n.AppLanguage
 import com.coinden.core.data.local.AndroidDatabase
@@ -75,6 +76,7 @@ class CoinDenApplication : Application() {
                 catalog = catalog,
                 currencyNames = PlatformCurrencyNames,
                 initialLanguage = savedLanguage ?: AppLanguage.proposedFor(device.language),
+                attachments = EncryptedAttachmentStore(filesDir.resolve("attachments")),
             )
     }
 }

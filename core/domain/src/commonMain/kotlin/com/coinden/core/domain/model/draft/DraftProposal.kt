@@ -45,6 +45,24 @@ sealed interface WalletRef {
     ) : WalletRef
 }
 
+/** Por qué el intérprete sugirió una billetera que la frase no nombró. Sin textos: la presentación lo explica. */
+enum class WalletSuggestionReason {
+    /** La billetera por defecto: la frase no nombró billetera, medio ni otra moneda. */
+    DEFAULT_WALLET,
+
+    /** La única billetera activa que acepta el medio de pago o la moneda dichos. */
+    ONLY_CANDIDATE,
+
+    /** Una recomendada entre varias candidatas: hay que revisarla. */
+    RECOMMENDED_AMONG_SEVERAL,
+}
+
+/** Motivo de la sugerencia y cuántas billeteras eran candidatas. */
+data class WalletSuggestion(
+    val reason: WalletSuggestionReason,
+    val candidates: Int,
+)
+
 /** Intenciones reconocibles que no son movimientos de dinero (se guardan como No soportado). */
 enum class NonMovementIntent {
     RECURRING_PAYMENT,
@@ -115,6 +133,8 @@ sealed interface MovementProposal {
         override val origins: Map<DraftField, FieldOrigin> = emptyMap(),
         /** Medio de pago dicho ("qr", "efectivo"): contexto para elegir la billetera en la revisión. */
         val paymentMethod: PaymentMethod? = null,
+        /** Por qué se sugirió la billetera (null si la dijo el usuario o no hay). */
+        val walletSuggestion: WalletSuggestion? = null,
     ) : MovementProposal {
         override val presentFields: Set<DraftField> get() = singleWalletFields(amount, wallet, occurredAtEpochMs)
     }
@@ -127,6 +147,8 @@ sealed interface MovementProposal {
         override val origins: Map<DraftField, FieldOrigin> = emptyMap(),
         /** Medio de pago dicho ("qr", "efectivo"): contexto para elegir la billetera en la revisión. */
         val paymentMethod: PaymentMethod? = null,
+        /** Por qué se sugirió la billetera (null si la dijo el usuario o no hay). */
+        val walletSuggestion: WalletSuggestion? = null,
     ) : MovementProposal {
         override val presentFields: Set<DraftField> get() = singleWalletFields(amount, wallet, occurredAtEpochMs)
     }
@@ -203,8 +225,8 @@ val MovementProposal.confidence: Confidence
 fun MovementProposal.markedCorrected(): MovementProposal {
     val corrected = presentFields.associateWith { FieldOrigin.CORRECTED }
     return when (this) {
-        is MovementProposal.Expense -> copy(origins = corrected)
-        is MovementProposal.Income -> copy(origins = corrected)
+        is MovementProposal.Expense -> copy(origins = corrected, walletSuggestion = null)
+        is MovementProposal.Income -> copy(origins = corrected, walletSuggestion = null)
         is MovementProposal.Transfer -> copy(origins = corrected)
         is MovementProposal.AdjustTo -> copy(origins = corrected)
         is MovementProposal.NotAMovement, is MovementProposal.Unknown -> this

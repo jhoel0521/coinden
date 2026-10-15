@@ -30,6 +30,10 @@ enum class CoinDenIcon(
     PLUS("M12 5v14M5 12h14"),
     CLOSE("M6 6l12 12M18 6L6 18"),
     MIC("M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"),
+    CAMERA("M4 8h3l2-3h6l2 3h3v11H4zM12 10.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"),
+    IMAGE("M4 5h16v14H4zM4 16l5-5 4 4 2-2 5 5M15.5 9.5v.01"),
+    PENCIL("M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"),
+    STOP("M7 7h10v10H7z"),
     ;
 
     /** Vector de trazo; el color se aplica al dibujarlo. */

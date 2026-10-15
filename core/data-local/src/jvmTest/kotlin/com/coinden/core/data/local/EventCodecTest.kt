@@ -28,6 +28,8 @@ import com.coinden.core.domain.model.draft.NonMovementIntent
 import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.draft.WalletRef
+import com.coinden.core.domain.model.draft.WalletSuggestion
+import com.coinden.core.domain.model.draft.WalletSuggestionReason
 import com.coinden.core.domain.model.wallet.LedgerEvent
 import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.Wallet
@@ -74,6 +76,23 @@ class EventCodecTest {
                 MovementProposal.Income(ProposedAmount("200.5"), WalletRef.ById("w1"), null, null, emptyMap()),
                 MovementProposal.Expense(ProposedAmount("45"), WalletRef.ById("w2"), null, "almuerzo", origins, PaymentMethod.TRANSFER),
                 MovementProposal.Expense(ProposedAmount("20", Currency.USD), null, null, null, emptyMap(), PaymentMethod.CASH),
+                MovementProposal.Expense(
+                    ProposedAmount("45"),
+                    WalletRef.ById("w2"),
+                    null,
+                    "almuerzo",
+                    origins,
+                    PaymentMethod.TRANSFER,
+                    WalletSuggestion(WalletSuggestionReason.RECOMMENDED_AMONG_SEVERAL, candidates = 3),
+                ),
+                MovementProposal.Income(
+                    ProposedAmount("200"),
+                    WalletRef.ById("w1"),
+                    null,
+                    null,
+                    origins,
+                    walletSuggestion = WalletSuggestion(WalletSuggestionReason.DEFAULT_WALLET, candidates = 1),
+                ),
                 MovementProposal.Transfer(
                     ProposedAmount("11", Currency.USD),
                     WalletRef.ById("w3"),
@@ -209,6 +228,7 @@ class EventCodecTest {
         val event = EventCodec.decodeDraft("draft.interpreted", 1, payload) as DraftEvent.Interpreted
         val proposal = event.proposal as MovementProposal.Expense
         assertEquals(null, proposal.paymentMethod)
+        assertEquals(null, proposal.walletSuggestion)
         assertEquals(WalletRef.ByHint("qr"), proposal.wallet)
     }
 

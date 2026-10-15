@@ -9,6 +9,8 @@ import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.WalletDirectory
 import com.coinden.core.domain.model.draft.WalletRef
+import com.coinden.core.domain.model.draft.WalletSuggestion
+import com.coinden.core.domain.model.draft.WalletSuggestionReason
 import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.WalletType
 
@@ -203,7 +205,8 @@ object PhraseReader {
 
         return when (kind) {
             Kind.EXPENSE, Kind.INCOME -> {
-                val w = wallet ?: suggestWallet(method, amount.proposed.currency, ctx)
+                val suggested = if (wallet == null) suggestWallet(method, amount.proposed.currency, ctx) else null
+                val w = wallet ?: suggested?.first
                 val origins =
                     originsOf(
                         DraftField.KIND to kindOrigin,
@@ -212,9 +215,23 @@ object PhraseReader {
                         DraftField.WALLET to (walletOrigin ?: w?.let { FieldOrigin.SUGGESTED }),
                     )
                 if (kind == Kind.EXPENSE) {
-                    MovementProposal.Expense(amount.proposed, w, note = note, origins = origins, paymentMethod = method)
+                    MovementProposal.Expense(
+                        amount.proposed,
+                        w,
+                        note = note,
+                        origins = origins,
+                        paymentMethod = method,
+                        walletSuggestion = suggested?.second,
+                    )
                 } else {
-                    MovementProposal.Income(amount.proposed, w, note = note, origins = origins, paymentMethod = method)
+                    MovementProposal.Income(
+                        amount.proposed,
+                        w,
+                        note = note,
+                        origins = origins,
+                        paymentMethod = method,
+                        walletSuggestion = suggested?.second,
+                    )
                 }
             }
             Kind.WITHDRAWAL ->
@@ -321,7 +338,7 @@ object PhraseReader {
         method: PaymentMethod?,
         currency: Currency?,
         ctx: InterpretContext,
-    ): WalletRef? {
+    ): Pair<WalletRef, WalletSuggestion>? {
         val directory = ctx.directory
         val default = directory.defaultWalletId?.let(directory::byId)
         val active = directory.wallets.filter { it.isActive }
@@ -330,13 +347,20 @@ object PhraseReader {
                 method != null -> active.filter { method in it.type.acceptedMethods && (currency == null || it.accepts(currency)) }
                 currency != null && default != null && !default.accepts(currency) ->
                     active.filter { it.accepts(currency) }.let { same -> same.filter { it.type == WalletType.CASH }.ifEmpty { same } }
-                else -> return default?.let { WalletRef.ById(it.id) }
+                else -> return default?.let { WalletRef.ById(it.id) to WalletSuggestion(WalletSuggestionReason.DEFAULT_WALLET, 1) }
             }
         val chosen =
             candidates.firstOrNull { it.id == default?.id }
                 ?: candidates.firstOrNull { it.currency.isSameAs(ctx.locale.currency) }
                 ?: candidates.firstOrNull()
-        return chosen?.let { WalletRef.ById(it.id) }
+                ?: return null
+        val reason =
+            when {
+                candidates.size == 1 -> WalletSuggestionReason.ONLY_CANDIDATE
+                chosen.id == default?.id -> WalletSuggestionReason.DEFAULT_WALLET
+                else -> WalletSuggestionReason.RECOMMENDED_AMONG_SEVERAL
+            }
+        return WalletRef.ById(chosen.id) to WalletSuggestion(reason, candidates.size)
     }
 
     /** La única billetera activa en [currency]; null si hay varias, ninguna o no se sabe la moneda. */

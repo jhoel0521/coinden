@@ -33,6 +33,8 @@ import coinden.composeapp.generated.resources.category_by_word
 import coinden.composeapp.generated.resources.category_custom
 import coinden.composeapp.generated.resources.category_none
 import coinden.composeapp.generated.resources.draft_not_counted
+import coinden.composeapp.generated.resources.evidence_audio
+import coinden.composeapp.generated.resources.evidence_file
 import coinden.composeapp.generated.resources.evidence_quote
 import coinden.composeapp.generated.resources.field_category
 import coinden.composeapp.generated.resources.field_method
@@ -42,12 +44,18 @@ import coinden.composeapp.generated.resources.method_card
 import coinden.composeapp.generated.resources.method_cash
 import coinden.composeapp.generated.resources.method_transfer
 import coinden.composeapp.generated.resources.suggested_tag
+import coinden.composeapp.generated.resources.suggestion_default
+import coinden.composeapp.generated.resources.suggestion_only
+import coinden.composeapp.generated.resources.suggestion_several
 import coinden.composeapp.generated.resources.wallet_missing
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.theme.CoinDenTheme
 import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.category.SuggestionReason
+import com.coinden.core.domain.model.draft.EvidenceSource
+import com.coinden.core.domain.model.draft.WalletSuggestion
+import com.coinden.core.domain.model.draft.WalletSuggestionReason
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.wallet.PaymentMethod
 import org.jetbrains.compose.resources.stringResource
@@ -85,6 +93,29 @@ fun DraftCardView(
                     color = scheme.onSurfaceVariant,
                 )
             }
+            card.attachmentRef?.let {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(
+                        CoinDenIcon.LOCK.vector,
+                        contentDescription = null,
+                        tint = scheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Text(
+                        stringResource(
+                            if (card.evidenceSource ==
+                                EvidenceSource.VOICE
+                            ) {
+                                Res.string.evidence_audio
+                            } else {
+                                Res.string.evidence_file
+                            },
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = scheme.onSurfaceVariant,
+                    )
+                }
+            }
             if (card.status != DraftStatusView.CAPTURED) {
                 Text(
                     card.amount?.let { MoneyFormatter.format(it, locale) } ?: stringResource(Res.string.amount_missing),
@@ -94,6 +125,14 @@ fun DraftCardView(
                 FieldRow(CoinDenIcon.WALLET, stringResource(Res.string.field_wallet)) {
                     val name = card.walletName ?: stringResource(Res.string.wallet_missing)
                     if (card.walletSuggested) SuggestedValue(name) else Value(name)
+                }
+                card.walletSuggestion?.let {
+                    Text(
+                        suggestionText(it),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = scheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 114.dp),
+                    )
                 }
                 card.paymentMethod?.let { method ->
                     FieldRow(method.icon(), stringResource(Res.string.field_method)) { Value(stringResource(method.label())) }
@@ -196,6 +235,14 @@ private fun SuggestedValue(text: String) {
 }
 
 @Composable
+private fun suggestionText(suggestion: WalletSuggestion): String =
+    when (suggestion.reason) {
+        WalletSuggestionReason.DEFAULT_WALLET -> stringResource(Res.string.suggestion_default)
+        WalletSuggestionReason.ONLY_CANDIDATE -> stringResource(Res.string.suggestion_only)
+        WalletSuggestionReason.RECOMMENDED_AMONG_SEVERAL -> stringResource(Res.string.suggestion_several, suggestion.candidates)
+    }
+
+@Composable
 private fun categoryText(category: CategoryView?): String {
     if (category == null) return stringResource(Res.string.category_none)
     val name =
@@ -206,6 +253,7 @@ private fun categoryText(category: CategoryView?): String {
     return when (val reason = category.reason) {
         is SuggestionReason.PackWord -> stringResource(Res.string.category_by_word, name, reason.word)
         is SuggestionReason.UserRule -> stringResource(Res.string.category_by_rule, name, reason.key)
+        null -> name
     }
 }
 

@@ -7,7 +7,6 @@ import com.coinden.core.domain.model.category.SuggestionReason
 import com.coinden.core.domain.model.draft.Confidence
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.DraftField
-import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.EvidenceSource
 import com.coinden.core.domain.model.draft.FieldOrigin
 import com.coinden.core.domain.model.draft.MovementProposal
@@ -15,12 +14,9 @@ import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.draft.WalletDirectory
 import com.coinden.core.domain.model.draft.WalletRef
+import com.coinden.core.domain.model.draft.WalletSuggestion
 import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.Wallet
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 
 /** Tipo de movimiento visto por la pantalla (la pantalla lo traduce). */
 enum class MovementKindView { EXPENSE, INCOME, TRANSFER, ADJUSTMENT, NOT_A_MOVEMENT }
@@ -31,7 +27,8 @@ enum class DraftStatusView { CAPTURED, INCOMPLETE, READY, UNSUPPORTED }
 /** Categoría sugerida y por qué se sugirió. */
 data class CategoryView(
     val ref: CategoryRef,
-    val reason: SuggestionReason,
+    /** null: la eligió la persona en el formulario. */
+    val reason: SuggestionReason?,
 )
 
 /** Un borrador capturado, en datos semánticos: sin textos ni formatos. */
@@ -47,45 +44,20 @@ data class DraftCard(
     val category: CategoryView?,
     /** Medio de pago dicho ("qr", "efectivo"); null si no se dijo. */
     val paymentMethod: PaymentMethod? = null,
+    /** Por qué se sugirió la billetera; null si la dijo el usuario. */
+    val walletSuggestion: WalletSuggestion? = null,
+    val evidenceSource: EvidenceSource = EvidenceSource.TEXT,
+    /** Archivo cifrado de la evidencia (foto, PDF o audio), si lo hay. */
+    val attachmentRef: String? = null,
 )
 
-data class CaptureDemoState(
-    val text: String = "",
-    /** Más reciente primero. */
-    val cards: List<DraftCard> = emptyList(),
-)
-
-/**
- * Presentador de la demostración de captura: pasa la frase por el intérprete real y la
- * bandeja de borradores y expone el resultado. No usa Compose, así que se prueba en la JVM.
- */
-class CaptureDemoPresenter(
+/** Arma las tarjetas de los borradores con la sugerencia de categoría vigente. */
+class DraftCards(
     private val container: AppContainer,
 ) {
-    private val mutableState = MutableStateFlow(CaptureDemoState())
-    val state: StateFlow<CaptureDemoState> = mutableState.asStateFlow()
-
-    fun onTextChange(text: String) {
-        mutableState.update { it.copy(text = text) }
-    }
-
-    /** Al abrir: los borradores pendientes guardados, más recientes primero. */
-    suspend fun load() {
-        val owner = container.ownerId
-        val directory = container.drafts.directory(owner)
-        val pending = container.draftInbox(owner).pending.sortedByDescending { it.header.capturedAtEpochMs }
-        val cards = pending.map { card(it, directory) }
-        mutableState.update { it.copy(cards = cards) }
-    }
-
-    suspend fun onCapture() {
-        val text = state.value.text.trim()
-        if (text.isEmpty()) return
-        val owner = container.ownerId
-        val drafts = container.captureDraft(owner, Evidence(EvidenceSource.TEXT, text))
-        val directory = container.drafts.directory(owner)
-        val cards = drafts.map { card(it, directory) }
-        mutableState.update { it.copy(text = "", cards = cards.reversed() + it.cards) }
+    suspend fun of(drafts: List<Draft>): List<DraftCard> {
+        val directory = container.drafts.directory(container.ownerId)
+        return drafts.map { card(it, directory) }
     }
 
     private suspend fun card(
@@ -101,9 +73,10 @@ class CaptureDemoPresenter(
         val wallet = walletOf(draft, proposal, directory)
         val note = (proposal as? MovementProposal.Expense)?.note
         val suggestion = note?.let { container.categorization.suggest(container.ownerId, it) }
+        val evidence = draft.header.evidence
         return DraftCard(
             draftId = draft.id,
-            evidenceText = draft.header.evidence.text,
+            evidenceText = evidence.text,
             status = statusOf(draft),
             kind = proposal?.let(::kindOf) ?: (draft as? Draft.Unsupported)?.let { MovementKindView.NOT_A_MOVEMENT },
             amount = amountOf(draft, proposal, wallet),
@@ -112,6 +85,9 @@ class CaptureDemoPresenter(
             confidence = draft.confidence,
             paymentMethod = proposal?.let(::paymentMethodOf),
             category = suggestion?.let { CategoryView(it.category, it.reason) },
+            walletSuggestion = proposal?.let(::walletSuggestionOf),
+            evidenceSource = evidence.source,
+            attachmentRef = evidence.attachmentRef,
         )
     }
 
@@ -120,6 +96,13 @@ class CaptureDemoPresenter(
             is MovementProposal.Expense -> proposal.paymentMethod
             is MovementProposal.Income -> proposal.paymentMethod
             is MovementProposal.Transfer -> proposal.paymentMethod
+            else -> null
+        }
+
+    private fun walletSuggestionOf(proposal: MovementProposal): WalletSuggestion? =
+        when (proposal) {
+            is MovementProposal.Expense -> proposal.walletSuggestion
+            is MovementProposal.Income -> proposal.walletSuggestion
             else -> null
         }
 

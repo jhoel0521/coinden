@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import coinden.composeapp.generated.resources.Res
-import coinden.composeapp.generated.resources.home_capture
 import coinden.composeapp.generated.resources.home_default
 import coinden.composeapp.generated.resources.home_language
 import coinden.composeapp.generated.resources.home_pending
@@ -46,6 +44,10 @@ import coinden.composeapp.generated.resources.language_es
 import coinden.composeapp.generated.resources.language_pt
 import coinden.composeapp.generated.resources.logo_description
 import coinden.composeapp.generated.resources.privacy_note
+import com.coinden.app.capture.CaptureBar
+import com.coinden.app.capture.CaptureNoticeCard
+import com.coinden.app.capture.CapturePresenter
+import com.coinden.app.capture.CaptureResultSheet
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.onboarding.label
 import com.coinden.app.theme.CoinDenIcon
@@ -56,19 +58,24 @@ import com.coinden.core.domain.model.wallet.WalletType
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
-/** Inicio según el tablero "Inicio": patrimonio, borradores por revisar, billeteras y capturar. */
+/** Inicio según el tablero "Inicio": patrimonio, borradores por revisar, billeteras y la barra de captura. */
 @Composable
 fun HomeScreen(
     presenter: HomePresenter,
     locale: UserLocale,
     language: String,
     onChooseLanguage: suspend (String) -> Unit,
-    onCapture: () -> Unit,
+    capture: CapturePresenter,
+    onDictate: () -> Unit,
+    onPhoto: () -> Unit,
+    onWrite: () -> Unit,
 ) {
     val state by presenter.state.collectAsState()
+    val captureState by capture.state.collectAsState()
     val scope = rememberCoroutineScope()
     val scheme = MaterialTheme.colorScheme
-    LaunchedEffect(presenter) { presenter.load() }
+    // Cada captura o confirmación cambia el resultado: Inicio se recarga (pendientes y saldos).
+    LaunchedEffect(presenter, captureState.result) { presenter.load() }
 
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
         LazyColumn(
@@ -144,18 +151,16 @@ fun HomeScreen(
                 }
             }
         }
-        Button(
-            onClick = onCapture,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp).heightIn(min = 60.dp),
-            shape = MaterialTheme.shapes.extraLarge,
-        ) {
-            Icon(CoinDenIcon.PLUS.vector, contentDescription = null, modifier = Modifier.size(22.dp))
-            Text(
-                stringResource(Res.string.home_capture),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(start = 8.dp),
-            )
-        }
+        captureState.notice?.let { CaptureNoticeCard(it, onDismiss = capture::dismissNotice) }
+        CaptureBar(listening = captureState.listening, onDictate = onDictate, onPhoto = onPhoto, onWrite = onWrite)
+    }
+    captureState.result?.let { result ->
+        CaptureResultSheet(
+            result,
+            locale,
+            onConfirm = { draftId -> scope.launch { capture.confirm(draftId) } },
+            onDone = capture::dismissResult,
+        )
     }
 }
 
