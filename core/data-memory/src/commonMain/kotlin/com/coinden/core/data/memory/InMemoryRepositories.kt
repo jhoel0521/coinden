@@ -127,4 +127,15 @@ class InMemoryPreferencesRepository : PreferencesRepositoryPort {
     override suspend fun languageCode(): String? = mutex.withLock { language }
 
     override suspend fun setLanguageCode(code: String) = mutex.withLock { language = code }
+
+    private var googleReader = false
+    private var privacySeen = false
+
+    override suspend fun googleReaderEnabled(): Boolean = mutex.withLock { googleReader }
+
+    override suspend fun setGoogleReaderEnabled(enabled: Boolean) = mutex.withLock { googleReader = enabled }
+
+    override suspend fun privacyNoticeSeen(): Boolean = mutex.withLock { privacySeen }
+
+    override suspend fun setPrivacyNoticeSeen() = mutex.withLock { privacySeen = true }
 }

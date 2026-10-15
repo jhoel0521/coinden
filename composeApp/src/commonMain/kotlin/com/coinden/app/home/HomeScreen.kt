@@ -18,16 +18,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -36,6 +41,8 @@ import coinden.composeapp.generated.resources.home_default
 import coinden.composeapp.generated.resources.home_language
 import coinden.composeapp.generated.resources.home_pending
 import coinden.composeapp.generated.resources.home_pending_note
+import coinden.composeapp.generated.resources.home_privacy
+import coinden.composeapp.generated.resources.home_read_saved
 import coinden.composeapp.generated.resources.home_total
 import coinden.composeapp.generated.resources.home_unconverted
 import coinden.composeapp.generated.resources.home_wallets
@@ -70,6 +77,8 @@ fun HomeScreen(
     onPhoto: () -> Unit,
     onWrite: () -> Unit,
     utcOffsetMinutes: Int,
+    onPrivacy: () -> Unit = {},
+    onVoiceModels: () -> Unit = {},
 ) {
     val state by presenter.state.collectAsState()
     val captureState by capture.state.collectAsState()
@@ -77,6 +86,9 @@ fun HomeScreen(
     val scheme = MaterialTheme.colorScheme
     // Cada captura o confirmación cambia el resultado: Inicio se recarga (pendientes y saldos).
     LaunchedEffect(presenter, captureState.result) { presenter.load() }
+    // Capturas guardadas antes de la lectura (o que esperan un modelo): se ofrecen leer.
+    var pendingReads by remember { mutableStateOf(0) }
+    LaunchedEffect(capture, captureState.result) { pendingReads = capture.pendingReads() }
 
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
         LazyColumn(
@@ -84,7 +96,23 @@ fun HomeScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            item { CoinDenWordmark(stringResource(Res.string.logo_description)) }
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.weight(1f)) { CoinDenWordmark(stringResource(Res.string.logo_description)) }
+                    TextButton(onClick = onPrivacy, modifier = Modifier.heightIn(min = 48.dp)) {
+                        Icon(CoinDenIcon.SHIELD.vector, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(stringResource(Res.string.home_privacy), modifier = Modifier.padding(start = 6.dp))
+                    }
+                }
+            }
+            if (pendingReads > 0) {
+                item {
+                    FilledTonalButton(
+                        onClick = { scope.launch { capture.readSaved() } },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    ) { Text(stringResource(Res.string.home_read_saved, pendingReads)) }
+                }
+            }
             item {
                 Surface(shape = MaterialTheme.shapes.large, color = scheme.primaryContainer, contentColor = scheme.onPrimaryContainer) {
                     Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -163,6 +191,8 @@ fun HomeScreen(
             onConfirm = { draftId -> scope.launch { capture.confirm(draftId) } },
             onResolve = { draftId, same -> scope.launch { capture.resolve(draftId, same) } },
             onDone = capture::dismissResult,
+            reading = captureState.reading,
+            onVoiceModels = onVoiceModels,
         )
     }
 }

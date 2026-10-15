@@ -1,6 +1,8 @@
 package com.coinden.app.capture
 
 import androidx.compose.runtime.Composable
+import com.coinden.app.perception.PerceptionReaders
+import com.coinden.app.perception.VoiceModelManager
 
 /**
  * Lo que solo la plataforma sabe hacer: el reconocimiento de voz local, los permisos y la cámara.
@@ -8,6 +10,12 @@ import androidx.compose.runtime.Composable
  */
 interface CapturePlatform {
     val dictation: DictationPort
+
+    /** Lectores de fotos, PDF y audios del teléfono. */
+    val perceptionReaders: PerceptionReaders
+
+    /** Modelos de voz descargables. */
+    val voiceModels: VoiceModelManager
 
     /**
      * Devuelve una acción que pide el micrófono si hace falta y luego llama a [onResult] con

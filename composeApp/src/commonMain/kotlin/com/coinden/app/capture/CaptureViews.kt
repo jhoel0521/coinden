@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -39,9 +40,12 @@ import coinden.composeapp.generated.resources.result_confirm
 import coinden.composeapp.generated.resources.result_confirmed
 import coinden.composeapp.generated.resources.result_done
 import coinden.composeapp.generated.resources.result_not_ready
+import coinden.composeapp.generated.resources.result_reading
 import coinden.composeapp.generated.resources.result_rejected
 import coinden.composeapp.generated.resources.result_saved
 import coinden.composeapp.generated.resources.result_shortfall
+import coinden.composeapp.generated.resources.result_voice_model
+import coinden.composeapp.generated.resources.result_voice_model_button
 import coinden.composeapp.generated.resources.result_wallet_mismatch
 import coinden.composeapp.generated.resources.same_already_confirmed
 import coinden.composeapp.generated.resources.same_no
@@ -140,6 +144,8 @@ fun CaptureResultSheet(
     onConfirm: (draftId: String) -> Unit,
     onResolve: (draftId: String, same: Boolean) -> Unit,
     onDone: () -> Unit,
+    reading: Set<String> = emptySet(),
+    onVoiceModels: () -> Unit = {},
 ) {
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDone, sheetState = sheet) {
@@ -157,6 +163,18 @@ fun CaptureResultSheet(
             }
             result.cards.forEach { card ->
                 DraftCardView(card, locale)
+                if (card.draftId in reading) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                        Text(stringResource(Res.string.result_reading), style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                if (card.draftId in result.voiceModelNeeded) {
+                    Outcome(stringResource(Res.string.result_voice_model))
+                    OutlinedButton(onClick = onVoiceModels, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                        Text(stringResource(Res.string.result_voice_model_button))
+                    }
+                }
                 card.question?.let { SameMovementPrompt(it, locale, utcOffsetMinutes) { same -> onResolve(card.draftId, same) } }
                 val confirmed = card.draftId in result.confirmed
                 when {

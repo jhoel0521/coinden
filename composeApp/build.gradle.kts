@@ -33,6 +33,9 @@ kotlin {
             implementation(libs.androidx.camera.camera2)
             implementation(libs.androidx.camera.lifecycle)
             implementation(libs.androidx.camera.view)
+            implementation(libs.tesseract4android)
+            implementation(libs.mlkit.text.recognition)
+            implementation(libs.pdfbox.android)
             implementation(project(":core:data-local"))
         }
         commonTest.dependencies {
@@ -51,6 +54,7 @@ kotlin {
 android {
     namespace = "com.coinden.app"
     compileSdk = 36
+    ndkVersion = "30.0.15729638"
     defaultConfig {
         applicationId = "com.coinden.app"
         minSdk = 26
@@ -58,6 +62,14 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Whisper (código nativo) solo para teléfonos de 64 bits y el emulador.
+        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+    }
+    externalNativeBuild {
+        cmake {
+            path = file("src/androidMain/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

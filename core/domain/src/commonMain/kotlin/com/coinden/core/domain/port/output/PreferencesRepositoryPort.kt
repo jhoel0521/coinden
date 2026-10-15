@@ -9,4 +9,14 @@ interface PreferencesRepositoryPort {
     suspend fun languageCode(): String?
 
     suspend fun setLanguageCode(code: String)
+
+    /** Si la persona aceptó el lector de Google (envía métricas técnicas de uso); apagado por defecto. */
+    suspend fun googleReaderEnabled(): Boolean
+
+    suspend fun setGoogleReaderEnabled(enabled: Boolean)
+
+    /** Si la persona ya vio la pantalla de privacidad. */
+    suspend fun privacyNoticeSeen(): Boolean
+
+    suspend fun setPrivacyNoticeSeen()
 }

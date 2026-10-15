@@ -99,7 +99,7 @@ class FindSameMovementQuestionsUseCase(
                 val proposal = (draft as? Draft.Incomplete)?.proposal
                 val facts = movement?.let(::factsOf) ?: proposal?.let { factsOf(it, directory) }
                 val occurredAt = facts?.occurredAt ?: draft.header.capturedAtEpochMs
-                val text = draft.header.evidence.text
+                val text = draft.header.evidence.text ?: draft.header.perceivedText
                 return Candidate(
                     id = draft.id,
                     capturedAt = draft.header.capturedAtEpochMs,

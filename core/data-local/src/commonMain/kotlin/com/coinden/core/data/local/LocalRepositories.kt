@@ -226,8 +226,25 @@ class LocalPreferencesRepository(
 
     override suspend fun setLanguageCode(code: String) = write(dispatcher) { db.coinDenQueries.upsertSetting(LANGUAGE, code) }
 
+    override suspend fun googleReaderEnabled(): Boolean = flag(GOOGLE_READER)
+
+    override suspend fun setGoogleReaderEnabled(enabled: Boolean) =
+        write(dispatcher) {
+            db.coinDenQueries.upsertSetting(GOOGLE_READER, enabled.toString())
+        }
+
+    override suspend fun privacyNoticeSeen(): Boolean = flag(PRIVACY_SEEN)
+
+    override suspend fun setPrivacyNoticeSeen() = write(dispatcher) { db.coinDenQueries.upsertSetting(PRIVACY_SEEN, "true") }
+
+    /** Banderas guardadas como "true"/"false"; sin fila es falso (lo guardado antes no las trae). */
+    private suspend fun flag(key: String): Boolean =
+        withContext(dispatcher) { db.coinDenQueries.settingValue(key).executeAsOneOrNull() == "true" }
+
     private companion object {
         const val LANGUAGE = "language"
+        const val GOOGLE_READER = "google_reader"
+        const val PRIVACY_SEEN = "privacy_seen"
     }
 }
 

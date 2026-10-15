@@ -174,6 +174,8 @@ object EventCodec {
             is DraftEvent.Confirmed ->
                 store(DraftTypes.CONFIRMED, ConfirmedDto.serializer(), ConfirmedDto(draft, event.ledgerEventId, event.movement.toDto()))
             is DraftEvent.Discarded -> store(DraftTypes.DISCARDED, DiscardedDto.serializer(), DiscardedDto(draft, event.mergedInto))
+            is DraftEvent.Perceived ->
+                store(DraftTypes.PERCEIVED, PerceivedDto.serializer(), PerceivedDto(draft, event.text, event.engine))
             is DraftEvent.MarkedDistinct ->
                 store(DraftTypes.MARKED_DISTINCT, MarkedDistinctDto.serializer(), MarkedDistinctDto(draft, event.otherDraftId))
             is DraftEvent.Merged ->
@@ -223,6 +225,10 @@ object EventCodec {
             DraftTypes.DISCARDED ->
                 load(version, payload, DiscardedDto.serializer())?.let {
                     with(it.draft) { DraftEvent.Discarded(id, draftId, ownerId, deviceId, occurredAt, recordedAt, it.mergedInto) }
+                }
+            DraftTypes.PERCEIVED ->
+                load(version, payload, PerceivedDto.serializer())?.let {
+                    with(it.draft) { DraftEvent.Perceived(id, draftId, ownerId, deviceId, occurredAt, recordedAt, it.text, it.engine) }
                 }
             DraftTypes.MARKED_DISTINCT ->
                 load(version, payload, MarkedDistinctDto.serializer())?.let {
@@ -294,6 +300,7 @@ object DraftTypes {
     const val CONFIRMED = "draft.confirmed"
     const val DISCARDED = "draft.discarded"
     const val MARKED_DISTINCT = "draft.marked_distinct"
+    const val PERCEIVED = "draft.perceived"
     const val MERGED = "draft.merged"
 }
 
@@ -368,6 +375,13 @@ internal data class DiscardedDto(
     val draft: DraftFieldsDto,
     /** Borrador con el que se unió (opcional: lo guardado antes no lo trae). */
     val mergedInto: String? = null,
+)
+
+@Serializable
+internal data class PerceivedDto(
+    val draft: DraftFieldsDto,
+    val text: String,
+    val engine: String,
 )
 
 @Serializable

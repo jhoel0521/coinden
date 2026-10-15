@@ -143,6 +143,7 @@ class EventCodecTest {
                 DraftEvent.Discarded("d4", "draft", "carlos", "dev", t, t, mergedInto = "otro"),
                 DraftEvent.Captured("d5", "draft", "carlos", "dev", t, t, Evidence(EvidenceSource.VOICE, null, "audio-1", "huella")),
                 DraftEvent.MarkedDistinct("d6", "draft", "carlos", "dev", t, t, "otro"),
+                DraftEvent.Perceived("d9", "draft", "carlos", "dev", t, t, "Pago QR otros bancos\nImporte Bs25.00", "tesseract"),
                 DraftEvent.Merged(
                     "d7",
                     "draft",

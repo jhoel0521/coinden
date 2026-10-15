@@ -13,6 +13,8 @@ data class DraftHeader(
     val capturedAtEpochMs: Long,
     /** Evidencia de los borradores unidos a este ("son el mismo"), en el orden en que se unieron. */
     val extraEvidence: List<Evidence> = emptyList(),
+    /** Texto leído en el teléfono de la foto, el PDF o el audio (null si todavía no se leyó). */
+    val perceivedText: String? = null,
 )
 
 /**

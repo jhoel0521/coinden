@@ -52,6 +52,8 @@ data class DraftCard(
     val attachmentRef: String? = null,
     /** Número de transacción del comprobante, si lo hay. */
     val reference: String? = null,
+    /** Texto leído o transcrito en el teléfono de la foto, el PDF o el audio (null si no se leyó). */
+    val perceivedText: String? = null,
     /** Cuántas evidencias más tiene por haberse unido con otras capturas. */
     val extraEvidence: Int = 0,
     /** "¿Es el mismo gasto que...?", si puede ser el mismo movimiento que otra captura. */
@@ -135,6 +137,7 @@ class DraftCards(
             attachmentRef = evidence.attachmentRef,
             reference = referenceOf(draft, proposal),
             extraEvidence = draft.header.extraEvidence.size,
+            perceivedText = draft.header.perceivedText,
         )
     }
 

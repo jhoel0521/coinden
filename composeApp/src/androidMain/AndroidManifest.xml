@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Se piden solo al tocar Foto o Dictar. Sin permiso de internet ni de almacenamiento. -->
+    <!-- Se piden solo al tocar Foto o Dictar. Sin permiso de almacenamiento. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Internet solo para descargar modelos que la persona pide y, si lo acepta, el lector de Google.
+         Nunca se envían datos del usuario (ver la pantalla de privacidad). -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 

@@ -27,6 +27,11 @@ import com.coinden.app.onboarding.OnboardingPresenter
 import com.coinden.app.onboarding.OnboardingStep
 import com.coinden.app.onboarding.WalletsScreen
 import com.coinden.app.onboarding.WelcomeScreen
+import com.coinden.app.perception.PerceptionService
+import com.coinden.app.perception.PrivacyPresenter
+import com.coinden.app.perception.PrivacyScreen
+import com.coinden.app.perception.VoiceModelsPresenter
+import com.coinden.app.perception.VoiceModelsScreen
 import com.coinden.app.theme.CoinDenTheme
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -39,6 +44,8 @@ private object Routes {
     const val HOME = "home"
     const val FORM = "form"
     const val CAMERA = "camera"
+    const val PRIVACY = "privacy"
+    const val VOICE_MODELS = "voice-models"
 }
 
 /**
@@ -59,7 +66,15 @@ fun App(
     CoinDenTheme {
         ProvideAppLocale(language) {
             Surface(Modifier.fillMaxSize()) {
-                val start by produceState<String?>(null) { value = if (container.isOnboarded()) Routes.HOME else Routes.WELCOME }
+                // Quien ya terminó el onboarding ve una vez la pantalla de privacidad antes de Inicio.
+                val start by produceState<String?>(null) {
+                    value =
+                        when {
+                            !container.isOnboarded() -> Routes.WELCOME
+                            !container.storage.preferences.privacyNoticeSeen() -> Routes.PRIVACY
+                            else -> Routes.HOME
+                        }
+                }
                 start?.let { AppNavHost(container, it, deviceLanguage, deviceCountry, language, platform, shared, onSharedTaken) }
             }
         }
@@ -82,13 +97,33 @@ private fun AppNavHost(
     val settings = container.regional.settings()
     val locale = settings.locale
     // La captura vive con la navegación: su resultado sigue visible al volver de la cámara o del formulario.
-    val capture = remember { CapturePresenter(container, platform.dictation) }
+    val capture = remember { CapturePresenter(container, platform.dictation, PerceptionService(container, platform.perceptionReaders)) }
     val scope = rememberCoroutineScope()
     val pendingShare by shared.collectAsState()
     NavHost(navController = nav, startDestination = start) {
         composable(Routes.WELCOME) {
             LaunchedEffect(Unit) { onboarding.show(OnboardingStep.WELCOME) }
-            WelcomeScreen(onboarding) { nav.navigate(Routes.CURRENCIES) }
+            WelcomeScreen(onboarding) { nav.navigate(Routes.PRIVACY) }
+        }
+        composable(Routes.PRIVACY) {
+            val privacy = remember { PrivacyPresenter(container) }
+            PrivacyScreen(
+                privacy,
+                onContinue = {
+                    scope.launch {
+                        when {
+                            !container.isOnboarded() -> nav.navigate(Routes.CURRENCIES)
+                            nav.previousBackStackEntry != null -> nav.popBackStack()
+                            else -> nav.navigate(Routes.HOME) { popUpTo(Routes.PRIVACY) { inclusive = true } }
+                        }
+                    }
+                },
+                onVoiceModels = { nav.navigate(Routes.VOICE_MODELS) },
+            )
+        }
+        composable(Routes.VOICE_MODELS) {
+            val models = remember { VoiceModelsPresenter(platform.voiceModels) }
+            VoiceModelsScreen(models, onBack = { nav.popBackStack() })
         }
         composable(Routes.CURRENCIES) {
             LaunchedEffect(Unit) { onboarding.show(OnboardingStep.CURRENCIES) }
@@ -132,6 +167,8 @@ private fun AppNavHost(
                 onPhoto = { nav.navigate(Routes.CAMERA) },
                 onWrite = { nav.navigate(Routes.FORM) },
                 utcOffsetMinutes = settings.utcOffsetMinutes,
+                onPrivacy = { nav.navigate(Routes.PRIVACY) },
+                onVoiceModels = { nav.navigate(Routes.VOICE_MODELS) },
             )
         }
         composable(Routes.CAMERA) {

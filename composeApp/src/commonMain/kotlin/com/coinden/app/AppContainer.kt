@@ -33,6 +33,7 @@ import com.coinden.core.domain.usecase.draft.ConfirmDraftUseCase
 import com.coinden.core.domain.usecase.draft.DraftContext
 import com.coinden.core.domain.usecase.draft.FindSameMovementQuestionsUseCase
 import com.coinden.core.domain.usecase.draft.GetDraftInboxUseCase
+import com.coinden.core.domain.usecase.draft.InterpretPerceivedUseCase
 import com.coinden.core.domain.usecase.draft.ResolveSameMovementUseCase
 import com.coinden.core.domain.usecase.draft.ReviseDraftUseCase
 import com.coinden.core.domain.usecase.draft.SetDefaultWalletUseCase
@@ -125,6 +126,7 @@ class AppContainer(
     val confirmDraft = ConfirmDraftUseCase(drafts, ledger)
     val findSameMovementQuestions = FindSameMovementQuestionsUseCase(drafts)
     val resolveSameMovement = ResolveSameMovementUseCase(drafts)
+    val interpretPerceived = InterpretPerceivedUseCase(drafts, interpreter)
 
     /** Desfase de la zona horaria del teléfono: define el "mismo día" de dos capturas. */
     val utcOffsetMinutes: Int get() = regional.settings().utcOffsetMinutes

@@ -256,6 +256,26 @@ abstract class PreferencesRepositoryContract {
             repo.setLanguageCode("en")
             assertEquals("en", repo.languageCode())
         }
+
+    @Test
+    fun `el lector de Google empieza apagado y la eleccion se guarda`() =
+        runTest {
+            val repo = repo()
+            assertEquals(false, repo.googleReaderEnabled())
+            repo.setGoogleReaderEnabled(true)
+            assertEquals(true, repo.googleReaderEnabled())
+            repo.setGoogleReaderEnabled(false)
+            assertEquals(false, repo.googleReaderEnabled())
+        }
+
+    @Test
+    fun `la pantalla de privacidad se recuerda como vista`() =
+        runTest {
+            val repo = repo()
+            assertEquals(false, repo.privacyNoticeSeen())
+            repo.setPrivacyNoticeSeen()
+            assertEquals(true, repo.privacyNoticeSeen())
+        }
 }
 
 // --- Implementaciones: memoria y base local ----------------------------------------

@@ -66,6 +66,21 @@ sealed interface DraftEvent {
         val mergedInto: String? = null,
     ) : DraftEvent
 
+    /**
+     * Texto leído en el teléfono de la foto, el PDF o el audio de la evidencia. [engine] es el código
+     * del lector ("tesseract", "mlkit", "pdf-text", "whisper", "system-speech").
+     */
+    data class Perceived(
+        override val id: String,
+        override val draftId: String,
+        override val ownerId: String,
+        override val deviceId: String,
+        override val occurredAtEpochMs: Long,
+        override val recordedAtEpochMs: Long,
+        val text: String,
+        val engine: String,
+    ) : DraftEvent
+
     /** "Son distintos": no cambia el estado; evita volver a preguntar por el par. */
     data class MarkedDistinct(
         override val id: String,
@@ -132,9 +147,14 @@ object DraftProjection {
                 continue
             }
             if (state.isTerminal) continue
+            if (event is DraftEvent.Perceived) {
+                header = header.copy(perceivedText = event.text)
+                state = state.withHeader(header)
+                continue
+            }
             state =
                 when (event) {
-                    is DraftEvent.Captured, is DraftEvent.MarkedDistinct, is DraftEvent.Merged -> state
+                    is DraftEvent.Captured, is DraftEvent.MarkedDistinct, is DraftEvent.Merged, is DraftEvent.Perceived -> state
                     is DraftEvent.Interpreted -> DraftEvaluator.evaluate(header, event.proposal, directory)
                     is DraftEvent.Revised -> DraftEvaluator.evaluate(header, event.proposal, directory)
                     is DraftEvent.Confirmed -> Draft.Confirmed(header, event.movement, event.ledgerEventId)

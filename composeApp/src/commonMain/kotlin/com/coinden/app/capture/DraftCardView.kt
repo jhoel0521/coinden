@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.amount_missing
@@ -37,6 +38,8 @@ import coinden.composeapp.generated.resources.evidence_audio
 import coinden.composeapp.generated.resources.evidence_extra
 import coinden.composeapp.generated.resources.evidence_file
 import coinden.composeapp.generated.resources.evidence_quote
+import coinden.composeapp.generated.resources.evidence_read
+import coinden.composeapp.generated.resources.evidence_unread
 import coinden.composeapp.generated.resources.field_category
 import coinden.composeapp.generated.resources.field_method
 import coinden.composeapp.generated.resources.field_reference
@@ -110,7 +113,7 @@ fun DraftCardView(
                         tint = scheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp),
                     )
-                    Text(
+                    val stored =
                         stringResource(
                             if (card.evidenceSource ==
                                 EvidenceSource.VOICE
@@ -119,11 +122,25 @@ fun DraftCardView(
                             } else {
                                 Res.string.evidence_file
                             },
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = scheme.onSurfaceVariant,
-                    )
+                        )
+                    val unread = if (card.perceivedText == null) " " + stringResource(Res.string.evidence_unread) else ""
+                    Text(stored + unread, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
                 }
+            }
+            card.perceivedText?.let {
+                Text(
+                    stringResource(Res.string.evidence_read),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = scheme.onSurfaceVariant,
+                )
+                Text(
+                    stringResource(Res.string.evidence_quote, it),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontStyle = FontStyle.Italic,
+                    color = scheme.onSurfaceVariant,
+                    maxLines = 6,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
             if (card.status != DraftStatusView.CAPTURED) {
                 Text(

@@ -19,3 +19,6 @@ Thumbs.db
 
 # Claude Code (junction local hacia .agents/skills)
 .claude/skills
+
+# Compilación nativa de CMake (whisper.cpp)
+.cxx/

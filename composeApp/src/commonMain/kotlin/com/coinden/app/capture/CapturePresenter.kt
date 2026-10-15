@@ -1,6 +1,8 @@
 package com.coinden.app.capture
 
 import com.coinden.app.AppContainer
+import com.coinden.app.perception.PerceptionOutcome
+import com.coinden.app.perception.PerceptionService
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.draft.DraftError
 import com.coinden.core.domain.model.draft.DraftResult
@@ -49,12 +51,16 @@ data class CaptureResult(
     val cards: List<DraftCard>,
     val confirmed: Set<String> = emptySet(),
     val problems: Map<String, ConfirmProblem> = emptyMap(),
+    /** Audios que no se pudieron transcribir porque falta un modelo de voz: se ofrece descargarlo. */
+    val voiceModelNeeded: Set<String> = emptySet(),
 )
 
 data class CaptureState(
     val listening: Boolean = false,
     val notice: CaptureNotice? = null,
     val result: CaptureResult? = null,
+    /** Borradores que se están leyendo en el teléfono ("Leyendo…"). */
+    val reading: Set<String> = emptySet(),
 )
 
 /**
@@ -64,6 +70,8 @@ data class CaptureState(
 class CapturePresenter(
     private val container: AppContainer,
     private val dictation: DictationPort,
+    /** Lectura de fotos, PDF y audios; sin ella, quedan Capturados como antes. */
+    private val perception: PerceptionService? = null,
 ) {
     private val cards = DraftCards(container)
     private val mutableState = MutableStateFlow(CaptureState())
@@ -160,6 +168,46 @@ class CapturePresenter(
         val fingerprint = sha256Hex(bytes)
         val ref = container.attachments.save(bytes, mimeType)
         capture(Evidence(source, attachmentRef = ref, fingerprint = fingerprint))
+        // La captura ya se ve; la lectura llega después y actualiza la tarjeta.
+        state.value.result
+            ?.cards
+            ?.firstOrNull()
+            ?.let { read(it.draftId) }
+    }
+
+    /** Cuántos borradores Capturados con archivo esperan su lectura. */
+    suspend fun pendingReads(): Int = perception?.pendingDraftIds()?.size ?: 0
+
+    /** Lee los Capturados guardados antes de la lectura y muestra el resultado. */
+    suspend fun readSaved() {
+        val perception = perception ?: return
+        val ids = perception.pendingDraftIds()
+        if (ids.isEmpty()) return
+        val captured = cards.of(ids.mapNotNull { container.drafts.load(it) })
+        mutableState.update { it.copy(result = CaptureResult(captured)) }
+        ids.forEach { read(it) }
+    }
+
+    private suspend fun read(draftId: String) {
+        val perception = perception ?: return
+        mutableState.update { it.copy(reading = it.reading + draftId) }
+        val outcome =
+            try {
+                perception.perceive(draftId)
+            } finally {
+                mutableState.update { it.copy(reading = it.reading - draftId) }
+            }
+        val result = state.value.result ?: return
+        val updated =
+            when (outcome) {
+                is PerceptionOutcome.Read -> {
+                    val fresh = cards.of(outcome.drafts)
+                    result.copy(cards = result.cards.flatMap { if (it.draftId == draftId) fresh else listOf(it) })
+                }
+                PerceptionOutcome.NeedsVoiceModel -> result.copy(voiceModelNeeded = result.voiceModelNeeded + draftId)
+                else -> result
+            }
+        mutableState.update { it.copy(result = updated) }
     }
 
     private suspend fun capture(evidence: Evidence) {
