@@ -43,7 +43,7 @@ Foto DEBE (MUST) abrir la cámara dentro de la app, con un botón para elegir un
 - **THEN** el archivo no se puede abrir como imagen sin la llave de la app
 
 ### Requirement: Formulario Completo
-Escribir DEBE (MUST) abrir una página con todos los campos del movimiento: tipo, monto, moneda, billetera, medio de pago, categoría, fecha y nota, y un campo de frase libre que, al escribirla, llena los campos con el intérprete. Guardar crea un borrador con lo indicado en el formulario como dicho por el usuario.
+Escribir DEBE (MUST) abrir una página con todos los campos del movimiento: tipo, monto, moneda, billetera, medio de pago, categoría, fecha, nota y referencia (número de transacción, opcional), y un campo de frase libre que, al escribirla, llena los campos con el intérprete. Guardar crea un borrador con lo indicado en el formulario como dicho por el usuario.
 
 #### Scenario: Llenar con una frase
 - **WHEN** Carlos escribe "almuerzo 45 bnb" en la frase del formulario
@@ -56,6 +56,14 @@ Escribir DEBE (MUST) abrir una página con todos los campos del movimiento: tipo
 #### Scenario: Faltan datos
 - **WHEN** Carlos guarda el formulario sin monto
 - **THEN** se guarda igual como borrador Incompleto, sin perder lo que escribió
+
+#### Scenario: Referencia escrita a mano
+- **WHEN** Carlos llena un gasto de 120 Bs en "BNB Bs" y escribe la referencia "77001234"
+- **THEN** el borrador guardado trae la referencia "77001234"
+
+#### Scenario: Pegar un comprobante en la frase
+- **WHEN** Carlos pega en la frase el texto de un pago QR con "Nro. de transacción: 400000001" y toca Llenar
+- **THEN** el campo referencia queda con "400000001"
 
 ### Requirement: Compartir a CoinDen
 La app DEBE (MUST) aparecer como destino al compartir texto, imágenes, PDF o audios desde otras apps. Un texto compartido se guarda como borrador y pasa por el intérprete y sus plantillas de comprobantes; una imagen, un PDF o un audio se guarda cifrado como evidencia de un borrador Capturado, sin propuesta hasta que exista su lectura.
@@ -81,7 +89,7 @@ La app DEBE (MUST) aparecer como destino al compartir texto, imágenes, PDF o au
 - **THEN** el formulario se llena con lo que el intérprete entiende de ese texto
 
 ### Requirement: Resultado de la Captura y Confirmación Inmediata
-Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador, mostrar su tarjeta y ofrecer confirmarlo en ese momento, con la categoría sugerida si la hay, o dejarlo para la revisión. Confirmar aplica las reglas del libro; si el libro lo rechaza, el borrador sigue pendiente y se muestra el motivo.
+Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador, mostrar su tarjeta (con la referencia, si la hay) y ofrecer confirmarlo en ese momento, con la categoría sugerida si la hay, o dejarlo para la revisión. Confirmar aplica las reglas del libro; si el libro lo rechaza, el borrador sigue pendiente y se muestra el motivo. Si la captura puede ser el mismo movimiento que otra, la tarjeta pregunta "¿Es el mismo gasto?" mostrando la otra (nota, monto, hora y billetera) con los botones "Son el mismo" y "Son distintos".
 
 #### Scenario: Confirmar ahora
 - **WHEN** Carlos captura "almuerzo 45 bnb" y toca Confirmar
@@ -94,3 +102,15 @@ Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador
 #### Scenario: Confirmación rechazada
 - **WHEN** Carlos confirma un gasto de 45 Bs en "Billetera", que solo tiene 10 Bs
 - **THEN** el borrador sigue pendiente y la tarjeta muestra que faltan 35 Bs
+
+#### Scenario: Preguntar en el momento
+- **WHEN** Carlos comparte el comprobante de 10.00 Bs después de haber dictado "gasté 10 en power" ese día
+- **THEN** la tarjeta pregunta si es el mismo gasto que "power", con "Son el mismo" y "Son distintos"
+
+#### Scenario: Responder Son el mismo
+- **WHEN** Carlos toca "Son el mismo"
+- **THEN** la tarjeta pasa a mostrar el borrador unido y Inicio cuenta un borrador pendiente menos
+
+#### Scenario: Responder Son distintos
+- **WHEN** Carlos toca "Son distintos"
+- **THEN** la pregunta desaparece y quedan los dos borradores
