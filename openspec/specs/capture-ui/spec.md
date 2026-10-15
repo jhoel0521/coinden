@@ -1,0 +1,96 @@
+# capture-ui Specification
+
+## Purpose
+Hace que registrar un gasto tome segundos desde Inicio: dictar con la voz procesada en el teléfono, tomar o elegir la foto de un comprobante, llenar el formulario completo o compartir desde otra app, con el borrador visible al instante y la opción de confirmarlo ya o en la noche.
+
+## Requirements
+
+### Requirement: Barra de Captura en Inicio
+Inicio DEBE (MUST) mostrar siempre tres botones de captura: Dictar, Foto y Escribir, cada uno con su ícono y su texto, con un área táctil de al menos 48 dp. Dictar y Foto empiezan a capturar con un solo toque; Escribir abre el formulario completo.
+
+#### Scenario: Botones visibles
+- **WHEN** Carlos abre Inicio
+- **THEN** ve los botones Dictar, Foto y Escribir sin tocar nada más
+
+### Requirement: Dictado con Reconocimiento de Voz Local
+Dictar DEBE (MUST) transcribir con el reconocimiento de voz del propio teléfono en el idioma de la app, sin enviar el audio fuera del dispositivo, y guardar lo dicho como un borrador de voz que pasa por el intérprete. Si el teléfono no ofrece reconocimiento local, DEBE informarlo y no usar un servicio en la nube.
+
+#### Scenario: Gasto dictado
+- **WHEN** Carlos toca Dictar, dice su gasto y el reconocimiento local lo transcribe como "almuerzo 45 bnb"
+- **THEN** se guarda un borrador de voz con ese texto, interpretado como un gasto de 45 en "BNB Bs", y se muestra su tarjeta
+
+#### Scenario: Sin reconocimiento local
+- **WHEN** el teléfono no tiene reconocimiento de voz local disponible
+- **THEN** la app avisa que el dictado no está disponible en este teléfono y no envía audio a ningún servicio
+
+#### Scenario: Permiso denegado
+- **WHEN** Carlos niega el permiso de micrófono
+- **THEN** no se crea ningún borrador y la app explica para qué sirve el permiso
+
+### Requirement: Foto o Galería con Evidencia Cifrada
+Foto DEBE (MUST) abrir la cámara dentro de la app, con un botón para elegir una imagen de la galería sin pedir permisos de almacenamiento. La imagen se guarda cifrada en el almacenamiento privado de la app y queda como evidencia de un borrador Capturado, sin propuesta hasta que exista la lectura de imágenes.
+
+#### Scenario: Foto del comprobante
+- **WHEN** Carlos toca Foto y toma la foto de un comprobante
+- **THEN** se guarda un borrador Capturado con la imagen como evidencia y se muestra su tarjeta
+
+#### Scenario: Imagen de la galería
+- **WHEN** Carlos toca Foto y elige una captura de pantalla de la galería
+- **THEN** se guarda un borrador Capturado con esa imagen como evidencia
+
+#### Scenario: Imagen ilegible fuera de la app
+- **WHEN** alguien copia el archivo guardado de una imagen fuera de la app
+- **THEN** el archivo no se puede abrir como imagen sin la llave de la app
+
+### Requirement: Formulario Completo
+Escribir DEBE (MUST) abrir una página con todos los campos del movimiento: tipo, monto, moneda, billetera, medio de pago, categoría, fecha y nota, y un campo de frase libre que, al escribirla, llena los campos con el intérprete. Guardar crea un borrador con lo indicado en el formulario como dicho por el usuario.
+
+#### Scenario: Llenar con una frase
+- **WHEN** Carlos escribe "almuerzo 45 bnb" en la frase del formulario
+- **THEN** el formulario propone un gasto de 45 en "BNB Bs" con la categoría comida, y Carlos puede cambiar cualquier campo antes de guardar
+
+#### Scenario: Formulario completo a mano
+- **WHEN** Carlos elige gasto, 120 Bs, "BNB Bs", tarjeta, supermercado y la fecha de ayer, y guarda
+- **THEN** se guarda un borrador Listo con esos datos y confianza alta
+
+#### Scenario: Faltan datos
+- **WHEN** Carlos guarda el formulario sin monto
+- **THEN** se guarda igual como borrador Incompleto, sin perder lo que escribió
+
+### Requirement: Compartir a CoinDen
+La app DEBE (MUST) aparecer como destino al compartir texto, imágenes, PDF o audios desde otras apps. Un texto compartido se guarda como borrador y pasa por el intérprete y sus plantillas de comprobantes; una imagen, un PDF o un audio se guarda cifrado como evidencia de un borrador Capturado, sin propuesta hasta que exista su lectura.
+
+#### Scenario: Texto de un comprobante
+- **WHEN** Carlos comparte desde su banco el texto de un comprobante de pago por QR
+- **THEN** CoinDen crea un borrador con los datos leídos del comprobante y muestra su tarjeta
+
+#### Scenario: Imagen compartida
+- **WHEN** Carlos comparte la imagen de un comprobante desde Yape
+- **THEN** CoinDen crea un borrador Capturado con la imagen cifrada como evidencia
+
+#### Scenario: Comprobante en PDF
+- **WHEN** Carlos comparte desde su banca por internet el comprobante en PDF
+- **THEN** CoinDen crea un borrador Capturado con el PDF cifrado como evidencia
+
+#### Scenario: Nota de voz de WhatsApp
+- **WHEN** Carlos comparte desde WhatsApp la nota de voz "hey bro, ya te pagué los 100 bs que te debía"
+- **THEN** CoinDen crea un borrador de voz Capturado con el audio cifrado como evidencia, para transcribirlo cuando exista la lectura de audios
+
+#### Scenario: Pegar un texto que no se puede compartir
+- **WHEN** Carlos copia un mensaje en WhatsApp y lo pega en la frase del formulario
+- **THEN** el formulario se llena con lo que el intérprete entiende de ese texto
+
+### Requirement: Resultado de la Captura y Confirmación Inmediata
+Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador, mostrar su tarjeta y ofrecer confirmarlo en ese momento, con la categoría sugerida si la hay, o dejarlo para la revisión. Confirmar aplica las reglas del libro; si el libro lo rechaza, el borrador sigue pendiente y se muestra el motivo.
+
+#### Scenario: Confirmar ahora
+- **WHEN** Carlos captura "almuerzo 45 bnb" y toca Confirmar
+- **THEN** el gasto de 45 Bs se registra en "BNB Bs" clasificado como comida y el saldo de Inicio baja 45 Bs
+
+#### Scenario: Dejar para la noche
+- **WHEN** Carlos captura un gasto y vuelve a Inicio sin confirmar
+- **THEN** el borrador queda pendiente y los saldos no cambian
+
+#### Scenario: Confirmación rechazada
+- **WHEN** Carlos confirma un gasto de 45 Bs en "Billetera", que solo tiene 10 Bs
+- **THEN** el borrador sigue pendiente y la tarjeta muestra que faltan 35 Bs

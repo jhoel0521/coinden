@@ -80,7 +80,7 @@ El onboarding DEBE (MUST) mostrarse mientras la persona no tenga perfil de moned
 - **THEN** muestra la bienvenida y no existe ninguna billetera
 
 ### Requirement: Pantalla de Inicio
-Inicio DEBE (MUST) mostrar el patrimonio total en la moneda principal (sumando cada otra moneda con su tasa de referencia, y mostrando aparte, sin sumar, las que no tienen tasa), cada billetera activa con su saldo, cuántos borradores esperan revisión y un botón para capturar que abre la pantalla de captura.
+Inicio DEBE (MUST) mostrar el patrimonio total en la moneda principal (sumando cada otra moneda con su tasa de referencia, y mostrando aparte, sin sumar, las que no tienen tasa), cada billetera activa con su saldo, cuántos borradores esperan revisión y la barra de captura con los botones Dictar, Foto y Escribir.
 
 #### Scenario: Inicio de Carlos
 - **WHEN** Carlos, con 100 Bs, 500 Bs y 289 USD a 10,20 y dos borradores pendientes, abre Inicio
@@ -91,5 +91,5 @@ Inicio DEBE (MUST) mostrar el patrimonio total en la moneda principal (sumando c
 - **THEN** ve un patrimonio de 600,00 Bs y, aparte, 50,00 BRL sin convertir
 
 #### Scenario: Capturar desde Inicio
-- **WHEN** Carlos toca el botón de capturar en Inicio
-- **THEN** se abre la pantalla de captura y, al volver con el botón Atrás, regresa a Inicio
+- **WHEN** Carlos toca Escribir en Inicio
+- **THEN** se abre el formulario completo y, al volver con el botón Atrás, regresa a Inicio
