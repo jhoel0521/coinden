@@ -23,6 +23,8 @@ data class Evidence(
     val source: EvidenceSource,
     val text: String? = null,
     val attachmentRef: String? = null,
+    /** Huella (SHA-256) del archivo antes de cifrarlo: reconoce el mismo archivo enviado dos veces. */
+    val fingerprint: String? = null,
 )
 
 /**
@@ -135,6 +137,8 @@ sealed interface MovementProposal {
         val paymentMethod: PaymentMethod? = null,
         /** Por qué se sugirió la billetera (null si la dijo el usuario o no hay). */
         val walletSuggestion: WalletSuggestion? = null,
+        /** Número de transacción del comprobante, tal como aparece (null si no lo trae). */
+        val reference: String? = null,
     ) : MovementProposal {
         override val presentFields: Set<DraftField> get() = singleWalletFields(amount, wallet, occurredAtEpochMs)
     }
@@ -149,6 +153,8 @@ sealed interface MovementProposal {
         val paymentMethod: PaymentMethod? = null,
         /** Por qué se sugirió la billetera (null si la dijo el usuario o no hay). */
         val walletSuggestion: WalletSuggestion? = null,
+        /** Número de transacción del comprobante, tal como aparece (null si no lo trae). */
+        val reference: String? = null,
     ) : MovementProposal {
         override val presentFields: Set<DraftField> get() = singleWalletFields(amount, wallet, occurredAtEpochMs)
     }
@@ -164,6 +170,8 @@ sealed interface MovementProposal {
         override val origins: Map<DraftField, FieldOrigin> = emptyMap(),
         /** Medio de pago dicho para el origen. */
         val paymentMethod: PaymentMethod? = null,
+        /** Número de transacción del comprobante, tal como aparece (null si no lo trae). */
+        val reference: String? = null,
     ) : MovementProposal {
         override val presentFields: Set<DraftField>
             get() =

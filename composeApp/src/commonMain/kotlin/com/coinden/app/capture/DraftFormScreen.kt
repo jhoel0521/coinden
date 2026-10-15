@@ -60,6 +60,7 @@ import coinden.composeapp.generated.resources.form_none
 import coinden.composeapp.generated.resources.form_note
 import coinden.composeapp.generated.resources.form_other_date
 import coinden.composeapp.generated.resources.form_phrase
+import coinden.composeapp.generated.resources.form_reference
 import coinden.composeapp.generated.resources.form_save
 import coinden.composeapp.generated.resources.form_saved_note
 import coinden.composeapp.generated.resources.form_title
@@ -186,6 +187,13 @@ fun DraftFormScreen(
                 value = state.note,
                 onValueChange = presenter::onNoteChange,
                 label = { Text(stringResource(Res.string.form_note)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = state.reference,
+                onValueChange = presenter::onReferenceChange,
+                label = { Text(stringResource(Res.string.form_reference)) },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(stringResource(Res.string.form_saved_note), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)

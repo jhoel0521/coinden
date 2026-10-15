@@ -34,10 +34,12 @@ import coinden.composeapp.generated.resources.category_custom
 import coinden.composeapp.generated.resources.category_none
 import coinden.composeapp.generated.resources.draft_not_counted
 import coinden.composeapp.generated.resources.evidence_audio
+import coinden.composeapp.generated.resources.evidence_extra
 import coinden.composeapp.generated.resources.evidence_file
 import coinden.composeapp.generated.resources.evidence_quote
 import coinden.composeapp.generated.resources.field_category
 import coinden.composeapp.generated.resources.field_method
+import coinden.composeapp.generated.resources.field_reference
 import coinden.composeapp.generated.resources.field_wallet
 import coinden.composeapp.generated.resources.kind_unknown
 import coinden.composeapp.generated.resources.method_card
@@ -93,6 +95,13 @@ fun DraftCardView(
                     color = scheme.onSurfaceVariant,
                 )
             }
+            if (card.extraEvidence > 0) {
+                Text(
+                    stringResource(Res.string.evidence_extra, card.extraEvidence),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = scheme.onSurfaceVariant,
+                )
+            }
             card.attachmentRef?.let {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(
@@ -138,6 +147,9 @@ fun DraftCardView(
                     FieldRow(method.icon(), stringResource(Res.string.field_method)) { Value(stringResource(method.label())) }
                 }
                 FieldRow(CoinDenIcon.SPARKLE, stringResource(Res.string.field_category)) { Value(categoryText(card.category)) }
+                card.reference?.let { reference ->
+                    FieldRow(CoinDenIcon.HASH, stringResource(Res.string.field_reference)) { Value(reference) }
+                }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ConfidenceChip(card)

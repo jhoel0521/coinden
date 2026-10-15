@@ -11,6 +11,8 @@ data class DraftHeader(
     val ownerId: String,
     val evidence: Evidence,
     val capturedAtEpochMs: Long,
+    /** Evidencia de los borradores unidos a este ("son el mismo"), en el orden en que se unieron. */
+    val extraEvidence: List<Evidence> = emptyList(),
 )
 
 /**
@@ -26,6 +28,8 @@ sealed interface ReadyMovement {
         val walletId: String,
         override val occurredAtEpochMs: Long,
         override val note: String?,
+        /** Número de transacción del comprobante, tal como aparece (null si no lo trae). */
+        val reference: String? = null,
     ) : ReadyMovement
 
     data class Income(
@@ -33,6 +37,8 @@ sealed interface ReadyMovement {
         val walletId: String,
         override val occurredAtEpochMs: Long,
         override val note: String?,
+        /** Número de transacción del comprobante, tal como aparece (null si no lo trae). */
+        val reference: String? = null,
     ) : ReadyMovement
 
     data class Transfer(
@@ -42,6 +48,8 @@ sealed interface ReadyMovement {
         val toWalletId: String,
         override val occurredAtEpochMs: Long,
         override val note: String?,
+        /** Número de transacción del comprobante, tal como aparece (null si no lo trae). */
+        val reference: String? = null,
     ) : ReadyMovement {
         /** Tasa exacta de la operación (identidad si es la misma moneda). */
         val rate: ExchangeRate
@@ -56,6 +64,15 @@ sealed interface ReadyMovement {
         override val note: String?,
     ) : ReadyMovement
 }
+
+/** El mismo movimiento con su número de transacción (un ajuste no lleva referencia). */
+fun ReadyMovement.withReference(reference: String): ReadyMovement =
+    when (this) {
+        is ReadyMovement.Expense -> copy(reference = reference)
+        is ReadyMovement.Income -> copy(reference = reference)
+        is ReadyMovement.Transfer -> copy(reference = reference)
+        is ReadyMovement.AdjustTo -> this
+    }
 
 /**
  * Borrador como máquina de estados. Cada estado guarda solo sus datos:
@@ -119,6 +136,8 @@ sealed interface Draft {
 
     data class Discarded(
         override val header: DraftHeader,
+        /** El borrador con el que se unió, si se descartó por "son el mismo". */
+        val mergedInto: String? = null,
     ) : Draft
 }
 
@@ -144,7 +163,13 @@ object DraftEvaluator {
                     val wallet = check.wallet(proposal.wallet, directory, DraftField.WALLET)
                     val amount = check.positiveAmount(proposal.amount, wallet, DraftField.AMOUNT)
                     if (wallet != null && amount != null) {
-                        ReadyMovement.Expense(amount, wallet.id, proposal.occurredAtEpochMs ?: header.capturedAtEpochMs, proposal.note)
+                        ReadyMovement.Expense(
+                            amount,
+                            wallet.id,
+                            proposal.occurredAtEpochMs ?: header.capturedAtEpochMs,
+                            proposal.note,
+                            proposal.reference,
+                        )
                     } else {
                         null
                     }
@@ -153,7 +178,13 @@ object DraftEvaluator {
                     val wallet = check.wallet(proposal.wallet, directory, DraftField.WALLET)
                     val amount = check.positiveAmount(proposal.amount, wallet, DraftField.AMOUNT)
                     if (wallet != null && amount != null) {
-                        ReadyMovement.Income(amount, wallet.id, proposal.occurredAtEpochMs ?: header.capturedAtEpochMs, proposal.note)
+                        ReadyMovement.Income(
+                            amount,
+                            wallet.id,
+                            proposal.occurredAtEpochMs ?: header.capturedAtEpochMs,
+                            proposal.note,
+                            proposal.reference,
+                        )
                     } else {
                         null
                     }
@@ -202,7 +233,15 @@ object DraftEvaluator {
             check.issues += DraftIssue.INCONSISTENT_AMOUNTS
         }
         if (from == null || to == null || out == null || into == null) return null
-        return ReadyMovement.Transfer(out, from.id, into, to.id, proposal.occurredAtEpochMs ?: header.capturedAtEpochMs, proposal.note)
+        return ReadyMovement.Transfer(
+            out,
+            from.id,
+            into,
+            to.id,
+            proposal.occurredAtEpochMs ?: header.capturedAtEpochMs,
+            proposal.note,
+            proposal.reference,
+        )
     }
 
     /** Acumula faltantes y problemas mientras se resuelven los campos. */

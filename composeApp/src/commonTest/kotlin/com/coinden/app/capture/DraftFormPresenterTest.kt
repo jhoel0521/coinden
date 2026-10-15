@@ -122,4 +122,40 @@ class DraftFormPresenterTest {
             val movement = assertIs<ReadyMovement.Expense>(assertIs<Draft.Ready>(container.onlyPending()).movement)
             assertEquals(Money.parseCanonical("12.50", Currency.BOB), movement.amount)
         }
+
+    @Test
+    fun `la referencia escrita a mano se guarda en el borrador`() =
+        runTest {
+            val (container, form) = carlos()
+
+            form.onAmountChange("120")
+            form.onWalletChange(form.walletNamed("BNB Bs").id)
+            form.onReferenceChange(" 77001234 ")
+            form.save()
+
+            val draft = assertIs<Draft.Ready>(container.onlyPending())
+            assertEquals("77001234", (draft.movement as ReadyMovement.Expense).reference)
+        }
+
+    @Test
+    fun `pegar un comprobante en la frase llena la referencia`() =
+        runTest {
+            val (_, form) = carlos()
+            // Estructura de un pago QR del Banco Económico con datos inventados
+            form.onPhraseChange(
+                """
+                Banco ECONOMICO
+                Pago QR otros bancos
+                Beneficiario
+                POLLOS DEL VALLE
+                Importe
+                Bs25.00
+                Nro. de transacción: 400000001
+                """.trimIndent(),
+            )
+            form.fillFromPhrase()
+
+            assertEquals("400000001", form.state.value.reference)
+            assertEquals("25.00", form.state.value.amount)
+        }
 }

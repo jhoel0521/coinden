@@ -123,6 +123,32 @@ abstract class DraftRepositoryContract {
         }
 
     @Test
+    fun `las decisiones de mismo movimiento se guardan con el resto del historial`() =
+        runTest {
+            val repo = repo()
+            val first = captured("a1", "d1")
+            val second = captured("b1", "d2")
+            val distinct = DraftEvent.MarkedDistinct("b2", "d2", "carlos", "dev", T + 1, T + 1, otherDraftId = "d1")
+            val merged =
+                DraftEvent.Merged(
+                    "a2",
+                    "d1",
+                    "carlos",
+                    "dev",
+                    T + 2,
+                    T + 2,
+                    absorbedDraftId = "d2",
+                    absorbedEvidence = Evidence(EvidenceSource.VOICE, attachmentRef = "audio-1", fingerprint = "huella"),
+                    reference = "400000777",
+                )
+            val absorbed = DraftEvent.Discarded("b3", "d2", "carlos", "dev", T + 2, T + 2, mergedInto = "d1")
+            listOf(first, second, distinct, merged, absorbed).forEach { repo.appendEvent(it) }
+
+            assertEquals(listOf(first, merged), repo.eventsFor("d1"))
+            assertEquals(listOf(second, distinct, absorbed), repo.eventsFor("d2"))
+        }
+
+    @Test
     fun `un id repetido en los borradores se rechaza`() =
         runTest {
             val repo = repo()

@@ -30,7 +30,7 @@ Ver proposal.md. Las plantillas (`ReceiptTemplate`) y el lector genérico (`Gene
 - Con plantilla se usa solo su etiqueta; sin plantilla, la primera etiqueta del paquete presente. `PhraseReader` nunca la llena.
 
 ### D3. Huella de la evidencia
-`Evidence.fingerprint: String? = null`: SHA-256 en hexadecimal del archivo, calculado en la app antes de cifrarlo (`CapturePresenter`), nunca del archivo cifrado. Para evidencias de texto, la coincidencia compara el texto normalizado (`TextNormalizer`) y no hace falta huella.
+`Evidence.fingerprint: String? = null`: SHA-256 en hexadecimal del archivo, calculado en la app antes de cifrarlo (`CapturePresenter`), nunca del archivo cifrado. Para evidencias de texto de varias líneas (un comprobante pegado o compartido), la coincidencia compara el texto normalizado (`TextNormalizer`) y no hace falta huella. Una frase de una línea repetida no cuenta como texto repetido: dos "gasté 10 bs por qr" son la pregunta de mismo día y monto.
 
 ### D4. Coincidencias por consulta
 `FindSameMovementQuestionsUseCase(ownerId, utcOffsetMinutes): List<SameMovementQuestion>` con `SameMovementQuestion(draftId, otherDraftId, reason)` y `reason` ∈ {`SAME_FILE`, `SAME_TEXT`, `SAME_REFERENCE`, `SAME_DAY_AMOUNT`}.

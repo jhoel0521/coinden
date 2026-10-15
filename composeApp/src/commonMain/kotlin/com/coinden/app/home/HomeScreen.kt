@@ -69,6 +69,7 @@ fun HomeScreen(
     onDictate: () -> Unit,
     onPhoto: () -> Unit,
     onWrite: () -> Unit,
+    utcOffsetMinutes: Int,
 ) {
     val state by presenter.state.collectAsState()
     val captureState by capture.state.collectAsState()
@@ -158,7 +159,9 @@ fun HomeScreen(
         CaptureResultSheet(
             result,
             locale,
+            utcOffsetMinutes,
             onConfirm = { draftId -> scope.launch { capture.confirm(draftId) } },
+            onResolve = { draftId, same -> scope.launch { capture.resolve(draftId, same) } },
             onDone = capture::dismissResult,
         )
     }

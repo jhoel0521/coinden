@@ -22,6 +22,7 @@ import com.coinden.core.domain.model.draft.FieldOrigin
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.NonMovementIntent
 import com.coinden.core.domain.model.draft.ProposedAmount
+import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.draft.WalletRef
 import com.coinden.core.domain.model.wallet.LedgerEvent
 import com.coinden.core.domain.model.wallet.Wallet
@@ -364,5 +365,45 @@ class DraftUseCasesTest {
             assertNull(setDefault("carlos", null))
             wallet("Monedero", bs("5"))
             assertNull(ctx.directory("carlos").defaultWalletId)
+        }
+
+    // --- Referencia de la transacción ---
+
+    @Test
+    fun `la referencia sobrevive a la revision y llega al movimiento confirmado`() =
+        runTest {
+            val bnb = wallet("BNB Bs", bs("500"), WalletType.BANK)
+            text["comprobante pollos"] =
+                listOf(
+                    MovementProposal.Expense(
+                        ProposedAmount("25", Currency.BOB),
+                        WalletRef.ById(bnb.id),
+                        note = "POLLOS DEL VALLE",
+                        reference = "400000001",
+                    ),
+                )
+            val draft = assertIs<Draft.Ready>(capture("carlos", textEvidence("comprobante pollos")).single())
+            assertEquals("400000001", (draft.movement as ReadyMovement.Expense).reference)
+
+            // Corregir la nota no borra la referencia
+            val proposal = draft.proposal as MovementProposal.Expense
+            val revised = assertIs<Draft.Ready>(ok(revise(draft.id, proposal.copy(note = "pollo"))))
+            assertEquals("400000001", (revised.proposal as MovementProposal.Expense).reference)
+
+            val confirmed = assertIs<Draft.Confirmed>(ok(confirm(draft.id)))
+            assertEquals("400000001", (confirmed.movement as ReadyMovement.Expense).reference)
+            assertEquals("pollo", confirmed.movement.note)
+        }
+
+    @Test
+    fun `un gasto en efectivo se confirma sin referencia`() =
+        runTest {
+            val billetera = wallet("Billetera", bs("10"))
+            text["page 3 bs para trasmporte"] = listOf(expense("3", WalletRef.ById(billetera.id), "trasmporte"))
+
+            val draft = capture("carlos", textEvidence("page 3 bs para trasmporte")).single()
+            val confirmed = assertIs<Draft.Confirmed>(ok(confirm(draft.id)))
+
+            assertNull((confirmed.movement as ReadyMovement.Expense).reference)
         }
 }

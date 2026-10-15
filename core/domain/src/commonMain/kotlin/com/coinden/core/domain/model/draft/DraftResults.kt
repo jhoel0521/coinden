@@ -23,6 +23,9 @@ sealed interface DraftError {
         val error: WalletError,
     ) : DraftError
 
+    /** Al unir con un movimiento confirmado, el comprobante indica otra billetera. */
+    data object WalletMismatch : DraftError
+
     data class AliasAlreadyUsed(
         val alias: String,
         val walletId: String,

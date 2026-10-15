@@ -42,8 +42,20 @@ import coinden.composeapp.generated.resources.result_not_ready
 import coinden.composeapp.generated.resources.result_rejected
 import coinden.composeapp.generated.resources.result_saved
 import coinden.composeapp.generated.resources.result_shortfall
+import coinden.composeapp.generated.resources.result_wallet_mismatch
+import coinden.composeapp.generated.resources.same_already_confirmed
+import coinden.composeapp.generated.resources.same_no
+import coinden.composeapp.generated.resources.same_question
+import coinden.composeapp.generated.resources.same_question_note
+import coinden.composeapp.generated.resources.same_repeated_file
+import coinden.composeapp.generated.resources.same_repeated_receipt
+import coinden.composeapp.generated.resources.same_wallet
+import coinden.composeapp.generated.resources.same_yes
 import com.coinden.app.format.MoneyFormatter
+import com.coinden.app.format.TimeFormatter
 import com.coinden.app.theme.CoinDenIcon
+import com.coinden.app.theme.CoinDenTheme
+import com.coinden.core.domain.model.draft.SameMovementReason
 import com.coinden.core.domain.model.interpret.UserLocale
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -124,7 +136,9 @@ fun CaptureNoticeCard(
 fun CaptureResultSheet(
     result: CaptureResult,
     locale: UserLocale,
+    utcOffsetMinutes: Int,
     onConfirm: (draftId: String) -> Unit,
+    onResolve: (draftId: String, same: Boolean) -> Unit,
     onDone: () -> Unit,
 ) {
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -143,6 +157,7 @@ fun CaptureResultSheet(
             }
             result.cards.forEach { card ->
                 DraftCardView(card, locale)
+                card.question?.let { SameMovementPrompt(it, locale, utcOffsetMinutes) { same -> onResolve(card.draftId, same) } }
                 val confirmed = card.draftId in result.confirmed
                 when {
                     confirmed -> Outcome(stringResource(Res.string.result_confirmed))
@@ -165,6 +180,54 @@ fun CaptureResultSheet(
     }
 }
 
+/** "¿Es el mismo gasto?" con la otra captura y las dos respuestas. Nunca decide sola. */
+@Composable
+private fun SameMovementPrompt(
+    question: SameMovementView,
+    locale: UserLocale,
+    utcOffsetMinutes: Int,
+    onAnswer: (same: Boolean) -> Unit,
+) {
+    val extra = CoinDenTheme.colors
+    Surface(shape = MaterialTheme.shapes.medium, color = extra.warningContainer, contentColor = extra.onWarningContainer) {
+        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(CoinDenIcon.ALERT.vector, contentDescription = null, modifier = Modifier.size(20.dp))
+                Text(questionText(question, locale, utcOffsetMinutes), style = MaterialTheme.typography.titleSmall)
+            }
+            question.otherWalletName?.let { Text(stringResource(Res.string.same_wallet, it), style = MaterialTheme.typography.bodySmall) }
+            if (question.otherConfirmed) {
+                Text(stringResource(Res.string.same_already_confirmed), style = MaterialTheme.typography.bodySmall)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { onAnswer(true) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                    Text(stringResource(Res.string.same_yes))
+                }
+                OutlinedButton(onClick = { onAnswer(false) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                    Text(stringResource(Res.string.same_no))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun questionText(
+    question: SameMovementView,
+    locale: UserLocale,
+    utcOffsetMinutes: Int,
+): String =
+    when (question.reason) {
+        SameMovementReason.SAME_FILE -> stringResource(Res.string.same_repeated_file)
+        SameMovementReason.SAME_REFERENCE, SameMovementReason.SAME_TEXT -> stringResource(Res.string.same_repeated_receipt)
+        SameMovementReason.SAME_DAY_AMOUNT -> {
+            val amount = question.otherAmount?.let { MoneyFormatter.format(it, locale) }.orEmpty()
+            val time = TimeFormatter.hourMinute(question.otherCapturedAtEpochMs, utcOffsetMinutes)
+            question.otherNote?.let { stringResource(Res.string.same_question_note, it, amount, time) }
+                ?: stringResource(Res.string.same_question, amount, time)
+        }
+    }
+
 @Composable
 private fun Outcome(text: String) {
     Text(
@@ -184,6 +247,7 @@ private fun problemText(
     when (problem) {
         is ConfirmProblem.InsufficientFunds -> stringResource(Res.string.result_shortfall, MoneyFormatter.format(problem.shortfall, locale))
         ConfirmProblem.NotReady -> stringResource(Res.string.result_not_ready)
+        ConfirmProblem.WalletMismatch -> stringResource(Res.string.result_wallet_mismatch)
         ConfirmProblem.Rejected -> stringResource(Res.string.result_rejected)
     }
 

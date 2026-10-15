@@ -131,6 +131,7 @@ private fun AppNavHost(
                 onDictate = { if (capture.state.value.listening) capture.cancelDictation() else askMicrophone() },
                 onPhoto = { nav.navigate(Routes.CAMERA) },
                 onWrite = { nav.navigate(Routes.FORM) },
+                utcOffsetMinutes = settings.utcOffsetMinutes,
             )
         }
         composable(Routes.CAMERA) {

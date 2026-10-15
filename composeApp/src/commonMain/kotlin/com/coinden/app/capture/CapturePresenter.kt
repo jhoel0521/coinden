@@ -38,6 +38,9 @@ sealed interface ConfirmProblem {
     /** Le faltan datos o no es un movimiento: se completa en la bandeja. */
     data object NotReady : ConfirmProblem
 
+    /** Al unir con un gasto ya confirmado, el comprobante dice otra billetera: se corrige en la revisión. */
+    data object WalletMismatch : ConfirmProblem
+
     data object Rejected : ConfirmProblem
 }
 
@@ -127,13 +130,36 @@ class CapturePresenter(
         mutableState.update { it.copy(result = updated) }
     }
 
+    /**
+     * Responde "¿es el mismo gasto?". Son el mismo: la tarjeta pasa a ser la del borrador que queda.
+     * Son distintos: la pregunta desaparece y quedan los dos.
+     */
+    suspend fun resolve(
+        draftId: String,
+        same: Boolean,
+    ) {
+        val result = state.value.result ?: return
+        val question = result.cards.firstOrNull { it.draftId == draftId }?.question ?: return
+        val updated =
+            when (val outcome = container.resolveSameMovement(draftId, question.otherDraftId, same)) {
+                is DraftResult.Ok -> {
+                    val fresh = cards.of(listOf(outcome.draft)).single()
+                    result.copy(cards = result.cards.map { if (it.draftId == draftId) fresh else it }, problems = result.problems - draftId)
+                }
+                is DraftResult.Rejected -> result.copy(problems = result.problems + (draftId to problemOf(outcome.error)))
+            }
+        mutableState.update { it.copy(result = updated) }
+    }
+
     private suspend fun captureFile(
         bytes: ByteArray,
         mimeType: String,
     ) {
         val source = if (mimeType.startsWith("audio/")) EvidenceSource.VOICE else EvidenceSource.PHOTO
+        // La huella se calcula sobre el archivo original, antes de cifrarlo.
+        val fingerprint = sha256Hex(bytes)
         val ref = container.attachments.save(bytes, mimeType)
-        capture(Evidence(source, attachmentRef = ref))
+        capture(Evidence(source, attachmentRef = ref, fingerprint = fingerprint))
     }
 
     private suspend fun capture(evidence: Evidence) {
@@ -144,6 +170,7 @@ class CapturePresenter(
     private fun problemOf(error: DraftError): ConfirmProblem =
         when (error) {
             is DraftError.NotReady -> ConfirmProblem.NotReady
+            DraftError.WalletMismatch -> ConfirmProblem.WalletMismatch
             is DraftError.Wallet ->
                 (error.error as? WalletError.InsufficientFunds)?.let { ConfirmProblem.InsufficientFunds(it.shortfall) }
                     ?: ConfirmProblem.Rejected

@@ -43,6 +43,8 @@ data class DraftFormState(
     /** null: la hora de la captura. */
     val occurredAtEpochMs: Long? = null,
     val note: String = "",
+    /** Número de transacción (opcional). */
+    val reference: String = "",
     val wallets: List<FormWallet> = emptyList(),
 )
 
@@ -96,6 +98,7 @@ class DraftFormPresenter(
                 category = category ?: s.category,
                 occurredAtEpochMs = proposal.occurredAtOrNull() ?: s.occurredAtEpochMs,
                 note = note ?: s.note,
+                reference = proposal.referenceOrNull() ?: s.reference,
             )
         }
     }
@@ -120,6 +123,8 @@ class DraftFormPresenter(
 
     fun onNoteChange(note: String) = mutableState.update { it.copy(note = note) }
 
+    fun onReferenceChange(reference: String) = mutableState.update { it.copy(reference = reference) }
+
     /**
      * Guarda un borrador con la frase como evidencia y lo indicado como propuesta. La categoría
      * elegida viaja en la tarjeta del resultado para confirmarlo en el acto.
@@ -142,6 +147,7 @@ class DraftFormPresenter(
         val amount = normalizedAmount(s.amount)?.let { ProposedAmount(it, s.currency) }
         val wallet = s.walletId?.let { WalletRef.ById(it) }
         val note = s.note.trim().ifEmpty { null }
+        val reference = s.reference.trim().ifEmpty { null }
         val origins =
             buildMap {
                 put(DraftField.KIND, FieldOrigin.STATED)
@@ -151,8 +157,17 @@ class DraftFormPresenter(
                 if (s.occurredAtEpochMs != null) put(DraftField.OCCURRED_AT, FieldOrigin.STATED)
             }
         return when (s.kind) {
-            FormKind.EXPENSE -> MovementProposal.Expense(amount, wallet, s.occurredAtEpochMs, note, origins, s.method)
-            FormKind.INCOME -> MovementProposal.Income(amount, wallet, s.occurredAtEpochMs, note, origins, s.method)
+            FormKind.EXPENSE ->
+                MovementProposal.Expense(
+                    amount,
+                    wallet,
+                    s.occurredAtEpochMs,
+                    note,
+                    origins,
+                    s.method,
+                    reference = reference,
+                )
+            FormKind.INCOME -> MovementProposal.Income(amount, wallet, s.occurredAtEpochMs, note, origins, s.method, reference = reference)
         }
     }
 
@@ -168,6 +183,13 @@ class DraftFormPresenter(
         when (this) {
             is MovementProposal.Expense -> note
             is MovementProposal.Income -> note
+            else -> null
+        }
+
+    private fun MovementProposal.referenceOrNull(): String? =
+        when (this) {
+            is MovementProposal.Expense -> reference
+            is MovementProposal.Income -> reference
             else -> null
         }
 

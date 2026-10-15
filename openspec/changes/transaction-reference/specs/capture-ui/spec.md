@@ -41,7 +41,7 @@ Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador
 - **THEN** el borrador sigue pendiente y la tarjeta muestra que faltan 35 Bs
 
 #### Scenario: Preguntar en el momento
-- **WHEN** Carlos comparte el comprobante de 10.00 Bs después de haber dictado "gasté 10 por power" ese día
+- **WHEN** Carlos comparte el comprobante de 10.00 Bs después de haber dictado "gasté 10 en power" ese día
 - **THEN** la tarjeta pregunta si es el mismo gasto que "power", con "Son el mismo" y "Son distintos"
 
 #### Scenario: Responder Son el mismo

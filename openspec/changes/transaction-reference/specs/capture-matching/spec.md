@@ -13,7 +13,7 @@ El sistema DEBE (MUST) preguntar si dos borradores del mismo usuario son el mism
 - **THEN** los dos borradores se guardan y el segundo pregunta si es el mismo gasto que el primero
 
 #### Scenario: Audio y comprobante del mismo pago
-- **WHEN** Carlos dicta "gasté 10 por power" a las 10:40 y a las 11:30 comparte el comprobante QR de 10.00 Bs de las 10:42 con referencia "400000123"
+- **WHEN** Carlos dicta "gasté 10 en power" a las 10:40 y a las 11:30 comparte el comprobante QR de 10.00 Bs de las 10:42 con referencia "400000123"
 - **THEN** el borrador del comprobante pregunta si es el mismo gasto que "power"
 
 #### Scenario: Ya confirmado
@@ -25,11 +25,15 @@ El sistema DEBE (MUST) preguntar si dos borradores del mismo usuario son el mism
 - **THEN** no se pregunta nada
 
 ### Requirement: Aviso de Captura Repetida
-Cuando dos borradores comparten el mismo archivo, el mismo texto de evidencia o la misma referencia con el mismo monto, el sistema DEBE (MUST) avisar que la captura está repetida, aunque falte el monto o sean de días distintos, con las mismas respuestas que la pregunta.
+Cuando dos borradores comparten el mismo archivo, el mismo texto de un comprobante (de varias líneas) o la misma referencia con el mismo monto, el sistema DEBE (MUST) avisar que la captura está repetida, aunque falte el monto o sean de días distintos, con las mismas respuestas que la pregunta.
 
 #### Scenario: Mismo comprobante enviado dos veces
 - **WHEN** Carlos comparte dos veces el comprobante con referencia "400000001" de 25.00 Bs
 - **THEN** el segundo borrador avisa que es el mismo comprobante que el primero
+
+#### Scenario: Una frase corta repetida no es un comprobante repetido
+- **WHEN** Carlos dicta dos veces "gasté 10 bs por qr" el mismo día
+- **THEN** el segundo pregunta si es el mismo gasto, no avisa que la captura está repetida
 
 #### Scenario: Mismo archivo enviado dos veces
 - **WHEN** Carlos comparte dos veces la misma nota de voz, sin transcribir todavía
@@ -50,14 +54,14 @@ Cuando la persona responde que dos borradores son el mismo movimiento, el sistem
 - **THEN** queda uno solo y al confirmarlo el saldo baja una sola vez
 
 #### Scenario: La evidencia no se pierde
-- **WHEN** Carlos une el dictado "gasté 10 por power" con su comprobante
+- **WHEN** Carlos une el dictado "gasté 10 en power" con su comprobante
 - **THEN** el borrador que queda muestra el audio y el comprobante como evidencia, y el otro queda Descartado enlazado a él
 
 ### Requirement: Qué Dato Gana al Unir
 Al unir dos borradores el sistema DEBE (MUST) tomar el monto, la moneda, la billetera, el momento y la referencia leídos de un comprobante antes que los dichos o sugeridos, y la nota dicha por la persona antes que la del comprobante. El medio de pago y la referencia se toman de quien los tenga.
 
 #### Scenario: Power con su comprobante
-- **WHEN** Carlos une el dictado "gasté 10 por power" (billetera sugerida "Billetera") con el comprobante QR de 10.00 Bs de "BNB Bs" de las 10:42 con referencia "400000123"
+- **WHEN** Carlos une el dictado "gasté 10 en power" (billetera sugerida "Billetera") con el comprobante QR de 10.00 Bs de "BNB Bs" de las 10:42 con referencia "400000123"
 - **THEN** queda un borrador con la nota "power", 10.00 Bs, "BNB Bs", las 10:42 y la referencia "400000123"
 
 ### Requirement: Unir con un Movimiento Confirmado

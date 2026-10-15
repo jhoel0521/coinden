@@ -430,6 +430,27 @@ private class ReceiptLines(
     fun firstLabel(labels: Set<String>): Pair<String, Int>? = labels.sortedByDescending { it.length }.firstNotNullOfOrNull { valueOf(it) }
 }
 
+/**
+ * Número de transacción del valor de una etiqueta: el primer token (sin "N°", "#" ni signos
+ * iniciales) hecho de letras, dígitos y guiones, con al menos un dígito.
+ */
+internal fun referenceOf(value: String?): String? {
+    val token =
+        value
+            ?.trim()
+            ?.trimStart(':', '#', '°', 'º', ' ')
+            ?.removePrefix("N°")
+            ?.removePrefix("Nº")
+            ?.trim()
+            ?.split(Regex("""\s+"""))
+            ?.firstOrNull()
+            ?.trimEnd('.', ',', ';')
+            ?: return null
+    return token.takeIf { REFERENCE.matches(it) && it.any(Char::isDigit) }
+}
+
+private val REFERENCE = Regex("""[\p{L}\p{N}-]+""")
+
 /** Resuelve la cuenta de un comprobante con el alias que el usuario le puso (el número de cuenta). */
 private fun accountWallet(
     accountText: String?,
@@ -486,6 +507,7 @@ object TemplateReader {
         val account = template.accountLabel?.let { accountWallet(lines.valueOf(it)?.first, ctx.directory) }
         val wallet = template.issuerWalletHint?.let { WalletRef.ByHint(it) } ?: account
         val (occurredAt, dateOrigin) = readDate(text, ctx)
+        val reference = template.referenceLabel?.let { referenceOf(lines.valueOf(it)?.first) }
 
         val origins =
             originsOf(
@@ -497,8 +519,8 @@ object TemplateReader {
             )
         return listOf(
             when (template.kind) {
-                TemplateKind.EXPENSE -> MovementProposal.Expense(amount.proposed, wallet, occurredAt, note, origins)
-                TemplateKind.INCOME -> MovementProposal.Income(amount.proposed, wallet, occurredAt, note, origins)
+                TemplateKind.EXPENSE -> MovementProposal.Expense(amount.proposed, wallet, occurredAt, note, origins, reference = reference)
+                TemplateKind.INCOME -> MovementProposal.Income(amount.proposed, wallet, occurredAt, note, origins, reference = reference)
                 TemplateKind.WITHDRAWAL -> {
                     val default = defaultWallet(ctx.directory)
                     MovementProposal.Transfer(
@@ -508,6 +530,7 @@ object TemplateReader {
                         occurredAtEpochMs = occurredAt,
                         note = note,
                         origins = origins + originsOf(DraftField.TO_WALLET to default?.let { FieldOrigin.SUGGESTED }),
+                        reference = reference,
                     )
                 }
             },
@@ -564,6 +587,7 @@ object GenericReceiptReader {
         val note = lines.firstLabel(pack.counterpartyLabels)?.first ?: lines.firstLabel(pack.noteLabels)?.first
         val account = accountWallet(lines.firstLabel(pack.accountLabels)?.first, ctx.directory)
         val (occurredAt, dateOrigin) = readDate(text, ctx)
+        val reference = referenceOf(lines.firstLabel(pack.referenceLabels)?.first)
 
         val origins =
             originsOf(
@@ -575,8 +599,8 @@ object GenericReceiptReader {
             )
         return listOf(
             when (kind) {
-                TemplateKind.EXPENSE -> MovementProposal.Expense(amount.proposed, account, occurredAt, note, origins)
-                TemplateKind.INCOME -> MovementProposal.Income(amount.proposed, account, occurredAt, note, origins)
+                TemplateKind.EXPENSE -> MovementProposal.Expense(amount.proposed, account, occurredAt, note, origins, reference = reference)
+                TemplateKind.INCOME -> MovementProposal.Income(amount.proposed, account, occurredAt, note, origins, reference = reference)
                 TemplateKind.WITHDRAWAL -> {
                     val default = defaultWallet(ctx.directory)
                     MovementProposal.Transfer(
@@ -586,6 +610,7 @@ object GenericReceiptReader {
                         occurredAtEpochMs = occurredAt,
                         note = note,
                         origins = origins + originsOf(DraftField.TO_WALLET to default?.let { FieldOrigin.SUGGESTED }),
+                        reference = reference,
                     )
                 }
             },

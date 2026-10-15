@@ -12,6 +12,7 @@ import com.coinden.core.domain.model.draft.FieldOrigin
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.ReadyMovement
+import com.coinden.core.domain.model.draft.SameMovementReason
 import com.coinden.core.domain.model.draft.WalletDirectory
 import com.coinden.core.domain.model.draft.WalletRef
 import com.coinden.core.domain.model.draft.WalletSuggestion
@@ -49,6 +50,23 @@ data class DraftCard(
     val evidenceSource: EvidenceSource = EvidenceSource.TEXT,
     /** Archivo cifrado de la evidencia (foto, PDF o audio), si lo hay. */
     val attachmentRef: String? = null,
+    /** Número de transacción del comprobante, si lo hay. */
+    val reference: String? = null,
+    /** Cuántas evidencias más tiene por haberse unido con otras capturas. */
+    val extraEvidence: Int = 0,
+    /** "¿Es el mismo gasto que...?", si puede ser el mismo movimiento que otra captura. */
+    val question: SameMovementView? = null,
+)
+
+/** La otra captura de la pregunta, en datos: la pantalla arma el texto. */
+data class SameMovementView(
+    val reason: SameMovementReason,
+    val otherDraftId: String,
+    val otherNote: String?,
+    val otherAmount: Money?,
+    val otherWalletName: String?,
+    val otherCapturedAtEpochMs: Long,
+    val otherConfirmed: Boolean,
 )
 
 /** Arma las tarjetas de los borradores con la sugerencia de categoría vigente. */
@@ -57,8 +75,35 @@ class DraftCards(
 ) {
     suspend fun of(drafts: List<Draft>): List<DraftCard> {
         val directory = container.drafts.directory(container.ownerId)
-        return drafts.map { card(it, directory) }
+        val questions =
+            container.findSameMovementQuestions(container.ownerId, container.utcOffsetMinutes).associateBy { it.draftId }
+        return drafts.map { draft ->
+            val card = card(draft, directory)
+            val question = questions[draft.id] ?: return@map card
+            val other = container.drafts.load(question.otherDraftId) ?: return@map card
+            val otherCard = card(other, directory)
+            card.copy(
+                question =
+                    SameMovementView(
+                        reason = question.reason,
+                        otherDraftId = other.id,
+                        otherNote = noteOf(other),
+                        otherAmount = otherCard.amount,
+                        otherWalletName = otherCard.walletName,
+                        otherCapturedAtEpochMs = other.header.capturedAtEpochMs,
+                        otherConfirmed = other is Draft.Confirmed,
+                    ),
+            )
+        }
     }
+
+    private fun noteOf(draft: Draft): String? =
+        when (draft) {
+            is Draft.Ready -> draft.movement.note
+            is Draft.Confirmed -> draft.movement.note
+            is Draft.Incomplete -> (draft.proposal as? MovementProposal.Expense)?.note ?: (draft.proposal as? MovementProposal.Income)?.note
+            else -> null
+        }
 
     private suspend fun card(
         draft: Draft,
@@ -88,6 +133,8 @@ class DraftCards(
             walletSuggestion = proposal?.let(::walletSuggestionOf),
             evidenceSource = evidence.source,
             attachmentRef = evidence.attachmentRef,
+            reference = referenceOf(draft, proposal),
+            extraEvidence = draft.header.extraEvidence.size,
         )
     }
 
@@ -98,6 +145,30 @@ class DraftCards(
             is MovementProposal.Transfer -> proposal.paymentMethod
             else -> null
         }
+
+    private fun referenceOf(
+        draft: Draft,
+        proposal: MovementProposal?,
+    ): String? {
+        val movement =
+            when (draft) {
+                is Draft.Ready -> draft.movement
+                is Draft.Confirmed -> draft.movement
+                else -> null
+            }
+        return when (movement) {
+            is ReadyMovement.Expense -> movement.reference
+            is ReadyMovement.Income -> movement.reference
+            is ReadyMovement.Transfer -> movement.reference
+            else ->
+                when (proposal) {
+                    is MovementProposal.Expense -> proposal.reference
+                    is MovementProposal.Income -> proposal.reference
+                    is MovementProposal.Transfer -> proposal.reference
+                    else -> null
+                }
+        }
+    }
 
     private fun walletSuggestionOf(proposal: MovementProposal): WalletSuggestion? =
         when (proposal) {
@@ -129,8 +200,9 @@ class DraftCards(
         proposal: MovementProposal?,
         directory: WalletDirectory,
     ): Wallet? {
-        if (draft is Draft.Ready) {
-            return when (val m = draft.movement) {
+        val ready = (draft as? Draft.Ready)?.movement ?: (draft as? Draft.Confirmed)?.movement
+        if (ready != null) {
+            return when (val m = ready) {
                 is ReadyMovement.Expense -> directory.byId(m.walletId)
                 is ReadyMovement.Income -> directory.byId(m.walletId)
                 is ReadyMovement.Transfer -> directory.byId(m.fromWalletId)
@@ -157,8 +229,9 @@ class DraftCards(
         proposal: MovementProposal?,
         wallet: Wallet?,
     ): Money? {
-        if (draft is Draft.Ready) {
-            return when (val m = draft.movement) {
+        val ready = (draft as? Draft.Ready)?.movement ?: (draft as? Draft.Confirmed)?.movement
+        if (ready != null) {
+            return when (val m = ready) {
                 is ReadyMovement.Expense -> m.amount
                 is ReadyMovement.Income -> m.amount
                 is ReadyMovement.Transfer -> m.out

@@ -35,6 +35,8 @@ data class LanguagePack(
     val paymentMethodWords: Map<String, PaymentMethod> = emptyMap(),
     /** Palabras genéricas de un nombre de billetera ("banco", "cuenta"): no sirven como apodo. */
     val genericWalletWords: Set<String> = emptySet(),
+    /** Etiquetas del número de transacción en comprobantes sin plantilla, normalizadas. */
+    val referenceLabels: Set<String> = emptySet(),
 )
 
 /** Une varios paquetes activos en uno solo para buscar en todos a la vez. */
@@ -58,6 +60,7 @@ fun List<LanguagePack>.merged(): LanguagePack =
         receivedMarkers = flatMap { it.receivedMarkers }.toSet(),
         paymentMethodWords = fold(emptyMap()) { acc, pack -> acc + pack.paymentMethodWords },
         genericWalletWords = flatMap { it.genericWalletWords }.toSet(),
+        referenceLabels = flatMap { it.referenceLabels }.toSet(),
     )
 
 /**
@@ -84,6 +87,17 @@ object LanguagePacks {
             counterpartyLabels = setOf("to", "recipient", "payee", "merchant", "beneficiary", "paid to"),
             accountLabels = setOf("from", "account", "from account", "source account"),
             noteLabels = setOf("note", "memo", "description"),
+            referenceLabels =
+                setOf(
+                    "transaction id",
+                    "confirmation",
+                    "confirmation number",
+                    "reference",
+                    "reference number",
+                    "txid",
+                    "tx hash",
+                    "transaction hash",
+                ),
             expenseWords = setOf("paid", "pay", "spent", "spend", "bought", "buy", "sent", "purchase", "debit"),
             incomeWords = setOf("received", "earned", "deposit", "deposited", "got paid"),
             withdrawalWords = setOf("withdrawal", "withdrew", "withdraw", "atm"),
@@ -143,6 +157,16 @@ object LanguagePacks {
             counterpartyLabels = setOf("beneficiario", "destinatario", "para", "comercio", "pagaste a"),
             accountLabels = setOf("cuenta origen", "cuenta", "desde", "cuenta de origen"),
             noteLabels = setOf("nota", "glosa", "concepto", "descripcion"),
+            referenceLabels =
+                setOf(
+                    "nro de transaccion",
+                    "numero de transaccion",
+                    "nro de operacion",
+                    "numero de operacion",
+                    "operacion n",
+                    "codigo de transaccion",
+                    "referencia",
+                ),
             expenseWords =
                 setOf(
                     "pague",
@@ -240,6 +264,7 @@ object LanguagePacks {
             counterpartyLabels = setOf("para", "destinatario", "favorecido", "recebedor", "quem recebeu"),
             accountLabels = setOf("conta", "conta de origem", "de"),
             noteLabels = setOf("descricao", "mensagem", "observacao"),
+            referenceLabels = setOf("id da transacao", "codigo da transacao", "autenticacao"),
             expenseWords = setOf("paguei", "pago", "gastei", "comprei", "compra", "enviado", "enviei", "pagamento", "pix enviado"),
             incomeWords = setOf("recebi", "recebido", "recebeu", "pix recebido"),
             withdrawalWords = setOf("saque", "saquei", "retirada"),

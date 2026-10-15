@@ -28,11 +28,13 @@ internal data class EvidenceDto(
     val source: String,
     val text: String? = null,
     val attachmentRef: String? = null,
+    /** Huella del archivo (opcional: lo guardado antes no la trae). */
+    val fingerprint: String? = null,
 )
 
-internal fun Evidence.toDto() = EvidenceDto(source.name, text, attachmentRef)
+internal fun Evidence.toDto() = EvidenceDto(source.name, text, attachmentRef, fingerprint)
 
-internal fun EvidenceDto.toDomain() = Evidence(EvidenceSource.valueOf(source), text, attachmentRef)
+internal fun EvidenceDto.toDomain() = Evidence(EvidenceSource.valueOf(source), text, attachmentRef, fingerprint)
 
 @Serializable
 internal data class ProposedAmountDto(
@@ -74,6 +76,8 @@ internal data class ProposalDto(
     val paymentMethod: String? = null,
     /** Motivo de la billetera sugerida (opcional: los datos guardados antes no lo traen). */
     val walletSuggestion: WalletSuggestionDto? = null,
+    /** Número de transacción (opcional: lo guardado antes no lo trae). */
+    val reference: String? = null,
 )
 
 @Serializable
@@ -112,6 +116,7 @@ internal fun MovementProposal.toDto(): ProposalDto =
                 origins = origins.toDto(),
                 paymentMethod = paymentMethod?.name,
                 walletSuggestion = walletSuggestion?.toDto(),
+                reference = reference,
             )
         is MovementProposal.Income ->
             ProposalDto(
@@ -123,6 +128,7 @@ internal fun MovementProposal.toDto(): ProposalDto =
                 origins = origins.toDto(),
                 paymentMethod = paymentMethod?.name,
                 walletSuggestion = walletSuggestion?.toDto(),
+                reference = reference,
             )
         is MovementProposal.Transfer ->
             ProposalDto(
@@ -135,6 +141,7 @@ internal fun MovementProposal.toDto(): ProposalDto =
                 note,
                 origins = origins.toDto(),
                 paymentMethod = paymentMethod?.name,
+                reference = reference,
             )
         is MovementProposal.AdjustTo ->
             ProposalDto(
@@ -162,6 +169,7 @@ internal fun ProposalDto.toDomain(): MovementProposal =
                 origins.toOrigins(),
                 method(),
                 walletSuggestion?.toDomain(),
+                reference,
             )
         ProposalKinds.INCOME ->
             MovementProposal.Income(
@@ -172,6 +180,7 @@ internal fun ProposalDto.toDomain(): MovementProposal =
                 origins.toOrigins(),
                 method(),
                 walletSuggestion?.toDomain(),
+                reference,
             )
         ProposalKinds.TRANSFER ->
             MovementProposal.Transfer(
@@ -183,6 +192,7 @@ internal fun ProposalDto.toDomain(): MovementProposal =
                 note,
                 origins.toOrigins(),
                 method(),
+                reference,
             )
         ProposalKinds.ADJUST_TO -> MovementProposal.AdjustTo(amount?.toDomain(), wallet?.toDomain(), occurredAt, note, origins.toOrigins())
         ProposalKinds.NOT_A_MOVEMENT -> MovementProposal.NotAMovement(NonMovementIntent.valueOf(requireNotNull(intent)), note)
@@ -199,6 +209,8 @@ internal data class ReadyMovementDto(
     val toWalletId: String? = null,
     val occurredAt: Long,
     val note: String? = null,
+    /** Número de transacción (opcional: lo guardado antes no lo trae). */
+    val reference: String? = null,
 )
 
 internal fun ReadyMovement.toDto(): ReadyMovementDto =
@@ -210,6 +222,7 @@ internal fun ReadyMovement.toDto(): ReadyMovementDto =
                 walletId,
                 occurredAt = occurredAtEpochMs,
                 note = note,
+                reference = reference,
             )
         is ReadyMovement.Income ->
             ReadyMovementDto(
@@ -218,9 +231,19 @@ internal fun ReadyMovement.toDto(): ReadyMovementDto =
                 walletId,
                 occurredAt = occurredAtEpochMs,
                 note = note,
+                reference = reference,
             )
         is ReadyMovement.Transfer ->
-            ReadyMovementDto(ProposalKinds.TRANSFER, out.toDto(), fromWalletId, into.toDto(), toWalletId, occurredAtEpochMs, note)
+            ReadyMovementDto(
+                ProposalKinds.TRANSFER,
+                out.toDto(),
+                fromWalletId,
+                into.toDto(),
+                toWalletId,
+                occurredAtEpochMs,
+                note,
+                reference,
+            )
         is ReadyMovement.AdjustTo ->
             ReadyMovementDto(
                 ProposalKinds.ADJUST_TO,
@@ -233,8 +256,8 @@ internal fun ReadyMovement.toDto(): ReadyMovementDto =
 
 internal fun ReadyMovementDto.toDomain(): ReadyMovement =
     when (kind) {
-        ProposalKinds.EXPENSE -> ReadyMovement.Expense(amount.toDomain(), walletId, occurredAt, note)
-        ProposalKinds.INCOME -> ReadyMovement.Income(amount.toDomain(), walletId, occurredAt, note)
+        ProposalKinds.EXPENSE -> ReadyMovement.Expense(amount.toDomain(), walletId, occurredAt, note, reference)
+        ProposalKinds.INCOME -> ReadyMovement.Income(amount.toDomain(), walletId, occurredAt, note, reference)
         ProposalKinds.TRANSFER ->
             ReadyMovement.Transfer(
                 amount.toDomain(),
@@ -243,6 +266,7 @@ internal fun ReadyMovementDto.toDomain(): ReadyMovement =
                 requireNotNull(toWalletId),
                 occurredAt,
                 note,
+                reference,
             )
         ProposalKinds.ADJUST_TO -> ReadyMovement.AdjustTo(amount.toDomain(), walletId, occurredAt, note)
         else -> error("Tipo de movimiento desconocido: $kind")

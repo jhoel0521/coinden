@@ -75,6 +75,7 @@ class TemplateReaderTest {
                 boliviaTime(3, 12, 54),
                 "Mariela Quispe Rojas",
                 evidence,
+                reference = "900000001",
             )
         assertEquals(expected, read(ReceiptTemplates.YAPE_BO, AnonymizedReceipts.YAPE_PAYMENT))
     }
@@ -88,6 +89,7 @@ class TemplateReaderTest {
                 boliviaTime(10, 14, 22, 50),
                 "POLLOS DEL VALLE",
                 evidence,
+                reference = "400000001",
             )
         val proposal = read(ReceiptTemplates.BE_QR_PAYMENT, AnonymizedReceipts.BE_QR_CHICKEN)
         assertEquals(expected, proposal)

@@ -14,6 +14,7 @@ enum class TemplateKind {
  * Cada etiqueta busca su valor en la misma línea (después de la etiqueta) o en la siguiente.
  * [counterpartyAfterAmount] cubre formatos como Yape, donde el destinatario va en la línea que
  * sigue al monto, sin etiqueta. [issuerWalletHint] es el alias de la billetera del emisor ("yape").
+ * Las etiquetas se escriben normalizadas: minúsculas, sin tildes ni puntos ("nro de transaccion").
  */
 data class ReceiptTemplate(
     val id: String,
@@ -25,6 +26,8 @@ data class ReceiptTemplate(
     val accountLabel: String? = null,
     val issuerWalletHint: String? = null,
     val counterpartyAfterAmount: Boolean = false,
+    /** Etiqueta del número de transacción, normalizada ("nro de transaccion"). */
+    val referenceLabel: String? = null,
 )
 
 /**
@@ -38,6 +41,7 @@ object ReceiptTemplates {
             kind = TemplateKind.EXPENSE,
             issuerWalletHint = "yape",
             counterpartyAfterAmount = true,
+            referenceLabel = "nro de transaccion",
         )
 
     val BE_QR_PAYMENT =
@@ -49,6 +53,7 @@ object ReceiptTemplates {
             counterpartyLabel = "beneficiario",
             noteLabel = "nota",
             accountLabel = "cuenta origen",
+            referenceLabel = "nro de transaccion",
         )
 
     val BE_ECOMMERCE_DEBIT =
@@ -59,6 +64,7 @@ object ReceiptTemplates {
             amountLabel = "importe",
             noteLabel = "nota",
             accountLabel = "cuenta",
+            referenceLabel = "nro de transaccion",
         )
 
     val BE_CASH_WITHDRAWAL =
@@ -68,6 +74,7 @@ object ReceiptTemplates {
             kind = TemplateKind.WITHDRAWAL,
             amountLabel = "monto",
             accountLabel = "cuenta origen",
+            referenceLabel = "nro de transaccion",
         )
 
     val all: List<ReceiptTemplate> = listOf(YAPE_BO, BE_QR_PAYMENT, BE_ECOMMERCE_DEBIT, BE_CASH_WITHDRAWAL)

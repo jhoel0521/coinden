@@ -77,6 +77,25 @@ class EventCodecTest {
                 MovementProposal.Expense(ProposedAmount("45"), WalletRef.ById("w2"), null, "almuerzo", origins, PaymentMethod.TRANSFER),
                 MovementProposal.Expense(ProposedAmount("20", Currency.USD), null, null, null, emptyMap(), PaymentMethod.CASH),
                 MovementProposal.Expense(
+                    ProposedAmount("25.00", Currency.BOB),
+                    WalletRef.ByHint("1111"),
+                    t,
+                    "POLLOS",
+                    origins,
+                    reference = "400000001",
+                ),
+                MovementProposal.Income(ProposedAmount("10"), WalletRef.ById("w1"), null, null, emptyMap(), reference = "E0001"),
+                MovementProposal.Transfer(
+                    ProposedAmount("10", Currency.BOB),
+                    WalletRef.ById("w1"),
+                    null,
+                    WalletRef.ById("w2"),
+                    t,
+                    null,
+                    origins,
+                    reference = "8000001",
+                ),
+                MovementProposal.Expense(
                     ProposedAmount("45"),
                     WalletRef.ById("w2"),
                     null,
@@ -112,12 +131,40 @@ class EventCodecTest {
                 ReadyMovement.Income(Money.parseCanonical("3", vale), "w1", t, null),
                 ReadyMovement.Transfer(usd("11"), "w3", bs("112"), "w1", t, null),
                 ReadyMovement.AdjustTo(bs("140"), "w1", t, "conteo"),
+                ReadyMovement.Expense(bs("25"), "w2", t, "POLLOS", reference = "400000001"),
+                ReadyMovement.Income(bs("10"), "w1", t, null, reference = "E0001"),
+                ReadyMovement.Transfer(bs("10"), "w1", bs("10"), "w3", t, null, reference = "8000001"),
             )
         val events =
             listOf(
                 DraftEvent.Captured("d1", "draft", "carlos", "dev", t, t, Evidence(EvidenceSource.PHOTO, "BNB 45,00", "img-1")),
                 DraftEvent.Captured("d2", "draft", "carlos", "dev", t, t, Evidence(EvidenceSource.VOICE)),
                 DraftEvent.Discarded("d3", "draft", "carlos", "dev", t, t),
+                DraftEvent.Discarded("d4", "draft", "carlos", "dev", t, t, mergedInto = "otro"),
+                DraftEvent.Captured("d5", "draft", "carlos", "dev", t, t, Evidence(EvidenceSource.VOICE, null, "audio-1", "huella")),
+                DraftEvent.MarkedDistinct("d6", "draft", "carlos", "dev", t, t, "otro"),
+                DraftEvent.Merged(
+                    "d7",
+                    "draft",
+                    "carlos",
+                    "dev",
+                    t,
+                    t,
+                    "otro",
+                    Evidence(EvidenceSource.TEXT, "comprobante"),
+                    reference = "400000777",
+                ),
+                DraftEvent.Merged(
+                    "d8",
+                    "draft",
+                    "carlos",
+                    "dev",
+                    t,
+                    t,
+                    "otro",
+                    Evidence(EvidenceSource.PHOTO, attachmentRef = "img-2", fingerprint = "f2"),
+                    proposal = MovementProposal.Expense(ProposedAmount("10"), WalletRef.ById("w1"), note = "power", reference = "4001"),
+                ),
             ) +
                 proposals.mapIndexed { i, p -> DraftEvent.Interpreted("i$i", "draft", "carlos", "dev", t, t, p) } +
                 proposals.mapIndexed { i, p -> DraftEvent.Revised("r$i", "draft", "carlos", "dev", t, t, p) } +
@@ -229,7 +276,26 @@ class EventCodecTest {
         val proposal = event.proposal as MovementProposal.Expense
         assertEquals(null, proposal.paymentMethod)
         assertEquals(null, proposal.walletSuggestion)
+        assertEquals(null, proposal.reference)
         assertEquals(WalletRef.ByHint("qr"), proposal.wallet)
+    }
+
+    @Test
+    fun `un borrador guardado antes de la referencia y de la huella se sigue leyendo`() {
+        // JSON versión 1 de capture-ui: evidencia sin huella, movimiento sin referencia y descarte sin unión
+        val captured =
+            """{"draft":{"id":"c1","draftId":"d","ownerId":"carlos","deviceId":"dev","occurredAt":1,"recordedAt":1},""" +
+                """"evidence":{"source":"PHOTO","attachmentRef":"img-1"}}"""
+        val confirmed =
+            """{"draft":{"id":"c2","draftId":"d","ownerId":"carlos","deviceId":"dev","occurredAt":2,"recordedAt":2},""" +
+                """"ledgerEventId":"e1","movement":{"kind":"expense",""" +
+                """"amount":{"value":"45.00","currency":{"code":"BOB","decimals":2}},"walletId":"w1","occurredAt":2}}"""
+        val discarded = """{"draft":{"id":"c3","draftId":"d","ownerId":"carlos","deviceId":"dev","occurredAt":3,"recordedAt":3}}"""
+
+        assertEquals(null, (EventCodec.decodeDraft("draft.captured", 1, captured) as DraftEvent.Captured).evidence.fingerprint)
+        val movement = (EventCodec.decodeDraft("draft.confirmed", 1, confirmed) as DraftEvent.Confirmed).movement
+        assertEquals(null, (movement as ReadyMovement.Expense).reference)
+        assertEquals(null, (EventCodec.decodeDraft("draft.discarded", 1, discarded) as DraftEvent.Discarded).mergedInto)
     }
 
     @Test

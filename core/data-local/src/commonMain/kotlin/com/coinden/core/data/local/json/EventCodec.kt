@@ -173,7 +173,15 @@ object EventCodec {
                 )
             is DraftEvent.Confirmed ->
                 store(DraftTypes.CONFIRMED, ConfirmedDto.serializer(), ConfirmedDto(draft, event.ledgerEventId, event.movement.toDto()))
-            is DraftEvent.Discarded -> store(DraftTypes.DISCARDED, DiscardedDto.serializer(), DiscardedDto(draft))
+            is DraftEvent.Discarded -> store(DraftTypes.DISCARDED, DiscardedDto.serializer(), DiscardedDto(draft, event.mergedInto))
+            is DraftEvent.MarkedDistinct ->
+                store(DraftTypes.MARKED_DISTINCT, MarkedDistinctDto.serializer(), MarkedDistinctDto(draft, event.otherDraftId))
+            is DraftEvent.Merged ->
+                store(
+                    DraftTypes.MERGED,
+                    MergedDto.serializer(),
+                    MergedDto(draft, event.absorbedDraftId, event.absorbedEvidence.toDto(), event.proposal?.toDto(), event.reference),
+                )
         }
     }
 
@@ -214,7 +222,28 @@ object EventCodec {
                 }
             DraftTypes.DISCARDED ->
                 load(version, payload, DiscardedDto.serializer())?.let {
-                    with(it.draft) { DraftEvent.Discarded(id, draftId, ownerId, deviceId, occurredAt, recordedAt) }
+                    with(it.draft) { DraftEvent.Discarded(id, draftId, ownerId, deviceId, occurredAt, recordedAt, it.mergedInto) }
+                }
+            DraftTypes.MARKED_DISTINCT ->
+                load(version, payload, MarkedDistinctDto.serializer())?.let {
+                    with(it.draft) { DraftEvent.MarkedDistinct(id, draftId, ownerId, deviceId, occurredAt, recordedAt, it.otherDraftId) }
+                }
+            DraftTypes.MERGED ->
+                load(version, payload, MergedDto.serializer())?.let {
+                    with(it.draft) {
+                        DraftEvent.Merged(
+                            id,
+                            draftId,
+                            ownerId,
+                            deviceId,
+                            occurredAt,
+                            recordedAt,
+                            it.absorbedDraftId,
+                            it.absorbedEvidence.toDomain(),
+                            it.proposal?.toDomain(),
+                            it.reference,
+                        )
+                    }
                 }
             else -> null
         }
@@ -264,6 +293,8 @@ object DraftTypes {
     const val REVISED = "draft.revised"
     const val CONFIRMED = "draft.confirmed"
     const val DISCARDED = "draft.discarded"
+    const val MARKED_DISTINCT = "draft.marked_distinct"
+    const val MERGED = "draft.merged"
 }
 
 object ClassificationTypes {
@@ -335,4 +366,21 @@ internal data class ConfirmedDto(
 @Serializable
 internal data class DiscardedDto(
     val draft: DraftFieldsDto,
+    /** Borrador con el que se unió (opcional: lo guardado antes no lo trae). */
+    val mergedInto: String? = null,
+)
+
+@Serializable
+internal data class MarkedDistinctDto(
+    val draft: DraftFieldsDto,
+    val otherDraftId: String,
+)
+
+@Serializable
+internal data class MergedDto(
+    val draft: DraftFieldsDto,
+    val absorbedDraftId: String,
+    val absorbedEvidence: EvidenceDto,
+    val proposal: ProposalDto? = null,
+    val reference: String? = null,
 )
