@@ -88,8 +88,15 @@ La app DEBE (MUST) aparecer como destino al compartir texto, imágenes, PDF o au
 - **WHEN** Carlos copia un mensaje en WhatsApp y lo pega en la frase del formulario
 - **THEN** el formulario se llena con lo que el intérprete entiende de ese texto
 
-### Requirement: Resultado de la Captura y Confirmación Inmediata
-Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador, mostrar su tarjeta (con la referencia, si la hay) y ofrecer confirmarlo en ese momento, con la categoría sugerida si la hay, o dejarlo para la revisión. Confirmar aplica las reglas del libro; si el libro lo rechaza, el borrador sigue pendiente y se muestra el motivo. Si la captura puede ser el mismo movimiento que otra, la tarjeta pregunta "¿Es el mismo gasto?" mostrando la otra (nota, monto, hora y billetera) con los botones "Son el mismo" y "Son distintos".
+### Requirement: Leer Capturas Guardadas
+La app DEBE (MUST) ofrecer leer los borradores Capturados que tengan foto, PDF o audio guardados antes de que existiera la lectura, uno por uno o todos, sin bloquear la pantalla.
+
+#### Scenario: Fotos de antes de la lectura
+- **WHEN** Carlos tiene dos borradores Capturados con fotos de la semana pasada y toca "Leer capturas guardadas"
+- **THEN** ambos se leen en el teléfono y sus tarjetas muestran lo propuesto
+
+### Requirement: Resultado de la Captura
+Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador, mostrar su tarjeta (con la referencia, si la hay) y ofrecer confirmarlo en ese momento, con la categoría sugerida si la hay, o dejarlo para la revisión. Confirmar aplica las reglas del libro; si el libro lo rechaza, el borrador sigue pendiente y se muestra el motivo.
 
 #### Scenario: Confirmar ahora
 - **WHEN** Carlos captura "almuerzo 45 bnb" y toca Confirmar
@@ -103,6 +110,9 @@ Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador
 - **WHEN** Carlos confirma un gasto de 45 Bs en "Billetera", que solo tiene 10 Bs
 - **THEN** el borrador sigue pendiente y la tarjeta muestra que faltan 35 Bs
 
+### Requirement: Pregunta de Mismo Gasto en el Resultado
+Si la captura puede ser el mismo movimiento que otra, la tarjeta del resultado DEBE (MUST) preguntar "¿Es el mismo gasto?" mostrando la otra captura (nota, monto, hora y billetera) con los botones "Son el mismo" y "Son distintos".
+
 #### Scenario: Preguntar en el momento
 - **WHEN** Carlos comparte el comprobante de 10.00 Bs después de haber dictado "gasté 10 en power" ese día
 - **THEN** la tarjeta pregunta si es el mismo gasto que "power", con "Son el mismo" y "Son distintos"
@@ -114,10 +124,3 @@ Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador
 #### Scenario: Responder Son distintos
 - **WHEN** Carlos toca "Son distintos"
 - **THEN** la pregunta desaparece y quedan los dos borradores
-
-### Requirement: Leer Capturas Guardadas
-La app DEBE (MUST) ofrecer leer los borradores Capturados que tengan foto, PDF o audio guardados antes de que existiera la lectura, uno por uno o todos, sin bloquear la pantalla.
-
-#### Scenario: Fotos de antes de la lectura
-- **WHEN** Carlos tiene dos borradores Capturados con fotos de la semana pasada y toca "Leer capturas guardadas"
-- **THEN** ambos se leen en el teléfono y sus tarjetas muestran lo propuesto
