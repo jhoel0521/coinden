@@ -24,6 +24,7 @@ import com.coinden.core.domain.usecase.wallet.MovementKind
 import com.coinden.core.domain.usecase.wallet.ReactivateWalletUseCase
 import com.coinden.core.domain.usecase.wallet.RegisterMovementUseCase
 import com.coinden.core.domain.usecase.wallet.RegisterTransferUseCase
+import com.coinden.core.domain.usecase.wallet.ReplaceMovementUseCase
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -39,6 +40,7 @@ class WalletUseCasesTest {
     private val register = RegisterMovementUseCase(ctx)
     private val transfer = RegisterTransferUseCase(ctx)
     private val annul = AnnulMovementUseCase(ctx)
+    private val replace = ReplaceMovementUseCase(ctx)
     private val archive = ArchiveWalletUseCase(repo)
     private val reactivate = ReactivateWalletUseCase(repo)
     private val status = GetWalletStatusUseCase(repo)
@@ -317,5 +319,71 @@ class WalletUseCasesTest {
             val bnb = newWallet("BNB Bs", bs(20_000), WalletType.BANK)
             assertEquals("draft:d-1", recorded(register(cash.id, MovementKind.EXPENSE, bs(100), at(12), eventId = "draft:d-1")).id)
             assertEquals("draft:d-2", recorded(transfer(bnb.id, cash.id, bs(500), bs(500), at(13), eventId = "draft:d-2")).id)
+        }
+
+    // --- Corrección: anular y reemplazar juntos ---
+
+    @Test
+    fun `reemplazar un gasto anula el original y registra el nuevo juntos`() =
+        runTest {
+            val cash = newWallet("Billetera", bs(6_000))
+            val lunch = recorded(register(cash.id, MovementKind.EXPENSE, bs(3_500), at(12)))
+            val fixed = LedgerEvent.Expense("nuevo", "celular", at(12), at(21), cash.id, bs(3_200))
+
+            assertEquals(fixed, recorded(replace(lunch.id, "anula", fixed)))
+
+            assertEquals(listOf(lunch.id, "anula", "nuevo"), repo.eventsForWallet(cash.id).drop(1).map { it.id })
+            assertEquals(bs(2_800), balanceOf(cash.id))
+        }
+
+    @Test
+    fun `un reemplazo que deja faltante no escribe nada`() =
+        runTest {
+            val cash = newWallet("Billetera", bs(6_000))
+            val taxi = recorded(register(cash.id, MovementKind.EXPENSE, bs(1_000), at(12)))
+            val tooMuch = LedgerEvent.Expense("nuevo", "celular", at(12), at(21), cash.id, bs(9_000))
+
+            assertEquals(WalletError.InsufficientFunds(cash.id, bs(3_000), at(12)), rejected(replace(taxi.id, "anula", tooMuch)))
+
+            assertEquals(2, repo.eventsForWallet(cash.id).size)
+            assertEquals(bs(5_000), balanceOf(cash.id))
+        }
+
+    @Test
+    fun `reemplazar en otra billetera devuelve el dinero a la primera`() =
+        runTest {
+            val cash = newWallet("Billetera", bs(10_000))
+            val bnb = newWallet("BNB Bs", bs(50_000), WalletType.BANK)
+            val taxi = recorded(register(cash.id, MovementKind.EXPENSE, bs(4_000), at(8)))
+
+            recorded(replace(taxi.id, "anula", LedgerEvent.Expense("nuevo", "celular", at(8), at(21), bnb.id, bs(4_000))))
+
+            assertEquals(bs(10_000), balanceOf(cash.id))
+            assertEquals(bs(46_000), balanceOf(bnb.id))
+        }
+
+    @Test
+    fun `repetir el mismo reemplazo no duplica nada`() =
+        runTest {
+            val cash = newWallet("Billetera", bs(6_000))
+            val lunch = recorded(register(cash.id, MovementKind.EXPENSE, bs(3_500), at(12)))
+            val fixed = LedgerEvent.Expense("nuevo", "celular", at(12), at(21), cash.id, bs(3_200))
+            recorded(replace(lunch.id, "anula", fixed))
+
+            assertEquals(fixed, recorded(replace(lunch.id, "anula", fixed)))
+
+            assertEquals(4, repo.eventsForWallet(cash.id).size)
+            assertEquals(bs(2_800), balanceOf(cash.id))
+        }
+
+    @Test
+    fun `no se reemplaza un movimiento ya anulado por otra correccion`() =
+        runTest {
+            val cash = newWallet("Billetera", bs(6_000))
+            val lunch = recorded(register(cash.id, MovementKind.EXPENSE, bs(3_500), at(12)))
+            recorded(annul(lunch.id))
+            val fixed = LedgerEvent.Expense("nuevo", "celular", at(12), at(21), cash.id, bs(3_200))
+
+            assertEquals(WalletError.AlreadyAnnulled, rejected(replace(lunch.id, "anula", fixed)))
         }
 }

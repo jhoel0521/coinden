@@ -3,6 +3,7 @@ package com.coinden.core.domain.usecase.draft
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.category.CategoryOrigin
 import com.coinden.core.domain.model.category.CategoryRef
+import com.coinden.core.domain.model.draft.Confidence
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.DraftError
 import com.coinden.core.domain.model.draft.DraftEvent
@@ -59,10 +60,11 @@ class DraftContext(
     /** Agrega una transición con identidad, dispositivo y hora, y devuelve el nuevo estado. */
     suspend fun record(
         draft: Draft,
+        eventId: String? = null,
         build: (id: String, deviceId: String, now: Long) -> DraftEvent,
     ): Draft {
         val now = clock.nowEpochMs()
-        drafts.appendEvent(build(ids.newId(), device.deviceId(), now))
+        drafts.appendEvent(build(eventId ?: ids.newId(), device.deviceId(), now))
         return load(draft.id)!!
     }
 }
@@ -303,7 +305,10 @@ class ConfirmDraftUseCase(
 class GetDraftInboxUseCase(
     private val ctx: DraftContext,
 ) {
-    suspend operator fun invoke(ownerId: String): DraftInbox {
+    suspend operator fun invoke(
+        ownerId: String,
+        utcOffsetMinutes: Int = 0,
+    ): DraftInbox {
         val directory = ctx.directory(ownerId)
         val pending =
             ctx.drafts
@@ -355,6 +360,32 @@ class GetDraftInboxUseCase(
                             proposal?.note?.let { note -> categorization.suggest(ownerId, note)?.let { draft.id to it } }
                         }.toMap()
                 }.orEmpty()
-        return DraftInbox(pending, projections, suggestions)
+        val questions = FindSameMovementQuestionsUseCase(ctx)(ownerId, utcOffsetMinutes)
+        val asking = questions.map { it.draftId }.toSet()
+        val batchReady =
+            pending
+                .filter { it is Draft.Ready && it.confidence == Confidence.HIGH && it.id !in asking && it.header.correctionTarget == null }
+                .map { it.id }
+        return DraftInbox(pending, projections, suggestions, batchReady, questions)
     }
+}
+
+/**
+ * Caso de Uso: "Confirmar los N listos". Confirma uno por uno con las reglas del libro y la
+ * categoría sugerida de cada gasto; los que el libro rechace quedan pendientes con su motivo.
+ * Devuelve el resultado de cada borrador.
+ */
+class ConfirmReadyDraftsUseCase(
+    private val ctx: DraftContext,
+    ledger: LedgerContext,
+) {
+    private val confirm = ConfirmDraftUseCase(ctx, ledger)
+
+    suspend operator fun invoke(draftIds: List<String>): Map<String, DraftResult> =
+        draftIds.associateWith { id ->
+            val draft = ctx.load(id)
+            val note = ((draft as? Draft.Ready)?.movement as? ReadyMovement.Expense)?.note
+            val category = note?.let { ctx.categorization?.suggest(draft.header.ownerId, it)?.category }
+            confirm(id, category)
+        }
 }

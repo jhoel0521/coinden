@@ -61,7 +61,7 @@ El id del `Corrected` se genera antes que los ids del libro, y los ids del libro
 - *Alternativa:* anular y registrar con dos llamadas separadas. Se descarta porque si la segunda la rechaza el guard, el gasto queda anulado sin reemplazo.
 
 ### D4. Diferencias y diferencia grande (puro)
-`MovementDiff.between(before: ReadyMovement, beforeCategory, after: ReadyMovement, afterCategory): List<FieldChange>`. Cada `FieldChange` tiene un `CorrectionField` (KIND, AMOUNT, CURRENCY, WALLET, OCCURRED_AT, NOTE, CATEGORY, REFERENCE) con su valor anterior y el nuevo como datos tipados (sin texto).
+`MovementDiff.between(before: ReadyMovement, beforeCategory, after: ReadyMovement, afterCategory): List<FieldChange>`. Cada `FieldChange` tiene un `CorrectionField` (KIND, AMOUNT, WALLET, TO_AMOUNT, TO_WALLET, OCCURRED_AT, NOTE, CATEGORY, REFERENCE) con su valor anterior y el nuevo como datos tipados (sin texto); el monto lleva su moneda, así que un cambio de moneda es un cambio de monto.
 
 `touchesMoney` indica si hay que anular. `isLargeAmountChange(before, after)` es verdadero, en la misma moneda, si `after >= before + before` o `after + after <= before`. Solo usa sumas de `Money`, sin `Double`.
 

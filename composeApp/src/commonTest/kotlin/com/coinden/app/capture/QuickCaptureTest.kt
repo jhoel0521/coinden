@@ -6,8 +6,12 @@ import com.coinden.app.testContainer
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.draft.Draft
+import com.coinden.core.domain.model.draft.DraftResult
 import com.coinden.core.domain.model.draft.EvidenceSource
+import com.coinden.core.domain.model.draft.MovementProposal
+import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.ReadyMovement
+import com.coinden.core.domain.model.draft.WalletRef
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -78,6 +82,47 @@ class QuickCaptureTest {
             val (container, quick, _) = carlos()
 
             assertEquals(emptyList(), quick.shared(SharedContent.Text("   ")))
+            assertEquals(0, container.draftInbox(container.ownerId).pending.size)
+        }
+
+    @Test
+    fun `el mismo comprobante ya confirmado queda como su evidencia sin nada pendiente`() =
+        runTest {
+            val (container, quick, _) = carlos()
+            // Pago QR con datos inventados
+            val receipt =
+                """
+                Banco ECONOMICO
+                Pago QR otros bancos
+                Beneficiario
+                TIENDA EJEMPLO
+                Importe
+                Bs10.00
+                Nro. de transacción: 400000123
+                """.trimIndent()
+            val first = quick.shared(SharedContent.Text(receipt)).single()
+            // Sin cuenta en el comprobante: Carlos eligió "BNB Bs" en la revisión y lo confirmó
+            val bnb =
+                container.drafts
+                    .directory(container.ownerId)
+                    .wallets
+                    .single { it.name == "BNB Bs" }
+                    .id
+            val reviewed =
+                MovementProposal.Expense(
+                    ProposedAmount("10.00", Currency.BOB),
+                    WalletRef.ById(bnb),
+                    first.header.capturedAtEpochMs,
+                    "TIENDA EJEMPLO",
+                    reference = "400000123",
+                )
+            container.reviseDraft(first.id, reviewed)
+            assertIs<DraftResult.Ok>(container.confirmDraft(first.id))
+
+            val again = quick.shared(SharedContent.Text(receipt)).single()
+
+            assertEquals(first.id, assertIs<Draft.Confirmed>(again).id)
+            assertEquals(1, again.header.extraEvidence.size)
             assertEquals(0, container.draftInbox(container.ownerId).pending.size)
         }
 }

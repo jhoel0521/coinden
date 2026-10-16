@@ -5,6 +5,8 @@ import com.coinden.app.seedCarlos
 import com.coinden.app.testContainer
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.draft.Draft
+import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.draft.SameMovementReason
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -109,5 +111,24 @@ class SameMovementPresenterTest {
             presenter.photo(jpeg.copyOf(), "image/jpeg")
 
             assertEquals(SameMovementReason.SAME_FILE, presenter.card().question?.reason)
+        }
+
+    @Test
+    fun `son el mismo que un gasto confirmado abre el formulario de correccion sin cambiar nada`() =
+        runTest {
+            val (container, presenter) = carlos("gasté 10 en power bnb")
+            presenter.dictate()
+            val power = presenter.card().draftId
+            presenter.confirm(power)
+            presenter.shared(SharedContent.Text(powerReceipt))
+            val receipt = presenter.card().draftId
+
+            presenter.resolve(receipt, same = true)
+
+            assertEquals(FormMode.Correct(power, receipt), presenter.state.value.correction)
+            val still = container.drafts.load(power) as Draft.Confirmed
+            assertNull((still.movement as ReadyMovement.Expense).reference)
+            presenter.correctionOpened()
+            assertNull(presenter.state.value.correction)
         }
 }

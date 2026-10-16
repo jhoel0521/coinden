@@ -15,6 +15,7 @@ import com.coinden.core.domain.model.draft.SameMovementQuestion
 import com.coinden.core.domain.model.draft.SameMovementReason
 import com.coinden.core.domain.model.draft.WalletDirectory
 import com.coinden.core.domain.model.draft.WalletRef
+import com.coinden.core.domain.model.draft.isReceipt
 import com.coinden.core.domain.model.interpret.TextNormalizer
 
 /**
@@ -40,17 +41,21 @@ class FindSameMovementQuestionsUseCase(
                 .filterIsInstance<DraftEvent.MarkedDistinct>()
                 .map { setOf(it.draftId, it.otherDraftId) }
                 .toSet()
-        val candidates =
+        val projected =
             histories
                 .mapNotNull { DraftProjection.project(it, directory) }
                 .filterNot { it is Draft.Discarded }
+        // Un comprobante con un cambio pendiente ya respondió por su par: se revisa en el formulario.
+        val answered = projected.mapNotNull { d -> d.header.correctionTarget?.let { setOf(d.id, it) } }.toSet()
+        val candidates =
+            projected
                 .map { Candidate.of(it, directory, utcOffsetMinutes) }
                 .sortedWith(compareBy({ it.capturedAt }, { it.id }))
 
         return candidates.mapIndexedNotNull { index, later ->
             candidates
                 .take(index)
-                .filterNot { earlier -> setOf(later.id, earlier.id) in distinct }
+                .filterNot { earlier -> setOf(later.id, earlier.id).let { it in distinct || it in answered } }
                 .mapNotNull { earlier -> reasonBetween(later, earlier)?.let { it to earlier } }
                 .minWithOrNull(compareBy({ it.first.ordinal }, { later.capturedAt - it.second.capturedAt }))
                 ?.let { (reason, earlier) -> SameMovementQuestion(later.id, earlier.id, reason) }
@@ -173,8 +178,9 @@ class FindSameMovementQuestionsUseCase(
  *
  * Son distintos: queda registrado en [draftId] y no se vuelve a preguntar por el par.
  * Son el mismo: queda el confirmado o, si ninguno lo está, el capturado primero; absorbe la
- * evidencia del otro y este se descarta enlazado. Con un confirmado solo se agrega la referencia:
- * no se registra otro movimiento, y si el comprobante indica otra billetera no se unen.
+ * evidencia del otro y este se descarta enlazado. Con un confirmado nada cambia sin aprobación:
+ * un comprobante real queda como cambio pendiente para el formulario de corrección, y un dictado,
+ * una frase o un audio solo suman su evidencia.
  */
 class ResolveSameMovementUseCase(
     private val ctx: DraftContext,
@@ -202,29 +208,18 @@ class ResolveSameMovementUseCase(
                 draft is Draft.Confirmed -> draft to other
                 else -> listOf(draft, other).sortedWith(compareBy({ it.header.capturedAtEpochMs }, { it.id })).let { it[0] to it[1] }
             }
-        val absorbedProposal = proposalOf(absorbed)
+        if (kept is Draft.Confirmed && absorbed.isReceipt) {
+            val proposed =
+                ctx.record(absorbed) { id, device, now -> DraftEvent.CorrectionProposed(id, absorbed.id, owner, device, now, now, kept.id) }
+            return DraftResult.Ok(proposed)
+        }
         val merged =
             if (kept is Draft.Confirmed) {
-                val directory = ctx.directory(owner)
-                val absorbedWallet = walletIdOf(absorbed, absorbedProposal, directory)
-                if (absorbedWallet != null && absorbedWallet != walletIdOf(kept.movement)) {
-                    return DraftResult.Rejected(DraftError.WalletMismatch)
-                }
                 ctx.record(kept) { id, device, now ->
-                    DraftEvent.Merged(
-                        id,
-                        kept.id,
-                        owner,
-                        device,
-                        now,
-                        now,
-                        absorbed.id,
-                        absorbed.header.evidence,
-                        reference = referenceOf(absorbedProposal),
-                    )
+                    DraftEvent.Merged(id, kept.id, owner, device, now, now, absorbed.id, absorbed.header.evidence)
                 }
             } else {
-                val proposal = ProposalMerge.combine(proposalOf(kept), absorbedProposal)
+                val proposal = ProposalMerge.combine(proposalOf(kept), proposalOf(absorbed))
                 ctx.record(kept) { id, device, now ->
                     DraftEvent.Merged(id, kept.id, owner, device, now, now, absorbed.id, absorbed.header.evidence, proposal = proposal)
                 }
@@ -239,41 +234,4 @@ class ResolveSameMovementUseCase(
             is Draft.Incomplete -> draft.proposal
             else -> null
         }
-
-    private fun referenceOf(proposal: MovementProposal?): String? =
-        when (proposal) {
-            is MovementProposal.Expense -> proposal.reference
-            is MovementProposal.Income -> proposal.reference
-            is MovementProposal.Transfer -> proposal.reference
-            else -> null
-        }
-
-    private fun walletIdOf(movement: ReadyMovement): String =
-        when (movement) {
-            is ReadyMovement.Expense -> movement.walletId
-            is ReadyMovement.Income -> movement.walletId
-            is ReadyMovement.Transfer -> movement.fromWalletId
-            is ReadyMovement.AdjustTo -> movement.walletId
-        }
-
-    /** Billetera del borrador absorbido: la del movimiento listo o la que nombra su propuesta. */
-    private fun walletIdOf(
-        draft: Draft,
-        proposal: MovementProposal?,
-        directory: WalletDirectory,
-    ): String? {
-        if (draft is Draft.Ready) return walletIdOf(draft.movement)
-        val ref =
-            when (proposal) {
-                is MovementProposal.Expense -> proposal.wallet
-                is MovementProposal.Income -> proposal.wallet
-                is MovementProposal.Transfer -> proposal.from
-                else -> null
-            }
-        return when (ref) {
-            is WalletRef.ById -> ref.walletId
-            is WalletRef.ByHint -> directory.byHint(ref.hint)?.id
-            null -> null
-        }
-    }
 }

@@ -1,6 +1,7 @@
 package com.coinden.core.data.local.json
 
 import com.coinden.core.domain.model.category.ClassificationEvent
+import com.coinden.core.domain.model.draft.CorrectionOrigin
 import com.coinden.core.domain.model.draft.DraftEvent
 import com.coinden.core.domain.model.wallet.LedgerEvent
 import kotlinx.serialization.KSerializer
@@ -184,6 +185,22 @@ object EventCodec {
                     MergedDto.serializer(),
                     MergedDto(draft, event.absorbedDraftId, event.absorbedEvidence.toDto(), event.proposal?.toDto(), event.reference),
                 )
+            is DraftEvent.CorrectionProposed ->
+                store(DraftTypes.CORRECTION_PROPOSED, CorrectionProposedDto.serializer(), CorrectionProposedDto(draft, event.targetDraftId))
+            is DraftEvent.Corrected ->
+                store(
+                    DraftTypes.CORRECTED,
+                    CorrectedDto.serializer(),
+                    CorrectedDto(
+                        draft,
+                        event.movement.toDto(),
+                        event.ledgerEventId,
+                        event.annulledLedgerEventId,
+                        event.origin.name,
+                        event.sourceDraftId,
+                        event.absorbedEvidence?.toDto(),
+                    ),
+                )
         }
     }
 
@@ -251,6 +268,31 @@ object EventCodec {
                         )
                     }
                 }
+            DraftTypes.CORRECTION_PROPOSED ->
+                load(version, payload, CorrectionProposedDto.serializer())?.let {
+                    with(
+                        it.draft,
+                    ) { DraftEvent.CorrectionProposed(id, draftId, ownerId, deviceId, occurredAt, recordedAt, it.targetDraftId) }
+                }
+            DraftTypes.CORRECTED ->
+                load(version, payload, CorrectedDto.serializer())?.let {
+                    with(it.draft) {
+                        DraftEvent.Corrected(
+                            id,
+                            draftId,
+                            ownerId,
+                            deviceId,
+                            occurredAt,
+                            recordedAt,
+                            it.movement.toDomain(),
+                            it.ledgerEventId,
+                            it.annulledLedgerEventId,
+                            CorrectionOrigin.valueOf(it.origin),
+                            it.sourceDraftId,
+                            it.absorbedEvidence?.toDomain(),
+                        )
+                    }
+                }
             else -> null
         }
 
@@ -302,6 +344,8 @@ object DraftTypes {
     const val MARKED_DISTINCT = "draft.marked_distinct"
     const val PERCEIVED = "draft.perceived"
     const val MERGED = "draft.merged"
+    const val CORRECTION_PROPOSED = "draft.correction_proposed"
+    const val CORRECTED = "draft.corrected"
 }
 
 object ClassificationTypes {
@@ -388,6 +432,23 @@ internal data class PerceivedDto(
 internal data class MarkedDistinctDto(
     val draft: DraftFieldsDto,
     val otherDraftId: String,
+)
+
+@Serializable
+internal data class CorrectionProposedDto(
+    val draft: DraftFieldsDto,
+    val targetDraftId: String,
+)
+
+@Serializable
+internal data class CorrectedDto(
+    val draft: DraftFieldsDto,
+    val movement: ReadyMovementDto,
+    val ledgerEventId: String,
+    val annulledLedgerEventId: String? = null,
+    val origin: String,
+    val sourceDraftId: String? = null,
+    val absorbedEvidence: EvidenceDto? = null,
 )
 
 @Serializable

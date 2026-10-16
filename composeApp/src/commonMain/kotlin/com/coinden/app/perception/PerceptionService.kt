@@ -74,7 +74,7 @@ class PerceptionService(
         text: String,
         engine: String,
     ): PerceptionOutcome {
-        val drafts = container.interpretPerceived(draftId, text, engine)
+        val drafts = container.settleIdentical(container.interpretPerceived(draftId, text, engine))
         return PerceptionOutcome.Read(drafts)
     }
 

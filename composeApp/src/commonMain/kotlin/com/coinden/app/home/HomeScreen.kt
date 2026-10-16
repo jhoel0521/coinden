@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,10 +36,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.home_default
+import coinden.composeapp.generated.resources.home_history
 import coinden.composeapp.generated.resources.home_language
 import coinden.composeapp.generated.resources.home_pending
 import coinden.composeapp.generated.resources.home_pending_note
 import coinden.composeapp.generated.resources.home_privacy
+import coinden.composeapp.generated.resources.home_review
 import coinden.composeapp.generated.resources.home_total
 import coinden.composeapp.generated.resources.home_unconverted
 import coinden.composeapp.generated.resources.home_wallets
@@ -74,6 +78,8 @@ fun HomeScreen(
     utcOffsetMinutes: Int,
     onPrivacy: () -> Unit = {},
     onVoiceModels: () -> Unit = {},
+    onReview: () -> Unit = {},
+    onHistory: () -> Unit = {},
 ) {
     val state by presenter.state.collectAsState()
     val captureState by capture.state.collectAsState()
@@ -113,13 +119,21 @@ fun HomeScreen(
             }
             item {
                 Surface(shape = MaterialTheme.shapes.medium, color = scheme.surfaceContainerHigh) {
-                    Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(stringResource(Res.string.home_pending, state.pendingDrafts), style = MaterialTheme.typography.titleMedium)
                         Text(
                             stringResource(Res.string.home_pending_note),
                             style = MaterialTheme.typography.bodySmall,
                             color = scheme.onSurfaceVariant,
                         )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(onClick = onReview, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                                Text(stringResource(Res.string.home_review, state.pendingDrafts))
+                            }
+                            OutlinedButton(onClick = onHistory, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                                Text(stringResource(Res.string.home_history))
+                            }
+                        }
                     }
                 }
             }

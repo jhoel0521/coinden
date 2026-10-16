@@ -15,6 +15,8 @@ data class DraftHeader(
     val extraEvidence: List<Evidence> = emptyList(),
     /** Texto leído en el teléfono de la foto, el PDF o el audio (null si todavía no se leyó). */
     val perceivedText: String? = null,
+    /** Movimiento confirmado que este comprobante propone corregir (cambio pendiente), si hay. */
+    val correctionTarget: String? = null,
 )
 
 /**
@@ -66,6 +68,46 @@ sealed interface ReadyMovement {
         override val note: String?,
     ) : ReadyMovement
 }
+
+/**
+ * El movimiento confirmado como propuesta, para combinarlo con un comprobante o precargar el
+ * formulario de corrección. Sus campos cuentan como dichos por la persona.
+ */
+fun ReadyMovement.asProposal(): MovementProposal =
+    when (this) {
+        is ReadyMovement.Expense ->
+            MovementProposal.Expense(amount.proposed(), WalletRef.ById(walletId), occurredAtEpochMs, note, reference = reference)
+        is ReadyMovement.Income ->
+            MovementProposal.Income(amount.proposed(), WalletRef.ById(walletId), occurredAtEpochMs, note, reference = reference)
+        is ReadyMovement.Transfer ->
+            MovementProposal.Transfer(
+                out.proposed(),
+                WalletRef.ById(fromWalletId),
+                into.proposed(),
+                WalletRef.ById(toWalletId),
+                occurredAtEpochMs,
+                note,
+                reference = reference,
+            )
+        is ReadyMovement.AdjustTo -> MovementProposal.AdjustTo(target.proposed(), WalletRef.ById(walletId), occurredAtEpochMs, note)
+    }
+
+private fun Money.proposed() = ProposedAmount(toNumericString(), currency)
+
+/**
+ * Un comprobante real: su monto lo leyó una plantilla o el OCR de una foto o PDF. Un dictado, una
+ * frase escrita o un audio nunca lo son, aunque coincidan.
+ */
+val Draft.isReceipt: Boolean
+    get() {
+        val proposal =
+            when (this) {
+                is Draft.Ready -> proposal
+                is Draft.Incomplete -> proposal
+                else -> return false
+            }
+        return proposal.origins[DraftField.AMOUNT] == FieldOrigin.EVIDENCE
+    }
 
 /** El mismo movimiento con su número de transacción (un ajuste no lleva referencia). */
 fun ReadyMovement.withReference(reference: String): ReadyMovement =

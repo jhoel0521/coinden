@@ -46,7 +46,6 @@ import coinden.composeapp.generated.resources.result_saved
 import coinden.composeapp.generated.resources.result_shortfall
 import coinden.composeapp.generated.resources.result_voice_model
 import coinden.composeapp.generated.resources.result_voice_model_button
-import coinden.composeapp.generated.resources.result_wallet_mismatch
 import coinden.composeapp.generated.resources.same_already_confirmed
 import coinden.composeapp.generated.resources.same_no
 import coinden.composeapp.generated.resources.same_question
@@ -200,7 +199,7 @@ fun CaptureResultSheet(
 
 /** "¿Es el mismo gasto?" con la otra captura y las dos respuestas. Nunca decide sola. */
 @Composable
-private fun SameMovementPrompt(
+fun SameMovementPrompt(
     question: SameMovementView,
     locale: UserLocale,
     utcOffsetMinutes: Int,
@@ -258,14 +257,13 @@ private fun Outcome(text: String) {
 }
 
 @Composable
-private fun problemText(
+fun problemText(
     problem: ConfirmProblem,
     locale: UserLocale,
 ): String =
     when (problem) {
         is ConfirmProblem.InsufficientFunds -> stringResource(Res.string.result_shortfall, MoneyFormatter.format(problem.shortfall, locale))
         ConfirmProblem.NotReady -> stringResource(Res.string.result_not_ready)
-        ConfirmProblem.WalletMismatch -> stringResource(Res.string.result_wallet_mismatch)
         ConfirmProblem.Rejected -> stringResource(Res.string.result_rejected)
     }
 

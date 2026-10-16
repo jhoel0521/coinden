@@ -41,9 +41,6 @@ sealed interface ConfirmProblem {
     /** Le faltan datos o no es un movimiento: se completa en la bandeja. */
     data object NotReady : ConfirmProblem
 
-    /** Al unir con un gasto ya confirmado, el comprobante dice otra billetera: se corrige en la revisión. */
-    data object WalletMismatch : ConfirmProblem
-
     data object Rejected : ConfirmProblem
 }
 
@@ -62,6 +59,8 @@ data class CaptureState(
     val result: CaptureResult? = null,
     /** Borradores que se están leyendo en el teléfono ("Leyendo…"). */
     val reading: Set<String> = emptySet(),
+    /** "Son el mismo" dejó un cambio pendiente sobre un confirmado: se abre el formulario de corrección. */
+    val correction: FormMode.Correct? = null,
 )
 
 /**
@@ -127,6 +126,9 @@ class CapturePresenter(
 
     fun dismissResult() = mutableState.update { it.copy(result = null) }
 
+    /** La pantalla ya abrió el formulario de corrección. */
+    fun correctionOpened() = mutableState.update { it.copy(correction = null, result = null) }
+
     /** Muestra el resultado de una captura hecha en otra pantalla (el formulario). */
     fun showResult(result: CaptureResult) = mutableState.update { it.copy(result = result) }
 
@@ -143,8 +145,9 @@ class CapturePresenter(
     }
 
     /**
-     * Responde "¿es el mismo gasto?". Son el mismo: la tarjeta pasa a ser la del borrador que queda.
-     * Son distintos: la pregunta desaparece y quedan los dos.
+     * Responde "¿es el mismo gasto?". Son el mismo: la tarjeta pasa a ser la del borrador que queda;
+     * si el otro ya estaba confirmado y este es un comprobante, se pide abrir el formulario de
+     * corrección ([CaptureState.correction]). Son distintos: la pregunta desaparece y quedan los dos.
      */
     suspend fun resolve(
         draftId: String,
@@ -155,6 +158,9 @@ class CapturePresenter(
         val updated =
             when (val outcome = container.resolveSameMovement(draftId, question.otherDraftId, same)) {
                 is DraftResult.Ok -> {
+                    outcome.draft.header.correctionTarget?.let { target ->
+                        mutableState.update { it.copy(correction = FormMode.Correct(target, outcome.draft.id)) }
+                    }
                     val fresh = cards.of(listOf(outcome.draft)).single()
                     result.copy(cards = result.cards.map { if (it.draftId == draftId) fresh else it }, problems = result.problems - draftId)
                 }
@@ -219,7 +225,6 @@ class CapturePresenter(
     private fun problemOf(error: DraftError): ConfirmProblem =
         when (error) {
             is DraftError.NotReady -> ConfirmProblem.NotReady
-            DraftError.WalletMismatch -> ConfirmProblem.WalletMismatch
             is DraftError.Wallet ->
                 (error.error as? WalletError.InsufficientFunds)?.let { ConfirmProblem.InsufficientFunds(it.shortfall) }
                     ?: ConfirmProblem.Rejected

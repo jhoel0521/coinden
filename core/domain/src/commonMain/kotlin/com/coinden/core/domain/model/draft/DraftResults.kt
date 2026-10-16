@@ -23,8 +23,11 @@ sealed interface DraftError {
         val error: WalletError,
     ) : DraftError
 
-    /** Al unir con un movimiento confirmado, el comprobante indica otra billetera. */
-    data object WalletMismatch : DraftError
+    /** Solo se corrige un movimiento confirmado. */
+    data object NotConfirmed : DraftError
+
+    /** Los ajustes a un saldo objetivo no se corrigen: se registra otro ajuste. */
+    data object NotCorrectable : DraftError
 
     data class AliasAlreadyUsed(
         val alias: String,
@@ -58,4 +61,11 @@ data class DraftInbox(
     val pending: List<Draft>,
     val projections: List<ProjectedBalance>,
     val suggestions: Map<String, CategorySuggestion> = emptyMap(),
+    /**
+     * Los que se pueden confirmar de una vez ("Listos"): Listos de confianza ALTA, sin pregunta de
+     * mismo movimiento ni cambio pendiente, en el orden de la bandeja. Todo lo demás se revisa.
+     */
+    val batchReady: List<String> = emptyList(),
+    /** Preguntas de mismo movimiento de los pendientes. */
+    val questions: List<SameMovementQuestion> = emptyList(),
 )

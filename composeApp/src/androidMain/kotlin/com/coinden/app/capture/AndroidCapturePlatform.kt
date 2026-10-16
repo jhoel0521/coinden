@@ -77,6 +77,8 @@ class AndroidCapturePlatform(
 
     override val processingQueue: ProcessingQueue get() = perception.queue
 
+    override val evidenceViewer: EvidenceViewerPort = AndroidEvidenceViewer(context)
+
     override val voiceModels =
         object : VoiceModelManager {
             override fun deviceProfile() = perception.modelStore.deviceProfile()

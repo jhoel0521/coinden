@@ -85,6 +85,25 @@ class LocalWalletRepository(
             )
         }
 
+    /** Todos en una transacción: si uno falla, no queda ninguno. */
+    override suspend fun appendEvents(events: List<LedgerEvent>) =
+        withContext(dispatcher) {
+            db.transaction {
+                events.forEach { event ->
+                    db.append(
+                        event.id,
+                        Streams.LEDGER,
+                        null,
+                        event.deviceId,
+                        event.occurredAtEpochMs,
+                        event.recordedAtEpochMs,
+                        EventCodec.encodeLedger(event),
+                        event.affectedWalletIds,
+                    )
+                }
+            }
+        }
+
     override suspend fun findEvent(eventId: String): LedgerEvent? =
         withContext(dispatcher) {
             q.eventById(eventId, Streams.LEDGER).executeAsOneOrNull()?.let { EventCodec.decodeLedger(it.type, it.version, it.payload) }

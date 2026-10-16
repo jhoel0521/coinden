@@ -109,13 +109,48 @@ sealed interface DraftEvent {
         val proposal: MovementProposal? = null,
         val reference: String? = null,
     ) : DraftEvent
+
+    /**
+     * "Son el mismo" entre este comprobante y el movimiento confirmado [targetDraftId]: queda un
+     * cambio pendiente que la persona aprueba o descarta. No cambia nada del confirmado.
+     */
+    data class CorrectionProposed(
+        override val id: String,
+        override val draftId: String,
+        override val ownerId: String,
+        override val deviceId: String,
+        override val occurredAtEpochMs: Long,
+        override val recordedAtEpochMs: Long,
+        val targetDraftId: String,
+    ) : DraftEvent
+
+    /**
+     * La persona aprobó una corrección del movimiento confirmado: [movement] reemplaza al anterior.
+     * Si cambió el dinero, [annulledLedgerEventId] es el movimiento anulado y [ledgerEventId] el nuevo;
+     * si no, [ledgerEventId] sigue igual. Desde un comprobante, [sourceDraftId] es su borrador y
+     * [absorbedEvidence] su evidencia.
+     */
+    data class Corrected(
+        override val id: String,
+        override val draftId: String,
+        override val ownerId: String,
+        override val deviceId: String,
+        override val occurredAtEpochMs: Long,
+        override val recordedAtEpochMs: Long,
+        val movement: ReadyMovement,
+        val ledgerEventId: String,
+        val annulledLedgerEventId: String?,
+        val origin: CorrectionOrigin,
+        val sourceDraftId: String? = null,
+        val absorbedEvidence: Evidence? = null,
+    ) : DraftEvent
 }
 
 /**
  * Reproduce el historial de un borrador en orden cronológico (ocurrencia, registro, id),
  * así el resultado es el mismo sin importar en qué orden llegaron los eventos de cada dispositivo.
  * Los estados terminales ignoran lo que llegue después, salvo la unión con un confirmado, que
- * agrega evidencia y referencia sin cambiar el movimiento.
+ * agrega evidencia sin cambiar el movimiento, y la corrección aprobada de un confirmado.
  */
 object DraftProjection {
     private val CHRONOLOGICAL: Comparator<DraftEvent> =
@@ -147,6 +182,16 @@ object DraftProjection {
                 continue
             }
             if (state.isTerminal) continue
+            if (event is DraftEvent.CorrectionProposed) {
+                header = header.copy(correctionTarget = event.targetDraftId)
+                state = state.withHeader(header)
+                continue
+            }
+            if (event is DraftEvent.MarkedDistinct && event.otherDraftId == header.correctionTarget) {
+                header = header.copy(correctionTarget = null)
+                state = state.withHeader(header)
+                continue
+            }
             if (event is DraftEvent.Perceived) {
                 header = header.copy(perceivedText = event.text)
                 state = state.withHeader(header)
@@ -154,12 +199,23 @@ object DraftProjection {
             }
             state =
                 when (event) {
-                    is DraftEvent.Captured, is DraftEvent.MarkedDistinct, is DraftEvent.Merged, is DraftEvent.Perceived -> state
+                    is DraftEvent.Captured, is DraftEvent.MarkedDistinct, is DraftEvent.Merged, is DraftEvent.Perceived,
+                    is DraftEvent.Corrected, is DraftEvent.CorrectionProposed,
+                    -> state
                     is DraftEvent.Interpreted -> DraftEvaluator.evaluate(header, event.proposal, directory)
                     is DraftEvent.Revised -> DraftEvaluator.evaluate(header, event.proposal, directory)
                     is DraftEvent.Confirmed -> Draft.Confirmed(header, event.movement, event.ledgerEventId)
                     is DraftEvent.Discarded -> Draft.Discarded(header, event.mergedInto)
                 }
+        }
+        // Las correcciones se aplican sobre el confirmado aunque un reloj atrasado las ponga antes.
+        val corrections = events.filterIsInstance<DraftEvent.Corrected>().sortedWith(CHRONOLOGICAL)
+        if (state is Draft.Confirmed && corrections.isNotEmpty()) {
+            for (event in corrections) {
+                event.absorbedEvidence?.let { header = header.copy(extraEvidence = header.extraEvidence + it) }
+            }
+            val last = corrections.last()
+            state = Draft.Confirmed(header, last.movement, last.ledgerEventId)
         }
         return state
     }

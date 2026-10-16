@@ -222,3 +222,64 @@ class AnnulMovementUseCase(
         return WalletOperationResult.EventRecorded(annulment)
     }
 }
+
+/**
+ * Caso de Uso: corregir un movimiento con otro. Anula [targetId] con la anulación [annulmentId] y
+ * registra [replacement] en el mismo paso: se validan juntos y se escriben juntos, así el original
+ * nunca queda anulado sin su reemplazo. Repetirlo con los mismos ids no registra nada nuevo.
+ */
+class ReplaceMovementUseCase(
+    private val ctx: LedgerContext,
+) {
+    suspend operator fun invoke(
+        targetId: String,
+        annulmentId: String,
+        replacement: LedgerEvent,
+    ): WalletOperationResult {
+        val target = ctx.repository.findEvent(targetId) ?: return Rejected(WalletError.NotFound)
+        if (target is LedgerEvent.Annulment || replacement is LedgerEvent.Annulment) return Rejected(WalletError.CannotAnnulAnnulment)
+        if (ctx.repository.findEvent(annulmentId) != null && ctx.repository.findEvent(replacement.id) == replacement) {
+            return WalletOperationResult.EventRecorded(replacement)
+        }
+
+        val walletIds = target.affectedWalletIds + replacement.affectedWalletIds
+        val wallets = walletIds.map { ctx.repository.getWallet(it) ?: return Rejected(WalletError.NotFound) }
+        if (wallets.any { !it.isActive }) return Rejected(WalletError.WalletArchived)
+        val alreadyAnnulled =
+            target.affectedWalletIds.any { id ->
+                ctx.repository.eventsForWallet(id).any { it is LedgerEvent.Annulment && it.targetId == targetId }
+            }
+        if (alreadyAnnulled) return Rejected(WalletError.AlreadyAnnulled)
+        if (!accepts(wallets, replacement)) return Rejected(WalletError.CurrencyMismatch)
+
+        val now = ctx.clock.nowEpochMs()
+        val annulment =
+            LedgerEvent.Annulment(
+                id = annulmentId,
+                deviceId = ctx.device.deviceId(),
+                occurredAtEpochMs = now,
+                recordedAtEpochMs = now,
+                targetId = targetId,
+                affectedWalletIds = target.affectedWalletIds,
+            )
+        ctx.guard.checkAll(wallets, listOf(annulment, replacement))?.let { return Rejected(it) }
+
+        ctx.repository.appendEvents(listOf(annulment, replacement))
+        return WalletOperationResult.EventRecorded(replacement)
+    }
+
+    private fun accepts(
+        wallets: List<Wallet>,
+        event: LedgerEvent,
+    ): Boolean {
+        fun wallet(id: String) = wallets.first { it.id == id }
+        return when (event) {
+            is LedgerEvent.Expense -> wallet(event.walletId).accepts(event.amount.currency)
+            is LedgerEvent.Income -> wallet(event.walletId).accepts(event.amount.currency)
+            is LedgerEvent.Adjustment -> wallet(event.walletId).accepts(event.amount.currency)
+            is LedgerEvent.Transfer ->
+                wallet(event.fromWalletId).accepts(event.amountOut.currency) && wallet(event.toWalletId).accepts(event.amountIn.currency)
+            is LedgerEvent.OpeningBalance, is LedgerEvent.Annulment -> false
+        }
+    }
+}

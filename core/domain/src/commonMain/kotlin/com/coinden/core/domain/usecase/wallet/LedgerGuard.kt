@@ -21,10 +21,30 @@ internal class LedgerGuard(
     suspend fun check(
         wallets: List<Wallet>,
         candidate: LedgerEvent,
+    ): WalletError.InsufficientFunds? = check(wallets, candidate, pending = emptyList())
+
+    /**
+     * Valida varios candidatos que se escribirán juntos (una anulación y su reemplazo): cada uno
+     * se evalúa como si los anteriores ya estuvieran en el libro.
+     */
+    suspend fun checkAll(
+        wallets: List<Wallet>,
+        candidates: List<LedgerEvent>,
+    ): WalletError.InsufficientFunds? {
+        candidates.forEachIndexed { i, candidate ->
+            check(wallets, candidate, pending = candidates.take(i))?.let { return it }
+        }
+        return null
+    }
+
+    private suspend fun check(
+        wallets: List<Wallet>,
+        candidate: LedgerEvent,
+        pending: List<LedgerEvent>,
     ): WalletError.InsufficientFunds? {
         for (wallet in wallets) {
             if (wallet.allowsNegative) continue
-            val existing = repository.eventsForWallet(wallet.id)
+            val existing = repository.eventsForWallet(wallet.id) + pending.filter { wallet.id in it.affectedWalletIds }
             val effect = effectOf(candidate, wallet, existing) ?: continue
             if (!effect.delta.isNegative) continue
 

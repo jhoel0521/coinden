@@ -39,6 +39,16 @@ class InMemoryWalletRepository : WalletRepositoryPort {
             events += event
         }
 
+    /** Todos o ninguno: se validan los ids antes de agregar. */
+    override suspend fun appendEvents(events: List<LedgerEvent>) =
+        mutex.withLock {
+            val ids = events.map { it.id }
+            check(
+                ids.distinct().size == ids.size && this.events.none { it.id in ids },
+            ) { "El libro es de solo agregar: un evento ya existe" }
+            this.events += events
+        }
+
     override suspend fun findEvent(eventId: String): LedgerEvent? = mutex.withLock { events.firstOrNull { it.id == eventId } }
 
     override suspend fun eventsForWallet(walletId: String): List<LedgerEvent> =

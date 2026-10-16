@@ -9,7 +9,8 @@ import com.coinden.core.domain.model.draft.EvidenceSource
 /**
  * Guardar en segundos, sin esperar a nada pesado: un texto se interpreta al instante (milisegundos)
  * y un archivo se guarda cifrado con su huella y queda para la cola, que lo lee después aunque se
- * cierre la app. Lo usan la pantalla de captura y "compartir" sin abrir la app.
+ * cierre la app. Lo usan la pantalla de captura y "compartir" sin abrir la app. Un comprobante
+ * idéntico a un gasto ya confirmado queda como su evidencia (se devuelve el confirmado).
  */
 class QuickCapture(
     private val container: AppContainer,
@@ -26,7 +27,7 @@ class QuickCapture(
         source: EvidenceSource,
     ): List<Draft> {
         val clean = text.trim().takeIf { it.isNotEmpty() } ?: return emptyList()
-        return container.captureDraft(container.ownerId, Evidence(source, clean))
+        return container.settleIdentical(container.captureDraft(container.ownerId, Evidence(source, clean)))
     }
 
     suspend fun file(

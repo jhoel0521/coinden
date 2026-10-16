@@ -2,11 +2,13 @@ package com.coinden.core.domain.feature
 
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.draft.CorrectionField
+import com.coinden.core.domain.model.draft.CorrectionOrigin
 import com.coinden.core.domain.model.draft.Draft
-import com.coinden.core.domain.model.draft.DraftError
 import com.coinden.core.domain.model.draft.DraftResult
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.EvidenceSource
+import com.coinden.core.domain.model.draft.FieldChange
 import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.draft.SameMovementQuestion
 import com.coinden.core.domain.model.draft.SameMovementReason
@@ -18,12 +20,16 @@ import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
 import com.coinden.core.domain.usecase.draft.ConfirmDraftUseCase
+import com.coinden.core.domain.usecase.draft.CorrectMovementUseCase
 import com.coinden.core.domain.usecase.draft.DiscardDraftUseCase
+import com.coinden.core.domain.usecase.draft.DismissCorrectionUseCase
 import com.coinden.core.domain.usecase.draft.DraftContext
 import com.coinden.core.domain.usecase.draft.FindSameMovementQuestionsUseCase
 import com.coinden.core.domain.usecase.draft.GetDraftInboxUseCase
+import com.coinden.core.domain.usecase.draft.GetPendingCorrectionUseCase
 import com.coinden.core.domain.usecase.draft.ResolveSameMovementUseCase
 import com.coinden.core.domain.usecase.draft.SetWalletAliasesUseCase
+import com.coinden.core.domain.usecase.draft.SettleIdenticalReceiptUseCase
 import com.coinden.core.domain.usecase.wallet.CreateWalletUseCase
 import com.coinden.core.domain.usecase.wallet.GetActiveWalletBalancesUseCase
 import com.coinden.core.domain.usecase.wallet.LedgerContext
@@ -31,6 +37,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 
 /**
  * Escenario de Feature: el mismo pago de Carlos (Bolivia) llega por varios caminos (dictado,
@@ -292,36 +299,191 @@ class CarlosSameMovementFeatureTest {
             assertEquals(listOf(audio.id), pending())
         }
 
+    // --- Con un gasto ya confirmado: nada cambia sin aprobación ---
+
+    private val pendingCorrection = GetPendingCorrectionUseCase(ctx)
+    private val correct = CorrectMovementUseCase(ctx, ledger)
+    private val dismiss = DismissCorrectionUseCase(ctx)
+
+    private suspend fun walletId(name: String) =
+        ctx
+            .directory("carlos")
+            .wallets
+            .single { it.name == name }
+            .id
+
+    /** El taxi de 40 Bs dictado y confirmado en la mañana, y su comprobante de la tarde. */
+    private suspend fun taxiAndReceipt(phrase: String = "pagué 40 de taxi por qr"): Pair<Draft, Draft> {
+        val taxi = say(phrase, bolivia(15, 8))
+        assertIs<DraftResult.Ok>(confirm(taxi.id))
+        val receipt = share(qrReceipt("40.00", "15/Oct/2026 08:01:00", "400000777"), bolivia(15, 15))
+        return taxi to receipt
+    }
+
     @Test
-    fun `unir con el taxi confirmado le agrega la referencia sin cambiar el saldo`() =
+    fun `unir el comprobante con el taxi confirmado crea un cambio pendiente sin cambiar nada`() =
         runTest {
             carlos()
-            val taxi = say("pagué 40 de taxi por qr", bolivia(15, 8))
-            assertIs<DraftResult.Ok>(confirm(taxi.id))
-            val receipt = share(qrReceipt("40.00", "15/Oct/2026 08:01:00", "400000777"), bolivia(15, 15))
+            val (taxi, receipt) = taxiAndReceipt()
 
-            val kept = assertIs<Draft.Confirmed>(assertIs<DraftResult.Ok>(resolve(receipt.id, taxi.id, same = true)).draft)
+            val result = assertIs<DraftResult.Ok>(resolve(receipt.id, taxi.id, same = true)).draft
 
-            assertEquals("400000777", (kept.movement as ReadyMovement.Expense).reference)
-            assertEquals(listOf(receipt.header.evidence), kept.header.extraEvidence)
+            assertEquals(receipt.id, result.id)
+            assertEquals(taxi.id, result.header.correctionTarget)
+            val still = assertIs<Draft.Confirmed>(ctx.load(taxi.id))
+            assertEquals(null, (still.movement as ReadyMovement.Expense).reference)
+            assertEquals(emptyList(), still.header.extraEvidence)
+            assertEquals(bs("460"), balanceOf("BNB Bs"))
+            assertEquals(listOf(receipt.id), pending())
+            assertEquals(emptyList(), questions())
+
+            val change = assertNotNull(pendingCorrection(receipt.id))
+            assertEquals(taxi.id, change.target.id)
+            assertEquals(
+                listOf(FieldChange.OccurredAt(bolivia(15, 8), bolivia(15, 8, 1)), FieldChange.Reference(null, "400000777")),
+                change.changes,
+            )
+        }
+
+    @Test
+    fun `una billetera distinta queda como un cambio mas para aprobar`() =
+        runTest {
+            carlos()
+            // Dictado sin medio: quedó en la billetera de efectivo por defecto
+            val (taxi, receipt) = taxiAndReceipt("pagué 40 de taxi")
+
+            assertIs<DraftResult.Ok>(resolve(receipt.id, taxi.id, same = true))
+
+            val change = assertNotNull(pendingCorrection(receipt.id))
+            assertEquals(
+                FieldChange.Wallet(walletId("Billetera"), walletId("BNB Bs")),
+                change.changes.first {
+                    it.field ==
+                        CorrectionField.WALLET
+                },
+            )
+            assertEquals(bs("60"), balanceOf("Billetera"))
+            assertEquals(bs("500"), balanceOf("BNB Bs"))
+        }
+
+    @Test
+    fun `confirmar el cambio pendiente corrige el taxi y guarda el comprobante como evidencia`() =
+        runTest {
+            carlos()
+            val (taxi, receipt) = taxiAndReceipt("pagué 40 de taxi")
+            resolve(receipt.id, taxi.id, same = true)
+            val change = assertNotNull(pendingCorrection(receipt.id))
+
+            val result = correct(taxi.id, change.proposal, change.category, CorrectionOrigin.EVIDENCE, sourceDraftId = receipt.id)
+
+            val fixed = assertIs<Draft.Confirmed>(assertIs<DraftResult.Ok>(result).draft)
+            val movement = assertIs<ReadyMovement.Expense>(fixed.movement)
+            assertEquals("400000777", movement.reference)
+            assertEquals(walletId("BNB Bs"), movement.walletId)
+            assertEquals("taxi", movement.note)
+            assertEquals(listOf(receipt.header.evidence), fixed.header.extraEvidence)
+            assertEquals(taxi.id, assertIs<Draft.Discarded>(ctx.load(receipt.id)).mergedInto)
+            assertEquals(bs("100"), balanceOf("Billetera"))
             assertEquals(bs("460"), balanceOf("BNB Bs"))
             assertEquals(emptyList(), pending())
         }
 
     @Test
-    fun `si la billetera del confirmado no coincide no se unen`() =
+    fun `descartar el cambio deja el taxi como estaba con el comprobante como evidencia`() =
         runTest {
             carlos()
-            // Dictado sin medio: quedó en la billetera de efectivo por defecto
-            val taxi = say("pagué 40 de taxi", bolivia(15, 8))
-            assertIs<DraftResult.Ok>(confirm(taxi.id))
-            val receipt = share(qrReceipt("40.00", "15/Oct/2026 08:01:00", "400000777"), bolivia(15, 15))
+            val (taxi, receipt) = taxiAndReceipt()
+            resolve(receipt.id, taxi.id, same = true)
 
-            val result = resolve(receipt.id, taxi.id, same = true)
+            assertIs<DraftResult.Ok>(dismiss(receipt.id))
 
-            assertEquals(DraftError.WalletMismatch, assertIs<DraftResult.Rejected>(result).error)
+            val still = assertIs<Draft.Confirmed>(ctx.load(taxi.id))
+            assertEquals(null, (still.movement as ReadyMovement.Expense).reference)
+            assertEquals(listOf(receipt.header.evidence), still.header.extraEvidence)
+            assertEquals(taxi.id, assertIs<Draft.Discarded>(ctx.load(receipt.id)).mergedInto)
+            assertEquals(emptyList(), pending())
+            assertEquals(bs("460"), balanceOf("BNB Bs"))
+        }
+
+    @Test
+    fun `son distintos deja el comprobante como borrador propio y no vuelve a preguntar`() =
+        runTest {
+            carlos()
+            val (taxi, receipt) = taxiAndReceipt()
+            resolve(receipt.id, taxi.id, same = true)
+
+            assertIs<DraftResult.Ok>(resolve(receipt.id, taxi.id, same = false))
+
+            assertEquals(null, ctx.load(receipt.id)!!.header.correctionTarget)
+            assertEquals(null, pendingCorrection(receipt.id))
             assertEquals(listOf(receipt.id), pending())
-            assertEquals(bs("60"), balanceOf("Billetera"))
-            assertEquals(bs("500"), balanceOf("BNB Bs"))
+            assertEquals(emptyList(), questions())
+        }
+
+    @Test
+    fun `un dictado unido a un confirmado solo suma su evidencia`() =
+        runTest {
+            carlos()
+            val taxi = say("pagué 40 de taxi por qr", bolivia(15, 8))
+            val before = assertIs<Draft.Confirmed>(assertIs<DraftResult.Ok>(confirm(taxi.id)).draft).movement
+            val again = say("gasté 40 en taxi por qr", bolivia(15, 9))
+
+            val kept = assertIs<Draft.Confirmed>(assertIs<DraftResult.Ok>(resolve(again.id, taxi.id, same = true)).draft)
+
+            assertEquals(taxi.id, kept.id)
+            assertEquals(listOf(again.header.evidence), kept.header.extraEvidence)
+            assertEquals(before, kept.movement)
+            assertEquals(null, pendingCorrection(again.id))
+            assertEquals(emptyList(), pending())
+            assertEquals(bs("460"), balanceOf("BNB Bs"))
+        }
+
+    // --- Comprobante idéntico ---
+
+    private val settleIdentical = SettleIdenticalReceiptUseCase(ctx)
+
+    @Test
+    fun `el mismo comprobante otra vez queda como evidencia sin nada para revisar`() =
+        runTest {
+            carlos()
+            val text = qrReceipt("40.00", "15/Oct/2026 08:01:00", "400000777")
+            val taxi = share(text, bolivia(15, 8, 5))
+            val confirmed = assertIs<Draft.Confirmed>(assertIs<DraftResult.Ok>(confirm(taxi.id)).draft)
+            val again = share(text, bolivia(15, 20))
+
+            assertEquals(taxi.id, settleIdentical(again.id)?.id)
+
+            val kept = assertIs<Draft.Confirmed>(ctx.load(taxi.id))
+            assertEquals(confirmed.movement, kept.movement)
+            assertEquals(listOf(again.header.evidence), kept.header.extraEvidence)
+            assertEquals(taxi.id, assertIs<Draft.Discarded>(ctx.load(again.id)).mergedInto)
+            assertEquals(emptyList(), pending())
+            assertEquals(emptyList(), questions())
+            assertEquals(bs("460"), balanceOf("BNB Bs"))
+        }
+
+    @Test
+    fun `sin referencia en el confirmado no es identico y no se aplica solo`() =
+        runTest {
+            carlos()
+            val (taxi, receipt) = taxiAndReceipt()
+
+            assertEquals(null, settleIdentical(receipt.id))
+
+            assertEquals(null, (assertIs<Draft.Confirmed>(ctx.load(taxi.id)).movement as ReadyMovement.Expense).reference)
+            assertEquals(listOf(receipt.id), pending())
+        }
+
+    @Test
+    fun `un dictado nunca se une solo aunque coincida`() =
+        runTest {
+            carlos()
+            val text = qrReceipt("40.00", "15/Oct/2026 08:01:00", "400000777")
+            val taxi = share(text, bolivia(15, 8, 5))
+            confirm(taxi.id)
+            val said = say("gasté 40 en taxi por qr", bolivia(15, 9))
+
+            assertEquals(null, settleIdentical(said.id))
+            assertEquals(listOf(said.id), pending())
         }
 }

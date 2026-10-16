@@ -21,6 +21,9 @@ interface CapturePlatform {
     /** Cola que procesa lo capturado en segundo plano. */
     val processingQueue: ProcessingQueue
 
+    /** Muestra fotos, PDF y audios de la evidencia, descifrados solo en memoria. */
+    val evidenceViewer: EvidenceViewerPort
+
     /**
      * Devuelve una acción que pide el micrófono si hace falta y luego llama a [onResult] con
      * true si está concedido.

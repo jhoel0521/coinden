@@ -18,6 +18,12 @@ interface WalletRepositoryPort {
 
     suspend fun appendEvent(event: LedgerEvent)
 
+    /**
+     * Agrega varios eventos juntos (una anulación y su reemplazo): o quedan todos o ninguno.
+     * Un adaptador con base de datos lo hace en una transacción.
+     */
+    suspend fun appendEvents(events: List<LedgerEvent>) = events.forEach { appendEvent(it) }
+
     suspend fun findEvent(eventId: String): LedgerEvent?
 
     /**

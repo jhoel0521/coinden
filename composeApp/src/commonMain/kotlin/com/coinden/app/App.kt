@@ -18,10 +18,17 @@ import com.coinden.app.capture.CapturePlatform
 import com.coinden.app.capture.CapturePresenter
 import com.coinden.app.capture.DraftFormPresenter
 import com.coinden.app.capture.DraftFormScreen
+import com.coinden.app.capture.EvidencePresenter
+import com.coinden.app.capture.EvidenceScreen
+import com.coinden.app.capture.FormMode
 import com.coinden.app.capture.SharedContent
+import com.coinden.app.history.HistoryPresenter
+import com.coinden.app.history.HistoryScreen
 import com.coinden.app.home.HomePresenter
 import com.coinden.app.home.HomeScreen
 import com.coinden.app.i18n.ProvideAppLocale
+import com.coinden.app.inbox.ReviewInboxPresenter
+import com.coinden.app.inbox.ReviewInboxScreen
 import com.coinden.app.onboarding.CurrenciesScreen
 import com.coinden.app.onboarding.OnboardingPresenter
 import com.coinden.app.onboarding.OnboardingStep
@@ -33,6 +40,7 @@ import com.coinden.app.perception.PrivacyScreen
 import com.coinden.app.perception.VoiceModelsPresenter
 import com.coinden.app.perception.VoiceModelsScreen
 import com.coinden.app.theme.CoinDenTheme
+import com.coinden.core.domain.model.interpret.UserLocale
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -46,6 +54,27 @@ private object Routes {
     const val CAMERA = "camera"
     const val PRIVACY = "privacy"
     const val VOICE_MODELS = "voice-models"
+    const val INBOX = "inbox"
+    const val HISTORY = "history"
+    const val REVIEW = "review/{draftId}"
+    const val CORRECT = "correct/{draftId}/{source}"
+    const val EVIDENCE = "evidence/{draftId}"
+
+    /** Sin comprobante fuente: corrección a mano. */
+    private const val NO_SOURCE = "-"
+
+    fun review(draftId: String) = "review/$draftId"
+
+    fun evidence(draftId: String) = "evidence/$draftId"
+
+    fun form(mode: FormMode): String =
+        when (mode) {
+            FormMode.New -> FORM
+            is FormMode.Review -> review(mode.draftId)
+            is FormMode.Correct -> "correct/${mode.draftId}/${mode.sourceDraftId ?: NO_SOURCE}"
+        }
+
+    fun sourceOf(arg: String?): String? = arg?.takeIf { it != NO_SOURCE }
 }
 
 /**
@@ -161,6 +190,14 @@ private fun AppNavHost(
                     scope.launch { capture.shared(it) }
                 }
             }
+            val captureState by capture.state.collectAsState()
+            // "Son el mismo" con un confirmado: se revisa en el formulario de corrección antes de aplicar nada.
+            LaunchedEffect(captureState.correction) {
+                captureState.correction?.let {
+                    capture.correctionOpened()
+                    nav.navigate(Routes.form(it))
+                }
+            }
             HomeScreen(
                 home,
                 locale,
@@ -173,7 +210,44 @@ private fun AppNavHost(
                 utcOffsetMinutes = settings.utcOffsetMinutes,
                 onPrivacy = { nav.navigate(Routes.PRIVACY) },
                 onVoiceModels = { nav.navigate(Routes.VOICE_MODELS) },
+                onReview = { nav.navigate(Routes.INBOX) },
+                onHistory = { nav.navigate(Routes.HISTORY) },
             )
+        }
+        composable(Routes.INBOX) {
+            val inbox = remember { ReviewInboxPresenter(container) }
+            ReviewInboxScreen(
+                inbox,
+                locale,
+                settings.utcOffsetMinutes,
+                onOpen = { nav.navigate(Routes.form(it)) },
+                onBack = { nav.popBackStack() },
+            )
+        }
+        composable(Routes.HISTORY) {
+            val history = remember { HistoryPresenter(container) }
+            HistoryScreen(
+                history,
+                locale,
+                settings.utcOffsetMinutes,
+                onCorrect = { nav.navigate(Routes.form(it)) },
+                onEvidence = { nav.navigate(Routes.evidence(it)) },
+                onBack = { nav.popBackStack() },
+            )
+        }
+        composable(Routes.REVIEW) { entry ->
+            val draftId = entry.savedStateHandle.get<String>("draftId").orEmpty()
+            FormRoute(container, FormMode.Review(draftId), locale, settings.utcOffsetMinutes, nav::navigate) { nav.popBackStack() }
+        }
+        composable(Routes.CORRECT) { entry ->
+            val draftId = entry.savedStateHandle.get<String>("draftId").orEmpty()
+            val source = Routes.sourceOf(entry.savedStateHandle.get<String>("source"))
+            FormRoute(container, FormMode.Correct(draftId, source), locale, settings.utcOffsetMinutes, nav::navigate) { nav.popBackStack() }
+        }
+        composable(Routes.EVIDENCE) { entry ->
+            val draftId = entry.savedStateHandle.get<String>("draftId").orEmpty()
+            val evidence = remember(draftId) { EvidencePresenter(container, draftId) }
+            EvidenceScreen(evidence, platform.evidenceViewer, onBack = { nav.popBackStack() })
         }
         composable(Routes.CAMERA) {
             platform.Camera(
@@ -191,10 +265,13 @@ private fun AppNavHost(
                 form,
                 nowEpochMs = container.clock::nowEpochMs,
                 utcOffsetMinutes = settings.utcOffsetMinutes,
+                locale = locale,
                 onSaved = { result ->
                     capture.showResult(result)
                     nav.popBackStack()
                 },
+                onDone = { nav.popBackStack() },
+                onEvidence = { nav.navigate(Routes.evidence(it)) },
                 onBack = { nav.popBackStack() },
             )
         }
@@ -204,4 +281,27 @@ private fun AppNavHost(
         val route = nav.currentDestination?.route
         if (pendingShare != null && (route == Routes.CAMERA || route == Routes.FORM)) nav.popBackStack(Routes.HOME, inclusive = false)
     }
+}
+
+/** El formulario para revisar un borrador o corregir un movimiento; al terminar vuelve atrás. */
+@Composable
+private fun FormRoute(
+    container: AppContainer,
+    mode: FormMode,
+    locale: UserLocale,
+    utcOffsetMinutes: Int,
+    navigate: (String) -> Unit,
+    onDone: () -> Unit,
+) {
+    val form = remember(mode) { DraftFormPresenter(container, mode) }
+    DraftFormScreen(
+        form,
+        nowEpochMs = container.clock::nowEpochMs,
+        utcOffsetMinutes = utcOffsetMinutes,
+        locale = locale,
+        onSaved = { onDone() },
+        onDone = onDone,
+        onEvidence = { navigate(Routes.evidence(it)) },
+        onBack = onDone,
+    )
 }

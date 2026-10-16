@@ -11,6 +11,7 @@ import com.coinden.core.data.memory.InMemoryPreferencesRepository
 import com.coinden.core.data.memory.InMemoryWalletAliasRepository
 import com.coinden.core.data.memory.InMemoryWalletRepository
 import com.coinden.core.data.memory.UuidIdGenerator
+import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.WalletDirectory
@@ -30,13 +31,21 @@ import com.coinden.core.domain.usecase.GetConsolidatedPortfolioUseCase
 import com.coinden.core.domain.usecase.category.CategorizationContext
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
 import com.coinden.core.domain.usecase.draft.ConfirmDraftUseCase
+import com.coinden.core.domain.usecase.draft.ConfirmReadyDraftsUseCase
+import com.coinden.core.domain.usecase.draft.CorrectMovementUseCase
+import com.coinden.core.domain.usecase.draft.DiscardDraftUseCase
+import com.coinden.core.domain.usecase.draft.DismissCorrectionUseCase
 import com.coinden.core.domain.usecase.draft.DraftContext
 import com.coinden.core.domain.usecase.draft.FindSameMovementQuestionsUseCase
 import com.coinden.core.domain.usecase.draft.GetDraftInboxUseCase
+import com.coinden.core.domain.usecase.draft.GetMovementHistoryUseCase
+import com.coinden.core.domain.usecase.draft.GetMovementTimelineUseCase
+import com.coinden.core.domain.usecase.draft.GetPendingCorrectionUseCase
 import com.coinden.core.domain.usecase.draft.InterpretPerceivedUseCase
 import com.coinden.core.domain.usecase.draft.ResolveSameMovementUseCase
 import com.coinden.core.domain.usecase.draft.ReviseDraftUseCase
 import com.coinden.core.domain.usecase.draft.SetDefaultWalletUseCase
+import com.coinden.core.domain.usecase.draft.SettleIdenticalReceiptUseCase
 import com.coinden.core.domain.usecase.wallet.CreateWalletUseCase
 import com.coinden.core.domain.usecase.wallet.GetActiveWalletBalancesUseCase
 import com.coinden.core.domain.usecase.wallet.LedgerContext
@@ -127,6 +136,20 @@ class AppContainer(
     val findSameMovementQuestions = FindSameMovementQuestionsUseCase(drafts)
     val resolveSameMovement = ResolveSameMovementUseCase(drafts)
     val interpretPerceived = InterpretPerceivedUseCase(drafts, interpreter)
+    val discardDraft = DiscardDraftUseCase(drafts)
+    val correctMovement = CorrectMovementUseCase(drafts, ledger)
+    val pendingCorrection = GetPendingCorrectionUseCase(drafts)
+    val dismissCorrection = DismissCorrectionUseCase(drafts)
+    private val settleIdenticalReceipt = SettleIdenticalReceiptUseCase(drafts)
+    val confirmReadyDrafts = ConfirmReadyDraftsUseCase(drafts, ledger)
+    val movementHistory = GetMovementHistoryUseCase(drafts)
+    val movementTimeline = GetMovementTimelineUseCase(drafts)
+
+    /** Un id global nuevo (UUID), por ejemplo para reintentar una corrección sin duplicarla. */
+    fun newId(): String = ids.newId()
+
+    /** Cada comprobante idéntico a un confirmado queda como su evidencia: se devuelve el confirmado. */
+    suspend fun settleIdentical(captured: List<Draft>): List<Draft> = captured.map { settleIdenticalReceipt(it.id) ?: it }
 
     /** Desfase de la zona horaria del teléfono: define el "mismo día" de dos capturas. */
     val utcOffsetMinutes: Int get() = regional.settings().utcOffsetMinutes

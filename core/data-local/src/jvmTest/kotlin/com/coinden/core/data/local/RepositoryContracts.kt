@@ -18,9 +18,11 @@ import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.category.CategoryRule
 import com.coinden.core.domain.model.category.ClassificationEvent
 import com.coinden.core.domain.model.category.CustomCategory
+import com.coinden.core.domain.model.draft.CorrectionOrigin
 import com.coinden.core.domain.model.draft.DraftEvent
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.EvidenceSource
+import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.wallet.LedgerEvent
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
@@ -97,6 +99,27 @@ abstract class WalletRepositoryContract {
             assertFailsWith<IllegalStateException> { repo.appendEvent(LedgerEvent.Expense("e1", "dev", T, T, "w1", bs("99"))) }
             assertEquals(listOf(original), repo.eventsForWallet("w1"))
         }
+
+    @Test
+    fun `anulacion y reemplazo se guardan juntos o ninguno`() =
+        runTest {
+            val repo = repo()
+            val lunch = LedgerEvent.Expense("e1", "dev", T, T, "w1", bs("35"))
+            repo.appendEvent(lunch)
+            val annul = LedgerEvent.Annulment("annul:e1", "dev", T + 1, T + 1, "e1", setOf("w1"))
+
+            // El reemplazo repite un id: no se guarda ni la anulación
+            assertFailsWith<IllegalStateException> {
+                repo.appendEvents(
+                    listOf(annul, LedgerEvent.Expense("e1", "dev", T, T + 1, "w1", bs("32"))),
+                )
+            }
+            assertEquals(listOf(lunch), repo.eventsForWallet("w1"))
+
+            val fixed = LedgerEvent.Expense("e1:c1", "dev", T, T + 1, "w1", bs("32"))
+            repo.appendEvents(listOf(annul, fixed))
+            assertEquals(listOf(lunch, annul, fixed), repo.eventsForWallet("w1"))
+        }
 }
 
 abstract class DraftRepositoryContract {
@@ -146,6 +169,46 @@ abstract class DraftRepositoryContract {
 
             assertEquals(listOf(first, merged), repo.eventsFor("d1"))
             assertEquals(listOf(second, distinct, absorbed), repo.eventsFor("d2"))
+        }
+
+    @Test
+    fun `los cambios pendientes y las correcciones se guardan con el resto del historial`() =
+        runTest {
+            val repo = repo()
+            val receipt = captured("b1", "d2")
+            val proposed = DraftEvent.CorrectionProposed("b2", "d2", "carlos", "dev", T + 1, T + 1, targetDraftId = "d1")
+            val corrected =
+                DraftEvent.Corrected(
+                    "a3",
+                    "d1",
+                    "carlos",
+                    "dev",
+                    T + 2,
+                    T + 2,
+                    movement = ReadyMovement.Expense(bs("32"), "w1", T, "almuerzo", reference = "400000001"),
+                    ledgerEventId = "draft:d1:a3",
+                    annulledLedgerEventId = "draft:d1",
+                    origin = CorrectionOrigin.EVIDENCE,
+                    sourceDraftId = "d2",
+                    absorbedEvidence = Evidence(EvidenceSource.PHOTO, attachmentRef = "foto-1", fingerprint = "huella"),
+                )
+            val manual =
+                DraftEvent.Corrected(
+                    "a4",
+                    "d1",
+                    "carlos",
+                    "dev",
+                    T + 3,
+                    T + 3,
+                    movement = ReadyMovement.Expense(bs("32"), "w1", T, "almuerzo con Ana", reference = "400000001"),
+                    ledgerEventId = "draft:d1:a3",
+                    annulledLedgerEventId = null,
+                    origin = CorrectionOrigin.MANUAL,
+                )
+            listOf(captured("a1", "d1"), receipt, proposed, corrected, manual).forEach { repo.appendEvent(it) }
+
+            assertEquals(listOf(receipt, proposed), repo.eventsFor("d2"))
+            assertEquals(listOf(corrected, manual), repo.eventsFor("d1").drop(1))
         }
 
     @Test
