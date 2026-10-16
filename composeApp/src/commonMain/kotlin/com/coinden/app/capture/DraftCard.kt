@@ -4,6 +4,8 @@ import com.coinden.app.AppContainer
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.category.SuggestionReason
+import com.coinden.core.domain.model.draft.CaptureCoach
+import com.coinden.core.domain.model.draft.CaptureTip
 import com.coinden.core.domain.model.draft.Confidence
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.DraftField
@@ -58,6 +60,10 @@ data class DraftCard(
     val extraEvidence: Int = 0,
     /** "¿Es el mismo gasto que...?", si puede ser el mismo movimiento que otra captura. */
     val question: SameMovementView? = null,
+    /** Qué conviene decir la próxima vez (vacío si no faltó nada). */
+    val tips: Set<CaptureTip> = emptySet(),
+    /** Frase de ejemplo con las palabras de la persona («power 10 bnb»), si el consejo es decir la billetera. */
+    val tipExample: String? = null,
 )
 
 /** La otra captura de la pregunta, en datos: la pantalla arma el texto. */
@@ -121,6 +127,7 @@ class DraftCards(
         val note = (proposal as? MovementProposal.Expense)?.note
         val suggestion = note?.let { container.categorization.suggest(container.ownerId, it) }
         val evidence = draft.header.evidence
+        val tips = CaptureCoach.tipsFor(draft)
         return DraftCard(
             draftId = draft.id,
             evidenceText = evidence.text,
@@ -138,7 +145,27 @@ class DraftCards(
             reference = referenceOf(draft, proposal),
             extraEvidence = draft.header.extraEvidence.size,
             perceivedText = draft.header.perceivedText,
+            tips = tips,
+            tipExample = if (CaptureTip.SAY_WALLET in tips) exampleOf(draft, proposal, directory) else null,
         )
+    }
+
+    /** «nota monto palabra-de-billetera», con la billetera sugerida o la por defecto; null si no se puede armar. */
+    private suspend fun exampleOf(
+        draft: Draft,
+        proposal: MovementProposal?,
+        directory: WalletDirectory,
+    ): String? {
+        val amount =
+            when (proposal) {
+                is MovementProposal.Expense -> proposal.amount
+                is MovementProposal.Income -> proposal.amount
+                else -> null
+            } ?: return null
+        val walletId = CaptureCoach.exampleWalletId(draft, directory) ?: return null
+        val word = CaptureCoach.walletWord(walletId, directory, container.interpreter.walletNameHints(directory.wallets)) ?: return null
+        val note = (proposal as? MovementProposal.Expense)?.note ?: (proposal as? MovementProposal.Income)?.note
+        return listOfNotNull(note, amount.value.removeSuffix(".00"), word).joinToString(" ")
     }
 
     private fun paymentMethodOf(proposal: MovementProposal): PaymentMethod? =

@@ -33,6 +33,9 @@ import coinden.composeapp.generated.resources.category_by_rule
 import coinden.composeapp.generated.resources.category_by_word
 import coinden.composeapp.generated.resources.category_custom
 import coinden.composeapp.generated.resources.category_none
+import coinden.composeapp.generated.resources.coach_example
+import coinden.composeapp.generated.resources.coach_say_amount
+import coinden.composeapp.generated.resources.coach_say_wallet
 import coinden.composeapp.generated.resources.draft_not_counted
 import coinden.composeapp.generated.resources.evidence_audio
 import coinden.composeapp.generated.resources.evidence_extra
@@ -58,6 +61,7 @@ import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.theme.CoinDenTheme
 import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.category.SuggestionReason
+import com.coinden.core.domain.model.draft.CaptureTip
 import com.coinden.core.domain.model.draft.EvidenceSource
 import com.coinden.core.domain.model.draft.WalletSuggestion
 import com.coinden.core.domain.model.draft.WalletSuggestionReason
@@ -171,6 +175,7 @@ fun DraftCardView(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ConfidenceChip(card)
             }
+            CoachTip(card)
             if (card.status != DraftStatusView.CAPTURED) {
                 Text(
                     stringResource(Res.string.draft_not_counted),
@@ -292,3 +297,24 @@ fun PaymentMethod.label() =
         PaymentMethod.TRANSFER -> Res.string.method_transfer
         PaymentMethod.CARD -> Res.string.method_card
     }
+
+/** "La próxima vez di la billetera…" con un ejemplo en sus palabras; nada si no faltó nada. */
+@Composable
+private fun CoachTip(card: DraftCard) {
+    if (card.tips.isEmpty()) return
+    val lines =
+        buildList {
+            if (CaptureTip.SAY_WALLET in card.tips) add(stringResource(Res.string.coach_say_wallet))
+            if (CaptureTip.SAY_AMOUNT in card.tips) add(stringResource(Res.string.coach_say_amount))
+            card.tipExample?.let { add(stringResource(Res.string.coach_example, it)) }
+        }
+    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Icon(
+            CoinDenIcon.SPARKLE.vector,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.tertiary,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(lines.joinToString(" "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
+    }
+}

@@ -4,6 +4,7 @@ import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.EvidenceSource
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.WalletDirectory
+import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.port.output.DraftInterpreterPort
 import com.coinden.core.domain.port.output.InstalledPacksPort
 import com.coinden.core.domain.port.output.RegionalSettingsPort
@@ -24,6 +25,12 @@ class TextDraftInterpreter(
     private val packs: InstalledPacksPort,
     private val regional: RegionalSettingsPort,
 ) : DraftInterpreterPort {
+    /** Las palabras de los nombres de [wallets] que este intérprete reconoce al leer una frase (palabra -> id). */
+    suspend fun walletNameHints(wallets: List<Wallet>): Map<String, String> {
+        val pack = (listOf(LanguagePacks.ENGLISH) + packs.languagePacks().filter { it.code != LanguagePacks.ENGLISH.code }).merged()
+        return WalletNameHints.derive(wallets, pack, regional.settings().locale)
+    }
+
     override suspend fun interpret(
         evidence: Evidence,
         wallets: WalletDirectory,

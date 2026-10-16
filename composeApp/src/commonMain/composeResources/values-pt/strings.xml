@@ -222,4 +222,8 @@
     <string name="evidence_next">Próxima</string>
     <string name="evidence_unavailable">Não foi possível abrir esta evidência.</string>
     <string name="evidence_counter">%1$d de %2$d</string>
+    <string name="coach_say_wallet">Da próxima vez diga a carteira e ficará pronto sem revisar.</string>
+    <string name="coach_say_amount">Da próxima vez diga o valor.</string>
+    <string name="coach_example">Por exemplo: “%1$s”</string>
+    <string name="inbox_week">Esta semana %1$d de %2$d capturas ficaram prontas sem revisar.</string>
 </resources>

@@ -48,6 +48,7 @@ import coinden.composeapp.generated.resources.inbox_shortfall
 import coinden.composeapp.generated.resources.inbox_summary_title
 import coinden.composeapp.generated.resources.inbox_summary_wallet
 import coinden.composeapp.generated.resources.inbox_title
+import coinden.composeapp.generated.resources.inbox_week
 import com.coinden.app.capture.DraftCardView
 import com.coinden.app.capture.FormMode
 import com.coinden.app.capture.SameMovementPrompt
@@ -92,6 +93,15 @@ fun ReviewInboxScreen(
                         stringResource(Res.string.inbox_empty),
                         style = MaterialTheme.typography.bodyLarge,
                         color = scheme.onSurfaceVariant,
+                    )
+                }
+            }
+            state.week?.let { week ->
+                item {
+                    Text(
+                        stringResource(Res.string.inbox_week, week.readyAlone, week.total),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = scheme.tertiary,
                     )
                 }
             }

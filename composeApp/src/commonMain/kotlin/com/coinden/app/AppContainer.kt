@@ -37,6 +37,7 @@ import com.coinden.core.domain.usecase.draft.DiscardDraftUseCase
 import com.coinden.core.domain.usecase.draft.DismissCorrectionUseCase
 import com.coinden.core.domain.usecase.draft.DraftContext
 import com.coinden.core.domain.usecase.draft.FindSameMovementQuestionsUseCase
+import com.coinden.core.domain.usecase.draft.GetCaptureStatsUseCase
 import com.coinden.core.domain.usecase.draft.GetDraftInboxUseCase
 import com.coinden.core.domain.usecase.draft.GetMovementHistoryUseCase
 import com.coinden.core.domain.usecase.draft.GetMovementTimelineUseCase
@@ -144,6 +145,7 @@ class AppContainer(
     val confirmReadyDrafts = ConfirmReadyDraftsUseCase(drafts, ledger)
     val movementHistory = GetMovementHistoryUseCase(drafts)
     val movementTimeline = GetMovementTimelineUseCase(drafts)
+    val captureStats = GetCaptureStatsUseCase(drafts)
 
     /** Un id global nuevo (UUID), por ejemplo para reintentar una corrección sin duplicarla. */
     fun newId(): String = ids.newId()

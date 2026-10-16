@@ -222,4 +222,8 @@
     <string name="evidence_next">Next</string>
     <string name="evidence_unavailable">This evidence could not be opened.</string>
     <string name="evidence_counter">%1$d of %2$d</string>
+    <string name="coach_say_wallet">Next time say the wallet and it will be ready without review.</string>
+    <string name="coach_say_amount">Next time say the amount.</string>
+    <string name="coach_example">For example: “%1$s”</string>
+    <string name="inbox_week">This week %1$d of %2$d captures were ready without review.</string>
 </resources>

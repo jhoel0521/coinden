@@ -3,10 +3,13 @@ package com.coinden.core.domain.usecase.draft
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.category.CategoryOrigin
 import com.coinden.core.domain.model.category.CategoryRef
+import com.coinden.core.domain.model.draft.CaptureStats
 import com.coinden.core.domain.model.draft.Confidence
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.DraftError
+import com.coinden.core.domain.model.draft.DraftEvaluator
 import com.coinden.core.domain.model.draft.DraftEvent
+import com.coinden.core.domain.model.draft.DraftHeader
 import com.coinden.core.domain.model.draft.DraftInbox
 import com.coinden.core.domain.model.draft.DraftProjection
 import com.coinden.core.domain.model.draft.DraftResult
@@ -388,4 +391,34 @@ class ConfirmReadyDraftsUseCase(
             val category = note?.let { ctx.categorization?.suggest(draft.header.ownerId, it)?.category }
             confirm(id, category)
         }
+}
+
+/**
+ * Caso de Uso: el contador de la bandeja. Cuenta las capturas desde [sinceEpochMs] (sin las
+ * descartadas) y cuántas quedaron listas sin revisar: su primera interpretación ya era un borrador
+ * Listo de confianza ALTA.
+ */
+class GetCaptureStatsUseCase(
+    private val ctx: DraftContext,
+) {
+    suspend operator fun invoke(
+        ownerId: String,
+        sinceEpochMs: Long,
+    ): CaptureStats {
+        val directory = ctx.directory(ownerId)
+        var total = 0
+        var readyAlone = 0
+        for (draftId in ctx.drafts.draftIdsFor(ownerId)) {
+            val events = ctx.drafts.eventsFor(draftId)
+            val captured = events.filterIsInstance<DraftEvent.Captured>().firstOrNull() ?: continue
+            if (captured.occurredAtEpochMs < sinceEpochMs) continue
+            if (DraftProjection.project(events, directory) is Draft.Discarded) continue
+            total++
+            val header = DraftHeader(draftId, ownerId, captured.evidence, captured.occurredAtEpochMs)
+            val first = events.filterIsInstance<DraftEvent.Interpreted>().minByOrNull { it.occurredAtEpochMs }
+            val evaluated = first?.let { DraftEvaluator.evaluate(header, it.proposal, directory) }
+            if (evaluated is Draft.Ready && evaluated.confidence == Confidence.HIGH) readyAlone++
+        }
+        return CaptureStats(total, readyAlone)
+    }
 }

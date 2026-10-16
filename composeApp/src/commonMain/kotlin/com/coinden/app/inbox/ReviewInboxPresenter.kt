@@ -7,6 +7,7 @@ import com.coinden.app.capture.DraftCards
 import com.coinden.app.capture.FormMode
 import com.coinden.app.capture.MovementKindView
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.draft.CaptureStats
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.DraftError
 import com.coinden.core.domain.model.draft.DraftResult
@@ -51,6 +52,8 @@ data class InboxState(
     val summary: BatchSummary? = null,
     /** Por qué no se confirmó cada borrador (id -> motivo). */
     val problems: Map<String, ConfirmProblem> = emptyMap(),
+    /** Capturas de los últimos 7 días y cuántas quedaron listas sin revisar (null si no hubo). */
+    val week: CaptureStats? = null,
 ) {
     val isEmpty: Boolean get() = loaded && review.isEmpty() && ready.isEmpty()
 }
@@ -84,6 +87,7 @@ class ReviewInboxPresenter(
                 InboxItem(card, opensForm = opensForm(card, draft), correctionTarget = target, targetNote = targetNote)
             }
         readyDrafts = inbox.pending.filter { it.id in batch }
+        val week = container.captureStats(owner, container.clock.nowEpochMs() - WEEK_MS).takeIf { it.total > 0 }
         mutableState.update { s ->
             s.copy(
                 loaded = true,
@@ -91,6 +95,7 @@ class ReviewInboxPresenter(
                 review = items.filterNot { it.card.draftId in batch },
                 ready = items.filter { it.card.draftId in batch },
                 problems = s.problems.filterKeys { id -> inbox.pending.any { it.id == id } },
+                week = week,
             )
         }
     }
@@ -177,6 +182,10 @@ class ReviewInboxPresenter(
             MovementKindView.TRANSFER, MovementKindView.ADJUSTMENT -> false
             else -> draft !is Draft.Confirmed
         }
+
+    private companion object {
+        const val WEEK_MS = 7 * 86_400_000L
+    }
 
     private fun problemOf(error: DraftError): ConfirmProblem =
         when (error) {
