@@ -58,13 +58,35 @@ class AndroidPdfReaderTest {
     @Test
     fun un_pdf_escaneado_devuelve_sus_paginas_y_tesseract_las_lee() =
         runBlocking {
+            val before = storedFiles()
             val reading = reader.read(scannedPdf(), maxPages = 5)
             assertTrue(reading is PdfReading.Pages)
+            // Las páginas se dibujan en memoria: no aparece ninguna copia del PDF en el teléfono.
+            assertEquals(before, storedFiles())
             val pages = (reading as PdfReading.Pages).images
             assertEquals(1, pages.size)
             val text = TesseractImageReader(context) { "es" }.read(pages.single()).orEmpty()
             assertTrue(text, text.contains("400000001"))
         }
+
+    private fun storedFiles(): Set<String> =
+        listOf(context.cacheDir, context.filesDir)
+            .flatMap { dir ->
+                dir
+                    .walkTopDown()
+                    .filter { it.isFile }
+                    .map { it.path }
+                    .toList()
+            }.toSet()
+
+    @Test
+    fun al_iniciar_se_borran_los_pdf_temporales_de_una_version_anterior() {
+        val leftover = java.io.File(context.cacheDir, "pdf-anterior.pdf").apply { writeBytes(textPdf()) }
+
+        AndroidPdfReader.clearLeftovers(context)
+
+        assertTrue(!leftover.exists())
+    }
 
     @Test
     fun un_archivo_que_no_es_pdf_no_se_puede_leer() =

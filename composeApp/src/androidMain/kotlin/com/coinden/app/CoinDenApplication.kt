@@ -4,6 +4,7 @@ import android.app.Application
 import com.coinden.app.capture.EncryptedAttachmentStore
 import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.i18n.AppLanguage
+import com.coinden.app.perception.AndroidPdfReader
 import com.coinden.app.perception.AppPerception
 import com.coinden.core.data.local.AndroidDatabase
 import com.coinden.core.data.local.LocalCategorizationRepository
@@ -83,6 +84,8 @@ class CoinDenApplication : Application() {
                 initialLanguage = savedLanguage ?: AppLanguage.proposedFor(device.language),
                 attachments = EncryptedAttachmentStore(filesDir.resolve("attachments")),
             )
+        // Una versión anterior podía dejar un PDF descifrado en la caché si se cortaba la lectura.
+        AndroidPdfReader.clearLeftovers(this)
         perception = AppPerception(this, container)
         // Lo que quedó pendiente (capturas viejas, cortes, reinicios) se procesa solo.
         runBlocking { perception.queue.kick() }

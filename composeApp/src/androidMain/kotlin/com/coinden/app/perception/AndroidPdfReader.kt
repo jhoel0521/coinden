@@ -2,21 +2,18 @@ package com.coinden.app.perception
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
-import android.graphics.pdf.PdfRenderer
-import android.os.ParcelFileDescriptor
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.rendering.ImageType
+import com.tom_roush.pdfbox.rendering.PDFRenderer
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.util.UUID
 
 /**
  * Lee un PDF en el teléfono: el texto que ya trae (PdfBox, Apache 2.0) o, si es escaneado, sus
- * páginas dibujadas como imágenes para el lector de fotos. El archivo temporal se borra al terminar.
+ * páginas dibujadas en memoria como imágenes para el lector de fotos. Nada descifrado se escribe en el teléfono.
  */
 class AndroidPdfReader(
     context: Context,
@@ -41,40 +38,36 @@ class AndroidPdfReader(
         }
     }
 
+    /** Dibuja las primeras páginas en memoria (pdfbox): nunca escribe el PDF descifrado en el teléfono. */
     private fun pagesOf(
         pdf: ByteArray,
         maxPages: Int,
     ): PdfReading {
-        val temp = File(appContext.cacheDir, "pdf-${UUID.randomUUID()}.pdf")
-        try {
-            temp.writeBytes(pdf)
-            ParcelFileDescriptor.open(temp, ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->
-                PdfRenderer(fd).use { renderer ->
-                    val images =
-                        (0 until minOf(renderer.pageCount, maxPages)).map { index ->
-                            renderer.openPage(index).use { page ->
-                                val scale = PAGE_WIDTH.toFloat() / page.width
-                                val bitmap = Bitmap.createBitmap(PAGE_WIDTH, (page.height * scale).toInt(), Bitmap.Config.ARGB_8888)
-                                bitmap.eraseColor(Color.WHITE)
-                                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                                ByteArrayOutputStream().use {
-                                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it)
-                                    bitmap.recycle()
-                                    it.toByteArray()
-                                }
-                            }
-                        }
-                    return if (images.isEmpty()) PdfReading.Unreadable else PdfReading.Pages(images)
+        PDFBoxResourceLoader.init(appContext)
+        return PDDocument.load(pdf).use { document ->
+            val renderer = PDFRenderer(document)
+            val images =
+                (0 until minOf(document.numberOfPages, maxPages)).map { index ->
+                    val width = document.getPage(index).mediaBox.width
+                    val bitmap = renderer.renderImage(index, PAGE_WIDTH / width, ImageType.RGB)
+                    ByteArrayOutputStream().use {
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it)
+                        bitmap.recycle()
+                        it.toByteArray()
+                    }
                 }
-            }
-        } finally {
-            temp.delete()
+            if (images.isEmpty()) PdfReading.Unreadable else PdfReading.Pages(images)
         }
     }
 
-    private companion object {
+    companion object {
         /** Menos letras y dígitos que esto: el PDF no trae texto útil (escaneado). */
-        const val MIN_USEFUL_CHARS = 20
-        const val PAGE_WIDTH = 2000
+        private const val MIN_USEFUL_CHARS = 20
+        private const val PAGE_WIDTH = 2000f
+
+        /** Borra las copias temporales que dejaba una versión anterior al leer un PDF escaneado. */
+        fun clearLeftovers(context: Context) {
+            context.cacheDir.listFiles { file -> file.name.startsWith("pdf-") && file.name.endsWith(".pdf") }?.forEach { it.delete() }
+        }
     }
 }
