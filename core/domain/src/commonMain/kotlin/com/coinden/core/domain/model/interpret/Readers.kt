@@ -297,14 +297,13 @@ object PhraseReader {
         used: Set<Int>,
         pack: LanguagePack,
     ): String? {
-        val prepositionIndex = words.indices.firstOrNull { it !in used && words[it].normalized in pack.notePrepositions }
-        val noteWords =
-            if (prepositionIndex != null) {
-                words.drop(prepositionIndex + 1).filterIndexed { i, _ -> (prepositionIndex + 1 + i) !in used }
-            } else {
-                words.filterIndexed { i, _ -> i !in used }
-            }
-        return noteWords.joinToString(" ") { it.original }.ifBlank { null }
+        val free = words.indices.filter { it !in used }
+        val prepositionIndex = free.firstOrNull { words[it].normalized in pack.notePrepositions }
+        // Lo que sigue a la preposición; si no queda nada (era el medio, la moneda o la billetera),
+        // las demás palabras de la frase sin preposiciones sueltas.
+        val afterPreposition = prepositionIndex?.let { p -> free.filter { it > p } }.orEmpty()
+        val noteIndices = afterPreposition.ifEmpty { free.filter { words[it].normalized !in pack.notePrepositions } }
+        return noteIndices.joinToString(" ") { words[it].original }.ifBlank { null }
     }
 
     /**

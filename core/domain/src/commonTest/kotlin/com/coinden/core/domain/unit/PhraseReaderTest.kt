@@ -479,4 +479,38 @@ class PhraseReaderTest {
     fun `texto sin monto no propone nada`() {
         assertEquals(emptyList(), read("hola que tal"))
     }
+
+    // --- Nota sin preposiciones sueltas ---
+
+    private fun noteOf(
+        text: String,
+        pack: LanguagePack = es,
+        locale: UserLocale = testLocale("es", "BO"),
+    ) = (read(text, pack, locale).single() as MovementProposal.Expense).note
+
+    @Test
+    fun `gaste 10 por power deja la nota power`() {
+        assertEquals("power", noteOf("gasté 10 por power"))
+    }
+
+    @Test
+    fun `gaste 10 bs por qr no trae nota`() {
+        assertEquals(null, noteOf("gaste 10 bs por qr"))
+    }
+
+    @Test
+    fun `almuerzo 45 por qr conserva la nota almuerzo`() {
+        assertEquals("almuerzo", noteOf("almuerzo 45 por qr"))
+    }
+
+    @Test
+    fun `portugues e ingles sin preposicion suelta`() {
+        assertEquals(null, noteOf("paguei 30 pelo pix", pt, testLocale("pt", "BR")))
+        assertEquals(null, noteOf("paid 12 by card", en, testLocale("en", "US")))
+    }
+
+    @Test
+    fun `las notas que ya funcionaban siguen igual`() {
+        assertEquals("trasmporte", noteOf("page 3 bs para trasmporte"))
+    }
 }
