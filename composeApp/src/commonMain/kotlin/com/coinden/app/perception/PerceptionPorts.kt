@@ -74,4 +74,6 @@ class PerceptionReaders(
     val pdfReader: PdfTextReader,
     val audioDecoder: AudioDecoder,
     val transcribers: suspend () -> List<AudioTranscriber>,
+    /** Descarga de la memoria los modelos cargados (al vaciarse la cola o tras un rato sin uso). */
+    val release: suspend () -> Unit = {},
 )

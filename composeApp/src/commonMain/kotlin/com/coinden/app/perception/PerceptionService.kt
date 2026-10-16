@@ -51,6 +51,9 @@ class PerceptionService(
         return interpret(draftId, text, engine)
     }
 
+    /** Si hay con qué transcribir audios (modelo de voz descargado o reconocimiento local). */
+    suspend fun canTranscribe(): Boolean = readers.transcribers().isNotEmpty()
+
     /** Borradores Capturados con archivo que todavía no se leyeron. */
     suspend fun pendingDraftIds(): List<String> =
         container

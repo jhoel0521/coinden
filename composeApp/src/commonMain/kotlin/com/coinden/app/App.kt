@@ -97,7 +97,11 @@ private fun AppNavHost(
     val settings = container.regional.settings()
     val locale = settings.locale
     // La captura vive con la navegación: su resultado sigue visible al volver de la cámara o del formulario.
-    val capture = remember { CapturePresenter(container, platform.dictation, PerceptionService(container, platform.perceptionReaders)) }
+    val capture =
+        remember {
+            val service = PerceptionService(container, platform.perceptionReaders)
+            CapturePresenter(container, platform.dictation, platform.processingQueue, service)
+        }
     val scope = rememberCoroutineScope()
     val pendingShare by shared.collectAsState()
     NavHost(navController = nav, startDestination = start) {

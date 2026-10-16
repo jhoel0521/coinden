@@ -36,6 +36,7 @@ kotlin {
             implementation(libs.tesseract4android)
             implementation(libs.mlkit.text.recognition)
             implementation(libs.pdfbox.android)
+            implementation(libs.androidx.work.runtime)
             implementation(project(":core:data-local"))
         }
         commonTest.dependencies {
@@ -46,6 +47,7 @@ kotlin {
             dependencies {
                 implementation(libs.androidx.test.runner)
                 implementation(libs.androidx.test.ext.junit)
+                implementation(libs.androidx.work.testing)
             }
         }
     }

@@ -52,17 +52,11 @@ import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.camera_close
 import coinden.composeapp.generated.resources.camera_gallery
 import coinden.composeapp.generated.resources.camera_shutter
-import com.coinden.app.perception.AndroidAudioDecoder
-import com.coinden.app.perception.AndroidPdfReader
+import com.coinden.app.perception.AppPerception
 import com.coinden.app.perception.DownloadResult
-import com.coinden.app.perception.MlKitImageReader
-import com.coinden.app.perception.PerceptionReaders
-import com.coinden.app.perception.SystemSpeechTranscriber
-import com.coinden.app.perception.TesseractImageReader
+import com.coinden.app.perception.ProcessingQueue
 import com.coinden.app.perception.VoiceModel
 import com.coinden.app.perception.VoiceModelManager
-import com.coinden.app.perception.VoiceModelStore
-import com.coinden.app.perception.WhisperTranscriber
 import com.coinden.app.theme.CoinDenIcon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -75,50 +69,31 @@ import kotlin.math.roundToInt
 /** Dictado local, permisos y cámara (CameraX) en Android. */
 class AndroidCapturePlatform(
     context: Context,
-    languageCode: () -> String,
+    private val perception: AppPerception,
 ) : CapturePlatform {
     override val dictation: DictationPort = OnDeviceDictation(context.applicationContext)
 
-    private val modelStore = VoiceModelStore(context)
-    private val appContext = context.applicationContext
+    override val perceptionReaders get() = perception.readers
 
-    // Un solo cliente de Google, creado la primera vez que se usa (solo con consentimiento).
-    private val mlKit by lazy { MlKitImageReader() }
-
-    // Un transcriptor por modelo: el modelo cargado se reutiliza entre audios.
-    private val whispers = mutableMapOf<String, WhisperTranscriber>()
-
-    override val perceptionReaders =
-        PerceptionReaders(
-            freeImageReader = TesseractImageReader(context, languageCode),
-            googleImageReader = { mlKit },
-            pdfReader = AndroidPdfReader(context),
-            audioDecoder = AndroidAudioDecoder(),
-            transcribers = {
-                // El modelo descargado más preciso y, de respaldo, el reconocimiento local del sistema.
-                val whisper =
-                    modelStore.installed().firstOrNull()?.let { model ->
-                        whispers.getOrPut(model.id) { WhisperTranscriber(modelStore.fileOf(model)) }
-                    }
-                listOfNotNull(whisper, SystemSpeechTranscriber(appContext).takeIf { SystemSpeechTranscriber.isAvailable(appContext) })
-            },
-        )
+    override val processingQueue: ProcessingQueue get() = perception.queue
 
     override val voiceModels =
         object : VoiceModelManager {
-            override fun deviceProfile() = modelStore.deviceProfile()
+            override fun deviceProfile() = perception.modelStore.deviceProfile()
 
-            override fun installed() = modelStore.installed()
+            override fun installed() = perception.modelStore.installed()
 
             override suspend fun download(
                 model: VoiceModel,
                 onProgress: (Long, Long) -> Unit,
-            ) = modelStore.download(model, onProgress) is DownloadResult.Ready
-
-            override fun delete(model: VoiceModel) {
-                whispers.remove(model.id)
-                modelStore.delete(model)
+            ): Boolean {
+                val ok = perception.modelStore.download(model, onProgress) is DownloadResult.Ready
+                // Los audios que esperaban un modelo se transcriben solos.
+                if (ok) perception.queue.kick()
+                return ok
             }
+
+            override fun delete(model: VoiceModel) = perception.forgetVoiceModel(model)
         }
 
     @Composable

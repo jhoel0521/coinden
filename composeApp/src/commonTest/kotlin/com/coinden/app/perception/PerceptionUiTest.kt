@@ -97,7 +97,9 @@ class PerceptionUiTest {
     private suspend fun carlos(readers: PerceptionReaders = readers()): Pair<AppContainer, CapturePresenter> {
         val container = testContainer()
         seedCarlos(container)
-        return container to CapturePresenter(container, Silent, PerceptionService(container, readers))
+        val service = PerceptionService(container, readers)
+        val queue = InlineProcessingQueue(QueueRunner(service, readers, InMemoryFailureLog()))
+        return container to CapturePresenter(container, Silent, queue, service)
     }
 
     @Test
@@ -128,34 +130,6 @@ class PerceptionUiTest {
             val result = assertNotNull(presenter.state.value.result)
             assertEquals(DraftStatusView.CAPTURED, result.cards.single().status)
             assertEquals(setOf(result.cards.single().draftId), result.voiceModelNeeded)
-        }
-
-    @Test
-    fun `leer capturas guardadas muestra lo leido`() =
-        runTest {
-            val (container, presenter) = carlos(readers(imageText = null))
-            presenter.photo(byteArrayOf(1), "image/jpeg")
-            assertEquals(
-                DraftStatusView.CAPTURED,
-                presenter.state.value.result!!
-                    .cards
-                    .single()
-                    .status,
-            )
-
-            // Llega un lector que sí entiende (por ejemplo, después de aceptar el de Google).
-            val later = CapturePresenter(container, Silent, PerceptionService(container, readers(imageText = receipt)))
-            assertEquals(1, later.pendingReads())
-            later.readSaved()
-
-            assertEquals(
-                "400000001",
-                later.state.value.result!!
-                    .cards
-                    .single()
-                    .reference,
-            )
-            assertEquals(0, later.pendingReads())
         }
 
     @Test

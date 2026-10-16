@@ -33,7 +33,7 @@ Ver proposal.md. Hoy `CapturePresenter` lee la evidencia dentro de su propia cor
 ### D3. Lectores a nivel de aplicación y liberación
 - Los lectores pasan de `AndroidCapturePlatform` (por actividad) a `CoinDenApplication` (por proceso), para que el trabajador y la UI compartan los mismos.
 - `PerceptionReaders` gana `release: suspend () -> Unit`: cierra los `WhisperTranscriber` cargados (`close()` libera el contexto nativo) y el cliente de ML Kit, que se vuelve a crear al próximo uso. Tesseract ya libera su motor en cada lectura.
-- Con la app abierta: después de cada lectura se programa `release()` a los 60 s; una lectura nueva lo cancela.
+- Los modelos solo los carga la cola, y la cola llama a `release()` al terminar cada pasada: con la app abierta o cerrada, no quedan cargados entre capturas, así que no hace falta un temporizador aparte (cubre "tras un minuto sin usarlos").
 
 ### D4. Fallas por dispositivo
 `FailureLog` guarda intentos por borrador en un archivo privado (`files/queue-failures.json`). Es un dato operativo de este dispositivo, no un evento del dominio: otro dispositivo puede intentar leer el mismo borrador. Un borrador que se lee bien o deja de estar Capturado se quita del registro.

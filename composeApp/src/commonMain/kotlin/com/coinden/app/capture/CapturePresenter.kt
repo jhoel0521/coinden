@@ -1,9 +1,10 @@
 package com.coinden.app.capture
 
 import com.coinden.app.AppContainer
-import com.coinden.app.perception.PerceptionOutcome
 import com.coinden.app.perception.PerceptionService
+import com.coinden.app.perception.ProcessingQueue
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.DraftError
 import com.coinden.core.domain.model.draft.DraftResult
 import com.coinden.core.domain.model.draft.Evidence
@@ -70,10 +71,13 @@ data class CaptureState(
 class CapturePresenter(
     private val container: AppContainer,
     private val dictation: DictationPort,
-    /** Lectura de fotos, PDF y audios; sin ella, quedan Capturados como antes. */
+    /** Cola que lee fotos, PDF y audios en segundo plano; sin ella, quedan Capturados. */
+    private val queue: ProcessingQueue? = null,
+    /** Para saber si un audio puede transcribirse (si no, se ofrece descargar un modelo de voz). */
     private val perception: PerceptionService? = null,
 ) {
     private val cards = DraftCards(container)
+    private val quick = queue?.let { QuickCapture(container, it) }
     private val mutableState = MutableStateFlow(CaptureState())
     val state: StateFlow<CaptureState> = mutableState.asStateFlow()
 
@@ -163,51 +167,48 @@ class CapturePresenter(
         bytes: ByteArray,
         mimeType: String,
     ) {
-        val source = if (mimeType.startsWith("audio/")) EvidenceSource.VOICE else EvidenceSource.PHOTO
-        // La huella se calcula sobre el archivo original, antes de cifrarlo.
-        val fingerprint = sha256Hex(bytes)
-        val ref = container.attachments.save(bytes, mimeType)
-        capture(Evidence(source, attachmentRef = ref, fingerprint = fingerprint))
-        // La captura ya se ve; la lectura llega después y actualiza la tarjeta.
-        state.value.result
-            ?.cards
-            ?.firstOrNull()
-            ?.let { read(it.draftId) }
-    }
-
-    /** Cuántos borradores Capturados con archivo esperan su lectura. */
-    suspend fun pendingReads(): Int = perception?.pendingDraftIds()?.size ?: 0
-
-    /** Lee los Capturados guardados antes de la lectura y muestra el resultado. */
-    suspend fun readSaved() {
-        val perception = perception ?: return
-        val ids = perception.pendingDraftIds()
-        if (ids.isEmpty()) return
-        val captured = cards.of(ids.mapNotNull { container.drafts.load(it) })
-        mutableState.update { it.copy(result = CaptureResult(captured)) }
-        ids.forEach { read(it) }
-    }
-
-    private suspend fun read(draftId: String) {
-        val perception = perception ?: return
-        mutableState.update { it.copy(reading = it.reading + draftId) }
-        val outcome =
-            try {
-                perception.perceive(draftId)
-            } finally {
-                mutableState.update { it.copy(reading = it.reading - draftId) }
+        val draft =
+            quick?.file(bytes, mimeType) ?: run {
+                // Sin cola: se guarda igual y queda Capturado.
+                val source = if (mimeType.startsWith("audio/")) EvidenceSource.VOICE else EvidenceSource.PHOTO
+                val ref = container.attachments.save(bytes, mimeType)
+                container.captureDraft(container.ownerId, Evidence(source, attachmentRef = ref, fingerprint = sha256Hex(bytes))).single()
             }
+        // La captura ya está guardada: se muestra y la cola la lee cuando pueda.
+        mutableState.update { it.copy(result = CaptureResult(cards.of(listOf(draft))), reading = it.reading + draft.id) }
+        refresh(draft.id)
+    }
+
+    /**
+     * Escucha la cola mientras la pantalla está abierta: cada borrador procesado actualiza su
+     * tarjeta. La pantalla la llama una vez; termina al cerrarse.
+     */
+    suspend fun followProcessing() {
+        queue?.processed?.collect { draftId ->
+            mutableState.update { it.copy(reading = it.reading - draftId) }
+            refresh(draftId)
+        }
+    }
+
+    /** Vuelve a mostrar el borrador como está ahora; si es un audio sin modelo de voz, ofrece descargarlo. */
+    private suspend fun refresh(draftId: String) {
         val result = state.value.result ?: return
-        val updated =
-            when (outcome) {
-                is PerceptionOutcome.Read -> {
-                    val fresh = cards.of(outcome.drafts)
-                    result.copy(cards = result.cards.flatMap { if (it.draftId == draftId) fresh else listOf(it) })
-                }
-                PerceptionOutcome.NeedsVoiceModel -> result.copy(voiceModelNeeded = result.voiceModelNeeded + draftId)
-                else -> result
-            }
-        mutableState.update { it.copy(result = updated) }
+        if (result.cards.none { it.draftId == draftId }) return
+        val draft = container.drafts.load(draftId) ?: return
+        val pending = draft is Draft.Captured && draft.header.perceivedText == null && draft.header.evidence.attachmentRef != null
+        val needsModel = pending && draft.header.evidence.source == EvidenceSource.VOICE && perception?.canTranscribe() == false
+        val fresh = cards.of(listOf(draft)).single()
+        mutableState.update { state ->
+            val current = state.result ?: return@update state
+            state.copy(
+                result =
+                    current.copy(
+                        cards = current.cards.map { if (it.draftId == draftId) fresh else it },
+                        voiceModelNeeded = if (needsModel) current.voiceModelNeeded + draftId else current.voiceModelNeeded - draftId,
+                    ),
+                reading = if (pending && !needsModel) state.reading else state.reading - draftId,
+            )
+        }
     }
 
     private suspend fun capture(evidence: Evidence) {

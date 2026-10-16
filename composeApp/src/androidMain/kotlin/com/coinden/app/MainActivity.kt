@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         val app = application as CoinDenApplication
-        val platform = AndroidCapturePlatform(this) { app.container.languageCode }
+        val platform = AndroidCapturePlatform(this, app.perception)
         // Un "compartir" se procesa una vez: no se repite al rotar la pantalla.
         if (savedInstanceState == null) receive(intent)
         setContent {

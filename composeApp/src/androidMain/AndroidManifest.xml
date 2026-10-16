@@ -32,6 +32,15 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <!-- Compartir a CoinDen sin abrir la app: guarda, avisa y devuelve a la otra app. -->
+        <activity
+            android:name=".ShareActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <!-- Compartir a CoinDen: textos, imágenes, PDF y audios (notas de voz) -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

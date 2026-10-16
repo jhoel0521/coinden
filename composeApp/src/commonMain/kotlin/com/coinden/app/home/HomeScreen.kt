@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,10 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -42,7 +38,6 @@ import coinden.composeapp.generated.resources.home_language
 import coinden.composeapp.generated.resources.home_pending
 import coinden.composeapp.generated.resources.home_pending_note
 import coinden.composeapp.generated.resources.home_privacy
-import coinden.composeapp.generated.resources.home_read_saved
 import coinden.composeapp.generated.resources.home_total
 import coinden.composeapp.generated.resources.home_unconverted
 import coinden.composeapp.generated.resources.home_wallets
@@ -86,9 +81,8 @@ fun HomeScreen(
     val scheme = MaterialTheme.colorScheme
     // Cada captura o confirmación cambia el resultado: Inicio se recarga (pendientes y saldos).
     LaunchedEffect(presenter, captureState.result) { presenter.load() }
-    // Capturas guardadas antes de la lectura (o que esperan un modelo): se ofrecen leer.
-    var pendingReads by remember { mutableStateOf(0) }
-    LaunchedEffect(capture, captureState.result) { pendingReads = capture.pendingReads() }
+    // Mientras Inicio está abierto, lo que la cola procesa actualiza la tarjeta del resultado.
+    LaunchedEffect(capture) { capture.followProcessing() }
 
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
         LazyColumn(
@@ -103,14 +97,6 @@ fun HomeScreen(
                         Icon(CoinDenIcon.SHIELD.vector, contentDescription = null, modifier = Modifier.size(18.dp))
                         Text(stringResource(Res.string.home_privacy), modifier = Modifier.padding(start = 6.dp))
                     }
-                }
-            }
-            if (pendingReads > 0) {
-                item {
-                    FilledTonalButton(
-                        onClick = { scope.launch { capture.readSaved() } },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    ) { Text(stringResource(Res.string.home_read_saved, pendingReads)) }
                 }
             }
             item {

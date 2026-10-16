@@ -160,7 +160,6 @@
     <string name="privacy_models">Modelos de voz</string>
     <string name="privacy_continue">Entendido, continuar</string>
     <string name="home_privacy">Privacidad</string>
-    <string name="home_read_saved">Leer capturas guardadas (%1$d)</string>
     <string name="result_reading">Leyendo en el teléfono…</string>
     <string name="result_voice_model">Para transcribir este audio, descarga un modelo de voz.</string>
     <string name="result_voice_model_button">Ver modelos de voz</string>
@@ -179,6 +178,8 @@
     <string name="models_size">%1$s · %2$d MB</string>
     <string name="evidence_unread">Todavía sin leer.</string>
     <string name="evidence_read">Leído en el teléfono:</string>
+    <string name="share_saved">Guardado en CoinDen</string>
+    <string name="share_not_saved">CoinDen no pudo guardar lo compartido</string>
     <string name="camera_shutter">Tomar foto</string>
     <string name="camera_gallery">Galería</string>
     <string name="camera_close">Cerrar</string>

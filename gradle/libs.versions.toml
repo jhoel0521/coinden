@@ -16,6 +16,7 @@ camerax = "1.6.2"
 tesseract4android = "4.9.0"
 mlkit-text-recognition = "16.0.1"
 pdfbox-android = "2.0.27.0"
+work = "2.12.0"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
@@ -29,6 +30,8 @@ androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "
 tesseract4android = { module = "cz.adaptech.tesseract4android:tesseract4android", version.ref = "tesseract4android" }
 mlkit-text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "mlkit-text-recognition" }
 pdfbox-android = { module = "com.tom-roush:pdfbox-android", version.ref = "pdfbox-android" }
+androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "work" }
 
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-dialect-sqlite325 = { module = "app.cash.sqldelight:sqlite-3-25-dialect", version.ref = "sqldelight" }
