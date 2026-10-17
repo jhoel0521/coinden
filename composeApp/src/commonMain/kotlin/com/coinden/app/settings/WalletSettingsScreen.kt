@@ -2,28 +2,15 @@ package com.coinden.app.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -73,6 +61,23 @@ import coinden.composeapp.generated.resources.wallet_opening
 import com.coinden.app.AppContainer
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.onboarding.label
+import com.coinden.app.theme.CoinDenIcon
+import com.coinden.app.ui.components.ActionRole
+import com.coinden.app.ui.components.BadgeTone
+import com.coinden.app.ui.components.CardTone
+import com.coinden.app.ui.components.CdAction
+import com.coinden.app.ui.components.CdActionSpec
+import com.coinden.app.ui.components.CdActions
+import com.coinden.app.ui.components.CdBadge
+import com.coinden.app.ui.components.CdCard
+import com.coinden.app.ui.components.CdChoice
+import com.coinden.app.ui.components.CdChoiceGrid
+import com.coinden.app.ui.components.CdDialog
+import com.coinden.app.ui.components.CdField
+import com.coinden.app.ui.components.CdNotice
+import com.coinden.app.ui.components.CdOption
+import com.coinden.app.ui.components.CdTopBar
+import com.coinden.app.ui.components.NoticeKind
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.currentRate
 import com.coinden.core.domain.model.interpret.UserLocale
@@ -94,83 +99,105 @@ fun WalletSettingsScreen(
     var code by remember { mutableStateOf("") }
     LaunchedEffect(presenter) { presenter.load() }
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
-        TextButton(onClick = onBack, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(Res.string.back)) }
-        if (state.busy) Text(stringResource(Res.string.settings_loading), modifier = Modifier.padding(horizontal = 16.dp))
-        state.error?.let { error ->
-            Column(Modifier.padding(horizontal = 16.dp)) {
-                Text(settingsErrorText(error), color = MaterialTheme.colorScheme.error)
-                if (error == SettingsError.STORAGE) {
-                    TextButton(
-                        onClick = { scope.launch { presenter.load() } },
-                        enabled = !state.busy,
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    ) { Text(stringResource(Res.string.settings_retry)) }
+        CdTopBar(stringResource(Res.string.settings_title), stringResource(Res.string.back), onBack)
+        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            if (state.busy) item { CdNotice(NoticeKind.Info, stringResource(Res.string.settings_loading)) }
+            state.error?.let { error ->
+                item {
+                    CdNotice(
+                        NoticeKind.Error,
+                        settingsErrorText(error),
+                        action =
+                            if (error == SettingsError.STORAGE) {
+                                CdActionSpec(
+                                    stringResource(Res.string.settings_retry),
+                                    { scope.launch { presenter.load() } },
+                                    enabled = !state.busy,
+                                )
+                            } else {
+                                null
+                            },
+                    )
                 }
             }
-        }
-        if (state.saved) Text(stringResource(Res.string.settings_saved), modifier = Modifier.padding(horizontal = 16.dp))
-        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            item { Text(stringResource(Res.string.settings_title), style = MaterialTheme.typography.headlineSmall) }
+            if (state.saved) item { CdNotice(NoticeKind.Success, stringResource(Res.string.settings_saved)) }
             state.wallets.forEach { row ->
                 item(key = row.wallet.id) {
-                    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-                        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(row.wallet.name, style = MaterialTheme.typography.titleMedium)
-                            Text(stringResource(row.wallet.type.label()) + " · " + MoneyFormatter.format(row.balance, locale))
-                            if (!row.wallet.isActive) {
-                                Text(stringResource(Res.string.settings_archived))
-                                TextButton(onClick = {
-                                    scope.launch { presenter.reactivate(row.wallet.id) }
-                                }, enabled = !state.busy, modifier = Modifier.heightIn(min = 48.dp)) {
-                                    Text(stringResource(Res.string.settings_reactivate))
-                                }
-                            } else {
-                                if (row.wallet.id == state.defaultWalletId) {
-                                    Text(stringResource(Res.string.home_default))
-                                } else {
-                                    TextButton(onClick = {
-                                        scope.launch { presenter.makeDefault(row.wallet.id) }
-                                    }, enabled = !state.busy, modifier = Modifier.heightIn(min = 48.dp)) {
-                                        Text(stringResource(Res.string.settings_default))
-                                    }
-                                }
-                                TextButton(
-                                    onClick = { archiveId = row.wallet.id },
-                                    enabled = !state.busy,
-                                    modifier = Modifier.heightIn(min = 48.dp),
-                                ) {
-                                    Text(stringResource(Res.string.settings_archive, row.wallet.name))
-                                }
+                    CdCard {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(row.wallet.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            when {
+                                !row.wallet.isActive -> CdBadge(stringResource(Res.string.settings_archived), BadgeTone.Neutral)
+                                row.wallet.id == state.defaultWalletId ->
+                                    CdBadge(
+                                        stringResource(Res.string.home_default),
+                                        BadgeTone.Success,
+                                    )
                             }
                         }
+                        Text(stringResource(row.wallet.type.label()) + " · " + MoneyFormatter.format(row.balance, locale))
+                        val actions =
+                            if (!row.wallet.isActive) {
+                                listOf(
+                                    CdActionSpec(
+                                        stringResource(Res.string.settings_reactivate),
+                                        { scope.launch { presenter.reactivate(row.wallet.id) } },
+                                        enabled = !state.busy,
+                                    ),
+                                )
+                            } else {
+                                listOfNotNull(
+                                    if (row.wallet.id != state.defaultWalletId) {
+                                        CdActionSpec(
+                                            stringResource(Res.string.settings_default),
+                                            { scope.launch { presenter.makeDefault(row.wallet.id) } },
+                                            enabled = !state.busy,
+                                        )
+                                    } else {
+                                        null
+                                    },
+                                    CdActionSpec(
+                                        stringResource(Res.string.settings_archive, row.wallet.name),
+                                        { archiveId = row.wallet.id },
+                                        ActionRole.Danger,
+                                        enabled = !state.busy,
+                                    ),
+                                )
+                            }
+                        CdActions(actions)
                     }
                 }
             }
             if (state.loaded) {
                 item {
-                    OutlinedButton(
-                        onClick = { showWallet = !showWallet },
+                    CdAction(
+                        stringResource(Res.string.settings_add_wallet),
+                        { showWallet = !showWallet },
+                        role = ActionRole.Tertiary,
                         enabled = !state.busy,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    ) {
-                        Text(stringResource(Res.string.settings_add_wallet))
-                    }
+                        icon = CoinDenIcon.PLUS.vector,
+                    )
                 }
                 if (showWallet) item { NewWalletForm(presenter, state, onAdded = { showWallet = false }) }
-                item { Text(stringResource(Res.string.rates_title), style = MaterialTheme.typography.titleLarge) }
-                item { Text(stringResource(Res.string.rates_note)) }
                 item {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(code, {
-                            code = it
-                        }, enabled = !state.busy, singleLine = true, label = {
-                            Text(stringResource(Res.string.settings_currency))
-                        }, modifier = Modifier.fillMaxWidth())
-                        OutlinedButton(onClick = {
-                            scope.launch { if (presenter.addCurrency(code)) code = "" }
-                        }, enabled = !state.busy, modifier = Modifier.heightIn(min = 48.dp)) {
-                            Text(stringResource(Res.string.settings_currency_add))
-                        }
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(stringResource(Res.string.rates_title), style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(Res.string.rates_note), style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                item {
+                    CdCard(tone = CardTone.Raised) {
+                        CdField(code, { code = it }, label = stringResource(Res.string.settings_currency), enabled = !state.busy)
+                        CdActions(
+                            listOf(
+                                CdActionSpec(
+                                    stringResource(Res.string.settings_currency_add),
+                                    { scope.launch { if (presenter.addCurrency(code)) code = "" } },
+                                    enabled = !state.busy && code.isNotBlank(),
+                                    icon = CoinDenIcon.PLUS.vector,
+                                ),
+                            ),
+                        )
                     }
                 }
                 state.currencies.filter { it.code != state.profile?.localCurrency?.code }.forEach { currency ->
@@ -180,22 +207,25 @@ fun WalletSettingsScreen(
         }
     }
     archiveId?.let { id ->
-        AlertDialog(
-            onDismissRequest = { archiveId = null },
-            title = { Text(stringResource(Res.string.settings_archive_title)) },
-            text = { Text(stringResource(Res.string.settings_archive_note)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    archiveId = null
-                    scope.launch { presenter.archive(id) }
-                }, enabled = !state.busy) { Text(stringResource(Res.string.settings_archive_action)) }
-            },
-            dismissButton = { TextButton(onClick = { archiveId = null }) { Text(stringResource(Res.string.dialog_cancel)) } },
+        CdDialog(
+            title = stringResource(Res.string.settings_archive_title),
+            text = stringResource(Res.string.settings_archive_note),
+            onDismiss = { archiveId = null },
+            confirm =
+                CdActionSpec(
+                    stringResource(Res.string.settings_archive_action),
+                    {
+                        archiveId = null
+                        scope.launch { presenter.archive(id) }
+                    },
+                    ActionRole.Danger,
+                    enabled = !state.busy,
+                ),
+            dismiss = CdActionSpec(stringResource(Res.string.dialog_cancel), { archiveId = null }),
         )
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun NewWalletForm(
     presenter: WalletSettingsPresenter,
@@ -207,38 +237,35 @@ private fun NewWalletForm(
     var currency by remember { mutableStateOf(state.profile!!.localCurrency.code) }
     var opening by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        OutlinedTextField(name, {
-            name = it
-        }, enabled = !state.busy, label = { Text(stringResource(Res.string.wallet_name)) }, modifier = Modifier.fillMaxWidth())
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            WalletType.entries.forEach { choice ->
-                FilterChip(selected = type == choice, onClick = {
-                    type = choice
-                }, enabled = !state.busy, label = { Text(stringResource(choice.label())) }, modifier = Modifier.heightIn(min = 48.dp))
-            }
-        }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            state.currencies.forEach { choice ->
-                FilterChip(selected = currency == choice.code, onClick = {
-                    currency = choice.code
-                }, enabled = !state.busy, label = { Text(choice.code) }, modifier = Modifier.heightIn(min = 48.dp))
-            }
-        }
-        OutlinedTextField(opening, {
-            opening = it
-        }, enabled = !state.busy, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), label = {
-            Text(
-                stringResource(Res.string.wallet_opening) + " (" + currency + ")",
+    CdCard(tone = CardTone.Raised) {
+        CdField(name, { name = it }, label = stringResource(Res.string.wallet_name), enabled = !state.busy)
+        CdChoiceGrid(WalletType.entries.map { CdOption(it, stringResource(it.label())) }, selected = type, onSelect = { type = it })
+        if (state.currencies.size > 1) {
+            CdChoice(
+                state.currencies.map { CdOption(it.code, it.code) },
+                selected = currency,
+                onSelect = { currency = it },
+                enabled = !state.busy,
             )
-        }, modifier = Modifier.fillMaxWidth())
-        Button(onClick = {
-            scope.launch {
-                if (presenter.addWallet(name, type, currency, opening)) onAdded()
-            }
-        }, enabled = !state.busy, modifier = Modifier.heightIn(min = 48.dp)) {
-            Text(stringResource(Res.string.wallet_add))
         }
+        CdField(
+            opening,
+            { opening = it },
+            label = stringResource(Res.string.wallet_opening) + " (" + currency + ")",
+            suffix = currency,
+            keyboardType = KeyboardType.Decimal,
+            enabled = !state.busy,
+        )
+        CdActions(
+            listOf(
+                CdActionSpec(
+                    stringResource(Res.string.wallet_add),
+                    { scope.launch { if (presenter.addWallet(name, type, currency, opening)) onAdded() } },
+                    enabled = !state.busy,
+                    icon = CoinDenIcon.PLUS.vector,
+                ),
+            ),
+        )
     }
 }
 
@@ -254,7 +281,7 @@ private fun ReferenceRateForm(
     val reference = profile.referenceRateFor(currency)
     var text by remember(currency.code, reference) { mutableStateOf("") }
     val scope = rememberCoroutineScope()
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    CdCard {
         Text(
             currency.name ?: container.currencyNames.name(currency.code, container.languageCode) ?: currency.code,
             style = MaterialTheme.typography.titleMedium,
@@ -271,27 +298,29 @@ private fun ReferenceRateForm(
                 },
             )
         }
-        OutlinedTextField(text, {
-            text = it
-        }, enabled = !state.busy, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), label = {
-            Text(stringResource(Res.string.rate_label, currency.code, profile.localCurrency.code))
-        }, modifier = Modifier.fillMaxWidth())
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = {
-                scope.launch {
-                    presenter.saveRate(currency.code, text)
-                }
-            }, enabled = !state.busy && text.isNotBlank(), modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                Text(stringResource(Res.string.settings_save))
-            }
-            OutlinedButton(onClick = {
-                scope.launch {
-                    presenter.removeRate(currency.code)
-                }
-            }, enabled = !state.busy && reference != null, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                Text(stringResource(Res.string.settings_rate_remove))
-            }
-        }
+        CdField(
+            text,
+            { text = it },
+            label = stringResource(Res.string.rate_label, currency.code, profile.localCurrency.code),
+            keyboardType = KeyboardType.Decimal,
+            enabled = !state.busy,
+        )
+        CdActions(
+            listOf(
+                CdActionSpec(
+                    stringResource(Res.string.settings_rate_remove),
+                    { scope.launch { presenter.removeRate(currency.code) } },
+                    ActionRole.Danger,
+                    enabled = !state.busy && reference != null,
+                ),
+                CdActionSpec(
+                    stringResource(Res.string.settings_save),
+                    { scope.launch { presenter.saveRate(currency.code, text) } },
+                    ActionRole.Primary,
+                    enabled = !state.busy && text.isNotBlank(),
+                ),
+            ),
+        )
     }
 }
 

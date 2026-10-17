@@ -1,33 +1,23 @@
 package com.coinden.app.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,8 +31,6 @@ import coinden.composeapp.generated.resources.home_default
 import coinden.composeapp.generated.resources.home_history
 import coinden.composeapp.generated.resources.home_language
 import coinden.composeapp.generated.resources.home_partial
-import coinden.composeapp.generated.resources.home_pending
-import coinden.composeapp.generated.resources.home_pending_note
 import coinden.composeapp.generated.resources.home_privacy
 import coinden.composeapp.generated.resources.home_review
 import coinden.composeapp.generated.resources.home_total
@@ -51,7 +39,6 @@ import coinden.composeapp.generated.resources.home_wallets
 import coinden.composeapp.generated.resources.language_en
 import coinden.composeapp.generated.resources.language_es
 import coinden.composeapp.generated.resources.language_pt
-import coinden.composeapp.generated.resources.logo_description
 import coinden.composeapp.generated.resources.privacy_note
 import coinden.composeapp.generated.resources.settings_title
 import coinden.composeapp.generated.resources.spending_title
@@ -63,8 +50,18 @@ import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.onboarding.label
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.theme.CoinDenTheme
-import com.coinden.app.theme.CoinDenWordmark
 import com.coinden.app.ui.LoadNotice
+import com.coinden.app.ui.components.ActionRole
+import com.coinden.app.ui.components.BrandMark
+import com.coinden.app.ui.components.CardTone
+import com.coinden.app.ui.components.CdAction
+import com.coinden.app.ui.components.CdActionSpec
+import com.coinden.app.ui.components.CdActions
+import com.coinden.app.ui.components.CdCard
+import com.coinden.app.ui.components.CdChoice
+import com.coinden.app.ui.components.CdHeaderAction
+import com.coinden.app.ui.components.CdOption
+import com.coinden.app.ui.components.CdSection
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.wallet.WalletType
 import kotlinx.coroutines.launch
@@ -107,66 +104,45 @@ fun HomeScreen(
         ) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.weight(1f)) { CoinDenWordmark(stringResource(Res.string.logo_description)) }
-                    TextButton(onClick = onPrivacy, modifier = Modifier.heightIn(min = 48.dp)) {
-                        Icon(CoinDenIcon.SHIELD.vector, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(stringResource(Res.string.home_privacy), modifier = Modifier.padding(start = 6.dp))
-                    }
+                    BrandMark(Modifier.weight(1f))
+                    CdAction(
+                        stringResource(Res.string.home_privacy),
+                        onPrivacy,
+                        role = ActionRole.Tertiary,
+                        icon = CoinDenIcon.SHIELD.vector,
+                    )
                 }
             }
             item { LoadNotice(state.load, state.loaded, onRetry = { scope.launch { presenter.load() } }) }
             if (state.loaded) {
                 item {
-                    Surface(shape = MaterialTheme.shapes.large, color = scheme.primaryContainer, contentColor = scheme.onPrimaryContainer) {
-                        Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(
-                                stringResource(if (state.partial) Res.string.home_partial else Res.string.home_total),
-                                style = MaterialTheme.typography.labelLarge,
-                            )
-                            Text(state.total?.let { MoneyFormatter.format(it, locale) }.orEmpty(), style = CoinDenTheme.amounts.amountLarge)
-                            if (state.partial) {
-                                val apart = state.unconverted.joinToString(" · ") { MoneyFormatter.format(it, locale) }
-                                Text(stringResource(Res.string.home_unconverted, apart), style = MaterialTheme.typography.bodySmall)
-                            }
+                    CdCard(tone = CardTone.Accent) {
+                        Text(
+                            stringResource(if (state.partial) Res.string.home_partial else Res.string.home_total),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                        Text(state.total?.let { MoneyFormatter.format(it, locale) }.orEmpty(), style = CoinDenTheme.amounts.amountLarge)
+                        if (state.partial) {
+                            val apart = state.unconverted.joinToString(" · ") { MoneyFormatter.format(it, locale) }
+                            Text(stringResource(Res.string.home_unconverted, apart), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
                 item {
-                    Surface(shape = MaterialTheme.shapes.medium, color = scheme.surfaceContainerHigh) {
-                        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(Res.string.home_pending, state.pendingDrafts), style = MaterialTheme.typography.titleMedium)
-                            Text(
-                                stringResource(Res.string.home_pending_note),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = scheme.onSurfaceVariant,
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(onClick = onReview, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                                    Text(stringResource(Res.string.home_review, state.pendingDrafts))
-                                }
-                                OutlinedButton(onClick = onHistory, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                                    Text(stringResource(Res.string.home_history))
-                                }
-                            }
-                        }
-                    }
-                }
-                item {
-                    OutlinedButton(onClick = onSpending, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                        Text(stringResource(Res.string.spending_title))
-                    }
-                }
-                item {
-                    Text(
-                        stringResource(Res.string.home_wallets),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(top = 4.dp),
+                    CdActions(
+                        listOf(
+                            CdActionSpec(stringResource(Res.string.home_review, state.pendingDrafts), onReview, ActionRole.Primary),
+                            CdActionSpec(stringResource(Res.string.home_history), onHistory),
+                        ),
                     )
                 }
+                item { CdActions(listOf(CdActionSpec(stringResource(Res.string.spending_title), onSpending))) }
                 item {
-                    TextButton(onClick = onSettings, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                        Text(stringResource(Res.string.settings_title))
-                    }
+                    CdHeaderAction(
+                        stringResource(Res.string.home_wallets),
+                        CdActionSpec(stringResource(Res.string.settings_title), onSettings),
+                        Modifier.padding(top = 4.dp),
+                    )
                 }
                 items(state.wallets, key = { it.id }) { wallet -> WalletRow(wallet, locale) }
             }
@@ -186,22 +162,12 @@ fun HomeScreen(
                 }
             }
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        stringResource(Res.string.home_language),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = scheme.onSurfaceVariant,
+                CdSection(stringResource(Res.string.home_language)) {
+                    CdChoice(
+                        LANGUAGES.map { (code, name) -> CdOption(code, stringResource(name)) },
+                        selected = language,
+                        onSelect = { code -> scope.launch { onChooseLanguage(code) } },
                     )
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        LANGUAGES.forEach { (code, name) ->
-                            FilterChip(
-                                selected = language == code,
-                                onClick = { scope.launch { onChooseLanguage(code) } },
-                                label = { Text(stringResource(name)) },
-                                modifier = Modifier.heightIn(min = 48.dp),
-                            )
-                        }
-                    }
                 }
             }
         }
@@ -228,16 +194,8 @@ private fun WalletRow(
     locale: UserLocale,
 ) {
     val scheme = MaterialTheme.colorScheme
-    Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = scheme.surfaceContainerLowest,
-        border = BorderStroke(1.dp, scheme.outlineVariant),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+    CdCard {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Box(
                 Modifier.size(44.dp).background(scheme.secondaryContainer, MaterialTheme.shapes.small),
                 contentAlignment = Alignment.Center,
@@ -258,7 +216,6 @@ private fun WalletRow(
             Text(MoneyFormatter.format(wallet.balance, locale), style = CoinDenTheme.amounts.amount)
         }
     }
-    Spacer(Modifier.size(0.dp))
 }
 
 private fun WalletType.icon(): CoinDenIcon =

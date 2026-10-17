@@ -3,21 +3,15 @@ package com.coinden.app.insights
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -59,6 +53,13 @@ import coinden.composeapp.generated.resources.spending_total
 import com.coinden.app.capture.label
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.theme.CoinDenTheme
+import com.coinden.app.ui.components.CardTone
+import com.coinden.app.ui.components.CdActionSpec
+import com.coinden.app.ui.components.CdActions
+import com.coinden.app.ui.components.CdCard
+import com.coinden.app.ui.components.CdNotice
+import com.coinden.app.ui.components.CdTopBar
+import com.coinden.app.ui.components.NoticeKind
 import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.interpret.UserLocale
 import kotlinx.coroutines.launch
@@ -75,20 +76,11 @@ fun SpendingInsightsScreen(
     val scope = rememberCoroutineScope()
     LaunchedEffect(presenter) { presenter.load() }
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
-        TextButton(onClick = onBack, modifier = Modifier.heightIn(min = 48.dp)) {
-            Text(stringResource(Res.string.back))
-        }
+        CdTopBar(stringResource(Res.string.spending_title), backLabel = stringResource(Res.string.back), onBack = onBack)
         LazyColumn(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item {
-                Text(
-                    stringResource(Res.string.spending_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.semantics { heading() },
-                )
-            }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
@@ -96,38 +88,32 @@ fun SpendingInsightsScreen(
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.semantics { heading() },
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(
-                            onClick = { scope.launch { presenter.previous() } },
-                            modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                        ) { Text(stringResource(Res.string.spending_previous)) }
-                        OutlinedButton(
-                            onClick = { scope.launch { presenter.next() } },
-                            enabled = state.canNext,
-                            modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                        ) { Text(stringResource(Res.string.spending_next)) }
-                    }
+                    CdActions(
+                        listOf(
+                            CdActionSpec(stringResource(Res.string.spending_previous), { scope.launch { presenter.previous() } }),
+                            CdActionSpec(
+                                stringResource(Res.string.spending_next),
+                                { scope.launch { presenter.next() } },
+                                enabled = state.canNext,
+                            ),
+                        ),
+                    )
                 }
             }
             when (state.load) {
                 SpendingLoad.LOADING -> item { Text(stringResource(Res.string.spending_loading)) }
                 SpendingLoad.ERROR ->
                     item {
-                        Column {
-                            Text(stringResource(Res.string.spending_error))
-                            TextButton(onClick = { scope.launch { presenter.load() } }, modifier = Modifier.heightIn(min = 48.dp)) {
-                                Text(stringResource(Res.string.spending_retry))
-                            }
-                        }
+                        CdNotice(
+                            NoticeKind.Error,
+                            stringResource(Res.string.spending_error),
+                            action = CdActionSpec(stringResource(Res.string.spending_retry), { scope.launch { presenter.load() } }),
+                        )
                     }
                 SpendingLoad.READY -> {
                     item {
-                        Surface(
-                            shape = MaterialTheme.shapes.large,
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        ) {
-                            Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        CdCard(tone = CardTone.Accent) {
+                            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(stringResource(if (state.partial) Res.string.spending_partial else Res.string.spending_total))
                                 Text(
                                     if (state.hasConverted || state.empty) {
@@ -155,8 +141,8 @@ private fun SpendingCategoryRow(
     row: SpendingRow,
     locale: UserLocale,
 ) {
-    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    CdCard(tone = CardTone.Raised) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
                 when (val category = row.total.category) {
                     null -> stringResource(Res.string.category_none)

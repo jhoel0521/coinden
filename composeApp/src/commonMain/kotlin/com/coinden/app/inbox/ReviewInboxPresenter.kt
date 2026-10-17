@@ -8,7 +8,10 @@ import com.coinden.app.capture.FormMode
 import com.coinden.app.capture.MovementKindView
 import com.coinden.app.ui.ScreenLoad
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.draft.CaptureCoach
 import com.coinden.core.domain.model.draft.CaptureStats
+import com.coinden.core.domain.model.draft.CaptureTip
+import com.coinden.core.domain.model.draft.Confidence
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.DraftError
 import com.coinden.core.domain.model.draft.DraftResult
@@ -38,7 +41,40 @@ data class InboxItem(
     val opensForm: Boolean,
     val correctionTarget: String? = null,
     val targetNote: String? = null,
+    /** Por qué hay que revisarlo (null si está listo): la tarjeta compacta lo muestra en lugar del estado. */
+    val reason: InboxReason? = null,
 )
+
+/** Por qué un pendiente está en "Para revisar", como dato (la pantalla lo traduce). */
+enum class InboxReason {
+    PENDING_CHANGE,
+    SAME_QUESTION,
+    UNREAD,
+    NOT_A_MOVEMENT,
+    MISSING_AMOUNT,
+    MISSING_WALLET,
+    SUGGESTED_WALLET,
+    CHECK_DATA,
+}
+
+/** El motivo de un pendiente, del más urgente al más leve; null si nada lo detiene. */
+internal fun reasonOf(
+    draft: Draft,
+    card: DraftCard,
+): InboxReason? {
+    val tips = CaptureCoach.tipsFor(draft)
+    return when {
+        draft.header.correctionTarget != null -> InboxReason.PENDING_CHANGE
+        card.question != null -> InboxReason.SAME_QUESTION
+        draft is Draft.Captured && draft.header.evidence.attachmentRef != null -> InboxReason.UNREAD
+        draft is Draft.Unsupported -> InboxReason.NOT_A_MOVEMENT
+        CaptureTip.SAY_AMOUNT in tips || draft is Draft.Captured -> InboxReason.MISSING_AMOUNT
+        CaptureTip.SAY_WALLET in tips && card.walletName == null -> InboxReason.MISSING_WALLET
+        CaptureTip.SAY_WALLET in tips -> InboxReason.SUGGESTED_WALLET
+        draft !is Draft.Ready || draft.confidence != Confidence.HIGH -> InboxReason.CHECK_DATA
+        else -> null
+    }
+}
 
 /** "¿Confirmar N movimientos?": cuántos y cuánto cambia cada billetera. */
 data class BatchSummary(
@@ -110,7 +146,7 @@ class ReviewInboxPresenter(
             cards.of(inbox.pending).zip(inbox.pending).map { (card, draft) ->
                 val target = draft.header.correctionTarget
                 val targetNote = target?.let { (container.drafts.load(it) as? Draft.Confirmed)?.movement?.note }
-                InboxItem(card, opensForm = opensForm(card, draft), correctionTarget = target, targetNote = targetNote)
+                InboxItem(card, opensForm(card, draft), target, targetNote, reason = if (draft.id in batch) null else reasonOf(draft, card))
             }
         val drafts = inbox.pending.filter { it.id in batch }
         val week = container.captureStats(owner, container.clock.nowEpochMs() - WEEK_MS).takeIf { it.total > 0 }

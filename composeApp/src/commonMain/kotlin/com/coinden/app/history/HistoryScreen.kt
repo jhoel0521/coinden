@@ -1,6 +1,5 @@
 package com.coinden.app.history
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,17 +7,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,10 +37,15 @@ import com.coinden.app.capture.MovementKindView
 import com.coinden.app.capture.label
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.format.TimeFormatter
-import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.theme.CoinDenTheme
 import com.coinden.app.ui.LoadNotice
 import com.coinden.app.ui.ScreenLoad
+import com.coinden.app.ui.components.BadgeTone
+import com.coinden.app.ui.components.CdActionSpec
+import com.coinden.app.ui.components.CdActions
+import com.coinden.app.ui.components.CdBadge
+import com.coinden.app.ui.components.CdCard
+import com.coinden.app.ui.components.CdTopBar
 import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.interpret.UserLocale
 import kotlinx.coroutines.launch
@@ -69,10 +67,7 @@ fun HistoryScreen(
     LaunchedEffect(presenter) { presenter.load() }
 
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(CoinDenIcon.CLOSE.vector, stringResource(Res.string.back)) }
-            Text(stringResource(Res.string.history_title), style = MaterialTheme.typography.titleLarge)
-        }
+        CdTopBar(stringResource(Res.string.history_title), backLabel = stringResource(Res.string.back), onBack = onBack)
         LoadNotice(state.load, state.loaded, onRetry = { scope.launch { presenter.load() } })
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -89,12 +84,8 @@ fun HistoryScreen(
                 }
             }
             items(state.items, key = { it.draftId }) { item ->
-                Surface(
-                    shape = MaterialTheme.shapes.large,
-                    color = scheme.surfaceContainerLowest,
-                    border = BorderStroke(1.dp, scheme.outlineVariant),
-                ) {
-                    Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                CdCard {
+                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 item.note ?: stringResource(item.kind.label()),
@@ -112,29 +103,21 @@ fun HistoryScreen(
                                 item.reference?.let { "${stringResource(Res.string.field_reference)} $it" },
                             )
                         Text(details.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
-                        if (item.corrected) {
-                            Text(
-                                stringResource(Res.string.history_corrected),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = scheme.tertiary,
-                            )
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(onClick = { onEvidence(item.draftId) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                                Text(
-                                    if (item.evidenceCount > 1) {
-                                        stringResource(Res.string.history_evidence, item.evidenceCount)
-                                    } else {
-                                        stringResource(Res.string.form_see_evidence)
-                                    },
-                                )
+                        if (item.corrected) CdBadge(stringResource(Res.string.history_corrected), BadgeTone.Success)
+                        val evidence =
+                            if (item.evidenceCount > 1) {
+                                stringResource(Res.string.history_evidence, item.evidenceCount)
+                            } else {
+                                stringResource(Res.string.form_see_evidence)
                             }
-                            presenter.correct(item)?.let { mode ->
-                                OutlinedButton(onClick = { onCorrect(mode) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                                    Text(stringResource(Res.string.history_correct))
-                                }
-                            }
-                        }
+                        CdActions(
+                            listOfNotNull(
+                                CdActionSpec(evidence, { onEvidence(item.draftId) }),
+                                presenter.correct(item)?.let { mode ->
+                                    CdActionSpec(stringResource(Res.string.history_correct), { onCorrect(mode) })
+                                },
+                            ),
+                        )
                     }
                 }
             }

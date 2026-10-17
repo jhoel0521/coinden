@@ -204,4 +204,20 @@ class ReviewInboxPresenterTest {
             assertEquals(taxi.id, item.correctionTarget)
             assertEquals(FormMode.Correct(taxi.id, receipt.id), inbox.formFor(item))
         }
+
+    @Test
+    fun `cada pendiente dice por que hay que revisarlo en lugar de su estado`() =
+        runTest {
+            val (container, inbox) = carlos()
+            val transport = container.say("page 3 bs para trasmporte")
+            val noAmount = container.say("almuerzo bnb")
+            val lunch = container.say("pagué 25 de almuerzo bnb")
+
+            inbox.load()
+
+            val reasons = (inbox.state.value.review + inbox.state.value.ready).associate { it.card.draftId to it.reason }
+            assertEquals(InboxReason.SUGGESTED_WALLET, reasons[transport.id])
+            assertEquals(InboxReason.MISSING_AMOUNT, reasons[noAmount.id])
+            assertNull(reasons[lunch.id])
+        }
 }
