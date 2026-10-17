@@ -6,21 +6,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,6 +49,19 @@ import coinden.composeapp.generated.resources.privacy_public
 import coinden.composeapp.generated.resources.privacy_stays
 import coinden.composeapp.generated.resources.privacy_title
 import com.coinden.app.theme.CoinDenIcon
+import com.coinden.app.ui.components.ActionRole
+import com.coinden.app.ui.components.BadgeTone
+import com.coinden.app.ui.components.CardTone
+import com.coinden.app.ui.components.CdActionSpec
+import com.coinden.app.ui.components.CdActions
+import com.coinden.app.ui.components.CdBadge
+import com.coinden.app.ui.components.CdCard
+import com.coinden.app.ui.components.CdErrorText
+import com.coinden.app.ui.components.CdHeaderAction
+import com.coinden.app.ui.components.CdNotice
+import com.coinden.app.ui.components.CdSwitchRow
+import com.coinden.app.ui.components.CdTopBar
+import com.coinden.app.ui.components.NoticeKind
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -82,34 +89,28 @@ fun PrivacyScreen(
             Point(CoinDenIcon.LOCK, Res.string.privacy_stays)
             Point(CoinDenIcon.BANK, Res.string.privacy_public)
             Point(CoinDenIcon.SHIELD, Res.string.privacy_downloads)
-            Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            stringResource(Res.string.privacy_google),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Switch(checked = state.googleReader, onCheckedChange = presenter::onGoogleReaderChange)
-                    }
-                    Text(stringResource(Res.string.privacy_google_receives), style = MaterialTheme.typography.bodyMedium)
-                    Text(stringResource(Res.string.privacy_google_never), style = MaterialTheme.typography.bodyMedium)
-                }
+            CdCard(tone = CardTone.Raised) {
+                CdSwitchRow(stringResource(Res.string.privacy_google), state.googleReader, presenter::onGoogleReaderChange)
+                Text(stringResource(Res.string.privacy_google_receives), style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(Res.string.privacy_google_never), style = MaterialTheme.typography.bodyMedium)
             }
-            OutlinedButton(onClick = onVoiceModels, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                Text(stringResource(Res.string.privacy_models))
-            }
+            CdActions(listOf(CdActionSpec(stringResource(Res.string.privacy_models), onVoiceModels)))
         }
-        Button(
-            onClick = {
-                scope.launch {
-                    presenter.onContinue()
-                    onContinue()
-                }
-            },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp).heightIn(min = 60.dp),
-            shape = MaterialTheme.shapes.extraLarge,
-        ) { Text(stringResource(Res.string.privacy_continue), style = MaterialTheme.typography.titleMedium) }
+        CdActions(
+            listOf(
+                CdActionSpec(
+                    stringResource(Res.string.privacy_continue),
+                    {
+                        scope.launch {
+                            presenter.onContinue()
+                            onContinue()
+                        }
+                    },
+                    ActionRole.Primary,
+                ),
+            ),
+            Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        )
     }
 }
 
@@ -134,63 +135,53 @@ fun VoiceModelsScreen(
     val scope = rememberCoroutineScope()
     LaunchedEffect(presenter) { presenter.load() }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(CoinDenIcon.CLOSE.vector, stringResource(Res.string.back)) }
-            Text(stringResource(Res.string.models_title), style = MaterialTheme.typography.titleLarge)
-        }
-        Text(stringResource(Res.string.models_intro), style = MaterialTheme.typography.bodyMedium)
-        if (state.recommendation == VoiceRecommendation.SystemRecognizer) {
-            Text(
-                stringResource(Res.string.models_system),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-        state.models.forEach { row ->
-            Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        stringResource(
-                            Res.string.models_size,
-                            stringResource(row.model.label()),
-                            (row.model.sizeBytes / 1_000_000).toInt(),
-                        ),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    if (row.recommended) Text(stringResource(Res.string.models_recommended), color = MaterialTheme.colorScheme.primary)
+    Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
+        CdTopBar(stringResource(Res.string.models_title), stringResource(Res.string.back), onBack)
+        Column(
+            Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(stringResource(Res.string.models_intro), style = MaterialTheme.typography.bodyMedium)
+            if (state.recommendation == VoiceRecommendation.SystemRecognizer) {
+                CdNotice(NoticeKind.Info, stringResource(Res.string.models_system))
+            }
+            state.models.forEach { row ->
+                CdCard {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            stringResource(
+                                Res.string.models_size,
+                                stringResource(row.model.label()),
+                                (row.model.sizeBytes / 1_000_000).toInt(),
+                            ),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (row.recommended) CdBadge(stringResource(Res.string.models_recommended), BadgeTone.Success)
+                    }
                     if (!row.recommended && row.model.sizeBytes > recommendedSize(state)) {
                         Text(stringResource(Res.string.models_slow), style = MaterialTheme.typography.bodySmall)
                     }
                     when {
                         state.downloading == row.model ->
-                            LinearProgressIndicator(
-                                progress = { state.progress },
-                                modifier = Modifier.fillMaxWidth(),
-                            )
+                            LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
                         row.installed ->
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(stringResource(Res.string.models_installed), modifier = Modifier.weight(1f))
-                                OutlinedButton(
-                                    onClick = { presenter.delete(row.model) },
-                                    modifier = Modifier.heightIn(min = 48.dp),
-                                ) { Text(stringResource(Res.string.models_delete)) }
-                            }
+                            CdHeaderAction(
+                                stringResource(Res.string.models_installed),
+                                CdActionSpec(stringResource(Res.string.models_delete), { presenter.delete(row.model) }, ActionRole.Danger),
+                            )
                         else ->
-                            Button(
-                                onClick = { scope.launch { presenter.download(row.model) } },
-                                enabled = state.downloading == null,
-                                modifier = Modifier.heightIn(min = 48.dp),
-                            ) { Text(stringResource(Res.string.models_download)) }
+                            CdActions(
+                                listOf(
+                                    CdActionSpec(
+                                        stringResource(Res.string.models_download),
+                                        { scope.launch { presenter.download(row.model) } },
+                                        enabled = state.downloading == null,
+                                    ),
+                                ),
+                            )
                     }
-                    if (state.failed == row.model) Text(stringResource(Res.string.models_failed), color = MaterialTheme.colorScheme.error)
+                    if (state.failed == row.model) CdErrorText(stringResource(Res.string.models_failed))
                 }
             }
         }

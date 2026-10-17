@@ -25,15 +25,6 @@ class RawMaterialUsageTest {
             "rememberDatePickerState",
         )
 
-    /** Archivos que todavía no pasan por los componentes; la lista solo puede achicarse. */
-    private val pendingMigration =
-        setOf(
-            "App.kt",
-            "perception/PerceptionScreens.kt",
-            "settings/WalletSettingsScreen.kt",
-            "ui/LoadNotice.kt",
-        )
-
     private fun offenders(): Map<String, List<String>> {
         val root = File("src/commonMain/kotlin/com/coinden/app")
         return root
@@ -54,6 +45,6 @@ class RawMaterialUsageTest {
     @Test
     fun `las pantallas no usan controles de Material sueltos`() {
         val found = offenders()
-        assertEquals(pendingMigration, found.keys, "Usar componentes de ui/components en lugar de: $found")
+        assertEquals(emptySet(), found.keys, "Usar componentes de ui/components en lugar de: $found")
     }
 }

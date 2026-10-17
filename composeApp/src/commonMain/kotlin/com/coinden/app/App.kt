@@ -1,7 +1,9 @@
 package com.coinden.app
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -100,7 +102,7 @@ fun App(
     val language by container.language.collectAsState()
     CoinDenTheme {
         ProvideAppLocale(language) {
-            Surface(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
                 // Quien ya terminó el onboarding ve una vez la pantalla de privacidad antes de Inicio.
                 val start by produceState<String?>(null) {
                     value =
