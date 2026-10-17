@@ -40,6 +40,7 @@ import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.home_default
 import coinden.composeapp.generated.resources.home_history
 import coinden.composeapp.generated.resources.home_language
+import coinden.composeapp.generated.resources.home_partial
 import coinden.composeapp.generated.resources.home_pending
 import coinden.composeapp.generated.resources.home_pending_note
 import coinden.composeapp.generated.resources.home_privacy
@@ -118,9 +119,12 @@ fun HomeScreen(
                 item {
                     Surface(shape = MaterialTheme.shapes.large, color = scheme.primaryContainer, contentColor = scheme.onPrimaryContainer) {
                         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(stringResource(Res.string.home_total), style = MaterialTheme.typography.labelLarge)
+                            Text(
+                                stringResource(if (state.partial) Res.string.home_partial else Res.string.home_total),
+                                style = MaterialTheme.typography.labelLarge,
+                            )
                             Text(state.total?.let { MoneyFormatter.format(it, locale) }.orEmpty(), style = CoinDenTheme.amounts.amountLarge)
-                            if (state.unconverted.isNotEmpty()) {
+                            if (state.partial) {
                                 val apart = state.unconverted.joinToString(" · ") { MoneyFormatter.format(it, locale) }
                                 Text(stringResource(Res.string.home_unconverted, apart), style = MaterialTheme.typography.bodySmall)
                             }

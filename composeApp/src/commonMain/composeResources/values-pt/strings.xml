@@ -93,7 +93,8 @@
     <string name="error_invalid_wallet">Confira o nome e o saldo</string>
     <string name="error_no_wallets">Crie pelo menos uma carteira</string>
     <string name="home_total">Patrimônio total</string>
-    <string name="home_unconverted">Sem taxa: %1$s</string>
+    <string name="home_partial">Patrimônio parcial</string>
+    <string name="home_unconverted">Sem taxa: %1$s (não incluído no total)</string>
     <string name="home_pending">Rascunhos para revisar: %1$d</string>
     <string name="home_pending_note">Não mudam seus saldos até você confirmar.</string>
     <string name="home_wallets">Carteiras</string>

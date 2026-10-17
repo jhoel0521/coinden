@@ -93,7 +93,8 @@
     <string name="error_invalid_wallet">Check the name and the balance</string>
     <string name="error_no_wallets">Create at least one wallet</string>
     <string name="home_total">Total net worth</string>
-    <string name="home_unconverted">No rate: %1$s</string>
+    <string name="home_partial">Partial net worth</string>
+    <string name="home_unconverted">No rate: %1$s (not included in total)</string>
     <string name="home_pending">Drafts to review: %1$d</string>
     <string name="home_pending_note">They do not change your balances until you confirm them.</string>
     <string name="home_wallets">Wallets</string>

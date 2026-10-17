@@ -96,10 +96,9 @@ Los principios completos están en [MANIFIESTO.md](MANIFIESTO.md). En resumen:
 | 7 | `capture-ui` + compartir a CoinDen | captura rápida y comprobantes compartidos desde Yape o el banco | UI + adaptador | M | ✅ |
 | 8 | `perception-adapters` | voz a texto y OCR on-device → texto para el intérprete | adaptador | M | ✅ |
 | 9 | `review-inbox-ui` | la bandeja de la noche: lo dudoso primero, completar y confirmar | UI | M | ✅ |
-| 10 | `insights-ui` | saldos, patrimonio consolidado y gasto del mes por categoría | UI | M | Implementado; validación en dispositivo pendiente |
-| 11 | `rate-fetch-adapter` | cotizaciones reales por red (Frankfurter, DolarApi, selector web) | adaptador | S | |
+| 10 | `insights-ui` + `wallet-settings` | saldos, patrimonio total o parcial, gasto del mes por categoría y administración de billeteras y tasas manuales | UI | M | ✅ |
 
-Desde Inicio, **Gastos del mes** permite consultar el mes actual y los anteriores, con los gastos confirmados por categoría y sus montos originales. Las equivalencias usan las tasas de referencia actuales, no tasas históricas. Si falta una tasa, el importe original sigue visible y el total se identifica como parcial. Los borradores pendientes no cuentan como gasto.
+Desde Inicio, **Gastos del mes** permite consultar el mes actual y los anteriores, con los gastos confirmados por categoría y sus montos originales. Las equivalencias usan las tasas de referencia manuales actuales, no tasas históricas. Si falta una tasa, el importe original sigue visible y tanto el resumen mensual como Inicio identifican el total como parcial. Los borradores pendientes no cuentan como gasto.
 
 **Billeteras y tasas** permite agregar billeteras y monedas del catálogo, archivar/reactivar conservando el historial, elegir la predeterminada y guardar o quitar tasas manuales. No se permite archivar la última activa. Las tasas solo afectan equivalencias; los movimientos conservan sus montos reales. El idioma de la bienvenida sigue la selección y el APK incluye el icono Cobre de CoinDen. La validación manual Android del resumen se sigue en [la issue #2](https://github.com/jhoel0521/coinden/issues/2).
 
@@ -107,6 +106,7 @@ Desde Inicio, **Gastos del mes** permite consultar el mes actual y los anteriore
 
 | Capacidad | Qué aporta |
 |---|---|
+| `rate-fetch-adapter` | cotizaciones reales por red y enlaces públicos (Frankfurter, DolarApi, selector web) |
 | `free-to-spend` | dinero libre hasta fin de mes: ¿hamburguesa o sopa? |
 | `commitments` | gastos esperados del mes (Netflix "cuando puedo", no un día fijo), préstamos (debo / me deben) y reparto en cuotas |
 | `savings-goals` | metas de ahorro repartidas en varias billeteras |

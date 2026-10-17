@@ -30,6 +30,9 @@ class SpendingResourcesTest {
             assertTrue((1..12).all { !strings["spending_month_$it"].isNullOrBlank() })
             assertTrue(
                 listOf(
+                    "home_total",
+                    "home_partial",
+                    "home_unconverted",
                     "spending_partial",
                     "spending_estimate",
                     "spending_missing_rate",

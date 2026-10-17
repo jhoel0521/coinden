@@ -93,7 +93,8 @@
     <string name="error_invalid_wallet">Revisa el nombre y el saldo</string>
     <string name="error_no_wallets">Crea al menos una billetera</string>
     <string name="home_total">Patrimonio total</string>
-    <string name="home_unconverted">Sin tasa: %1$s</string>
+    <string name="home_partial">Patrimonio parcial</string>
+    <string name="home_unconverted">Sin tasa: %1$s (no incluido en el total)</string>
     <string name="home_pending">Borradores por revisar: %1$d</string>
     <string name="home_pending_note">No cambian tus saldos hasta que los confirmes.</string>
     <string name="home_wallets">Billeteras</string>

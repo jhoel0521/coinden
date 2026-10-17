@@ -26,7 +26,10 @@ data class HomeState(
     val pendingDrafts: Int = 0,
     val load: ScreenLoad = ScreenLoad.LOADING,
     val loaded: Boolean = false,
-)
+) {
+    /** El patrimonio es parcial cuando quedan saldos en monedas sin tasa de referencia. */
+    val partial: Boolean get() = unconverted.isNotEmpty()
+}
 
 /** Inicio: patrimonio en la moneda principal, billeteras con su saldo y borradores por revisar. */
 class HomePresenter(

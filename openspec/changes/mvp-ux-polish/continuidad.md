@@ -74,4 +74,8 @@ Implementado en `DraftCard`/`DraftCardView`, `HistoryPresenter`/`HistoryScreen` 
 - Si una categoría propia ya no tiene nombre disponible, la vista usa `Res.string.spending_category_missing` sin exponer nunca su UUID ni la etiqueta genérica `category_custom`.
 - `DraftFormPresenter` carga las categorías propias del usuario, conserva en las opciones cualquier categoría propia ya asignada (aunque esté archivada o sin nombre) y resuelve su nombre real tanto en los chips como en `beforeText` (`"antes: ..."`).
 
+### Bloque 6: claridad del patrimonio y alcance del MVP
+
+Implementado en `HomePresenter`, `HomeScreen`, recursos `es`/`en`/`pt` (`home_partial` y `home_unconverted` con explicación de que no se incluye en el total), pruebas en `HomePresenterTest` y `SpendingResourcesTest`, y actualización de `README.md` moviendo `rate-fetch-adapter` (cotizaciones por red/enlaces) a la sección *"Después del MVP"*.
+
 La auditoría integral actualizada está en `docs/audits/2026-10-16-mvp.md`; la validación manual pendiente se sigue en https://github.com/jhoel0521/coinden/issues/2. No se afirma prueba de TalkBack, cámara, voz ni recorrido completo en el emulador.

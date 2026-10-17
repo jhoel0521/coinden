@@ -29,8 +29,8 @@ Cada bloque funcional se entrega con pruebas, recursos es/en/pt, actualización 
 
 ## 6. Claridad del patrimonio y alcance del MVP
 
-- [ ] 6.1 Cubrir primero los tres escenarios de «Patrimonio Parcial Explícito»; implementar etiquetas y explicación es/en/pt sin cambiar importes. Mover cotizaciones automáticas a pos-MVP en README y documentar tasas manuales. Verificar pruebas de Inicio, recursos y diff monetario sin cambios de dominio.
-- [ ] 6.2 Registrar resultados y comandos de 6.1, verificar lint, commitear y pushear el bloque; comprobar igualdad de HEAD y rama remota.
+- [x] 6.1 Cubrir primero los tres escenarios de «Patrimonio Parcial Explícito»; implementar etiquetas y explicación es/en/pt sin cambiar importes. Mover cotizaciones automáticas a pos-MVP en README y documentar tasas manuales. Verificar pruebas de Inicio, recursos y diff monetario sin cambios de dominio.
+- [x] 6.2 Registrar resultados y comandos de 6.1, verificar lint, commitear y pushear el bloque; comprobar igualdad de HEAD y rama remota.
 
 ## 7. Integración y auditoría visual de cierre
 
