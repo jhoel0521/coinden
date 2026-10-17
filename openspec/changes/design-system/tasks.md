@@ -2,9 +2,9 @@
 
 ## 1. Base
 
-- [ ] 1.1 Escribir las pruebas de las reglas puras (`ActionsLayout`: 1 → Full, 2 que caben → Row, 2 que no caben o 3 → Stack con la principal al final; `ChoiceLayout`: 2 opciones cortas → Segmented, 4 que no caben → ScrollRow, lista abierta → ScrollRow, 13 fijas → TopAndMore(4); `GridLayout.columns` entre 2 y 4 según el ancho) e implementarlas en `ui/components` hasta que pasen (req. Grupo de Acciones según sus Hermanos, Elección Única, Cuadrícula sin Opciones Sueltas).
-- [ ] 1.2 Implementar el catálogo de D1 (`CdAction`, `CdActions`, `CdIconAction`, `CdChoice`, `CdChoiceGrid`, `CdField`, `CdSection`, `CdCard`, `CdNotice`, `CdDialog`, `CdSwitchRow`, `CdCollapsible`, `CdSheet`) con `LocalCdContainer` (D5). Pantalla de muestra solo en depuración para verlos en claro, oscuro y letra grande.
-- [ ] 1.3 Escribir `RawMaterialUsageTest` (D8) desactivado hasta la tarea 4.1 y verificar que hoy lista los ~150 usos.
+- [x] 1.1 Escribir las pruebas de las reglas puras (`ActionsLayout`: 1 → Full, 2 que caben → Row, 2 que no caben o 3 → Stack con la principal al final; `ChoiceLayout`: 2 opciones cortas → Segmented, 4 que no caben → ScrollRow, lista abierta → ScrollRow, 13 fijas → TopAndMore(4); `GridLayout.columns` entre 2 y 4 según el ancho) e implementarlas en `ui/components` hasta que pasen (req. Grupo de Acciones según sus Hermanos, Elección Única, Cuadrícula sin Opciones Sueltas).
+- [x] 1.2 Implementar el catálogo de D1 (`CdAction`, `CdActions`, `CdIconAction`, `CdChoice`, `CdChoiceGrid`, `CdField`, `CdSection`, `CdCard`, `CdNotice`, `CdDialog`, `CdSwitchRow`, `CdCollapsible`, `CdSheet`, `CdHeaderAction`) con `LocalCdContainer` (D5). Se verifican en las pantallas reales en claro, oscuro y letra grande (tarea 4.2), sin pantalla de muestra aparte.
+- [x] 1.3 Escribir `RawMaterialUsageTest` (D8) activo desde ya, con la lista de archivos pendientes de migrar, que solo puede achicarse y debe quedar vacía en la tarea 4.1.
 
 ## 2. Formulario y captura
 
