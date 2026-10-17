@@ -138,6 +138,8 @@ private fun AppNavHost(
             CapturePresenter(container, platform.dictation, platform.processingQueue, service)
         }
     val scope = rememberCoroutineScope()
+    // La evidencia sale del formulario sin destruir su edición; cada entrada conserva su presentador.
+    val forms = remember { mutableMapOf<String, DraftFormPresenter>() }
     val pendingShare by shared.collectAsState()
     NavHost(navController = nav, startDestination = start) {
         composable(Routes.WELCOME) {
@@ -253,12 +255,20 @@ private fun AppNavHost(
         }
         composable(Routes.REVIEW) { entry ->
             val draftId = entry.savedStateHandle.get<String>("draftId").orEmpty()
-            FormRoute(container, FormMode.Review(draftId), locale, settings.utcOffsetMinutes, nav::navigate) { nav.popBackStack() }
+            val form = forms.getOrPut(entry.id) { DraftFormPresenter(container, FormMode.Review(draftId)) }
+            FormRoute(container, form, locale, settings.utcOffsetMinutes, nav::navigate) {
+                forms.remove(entry.id)
+                nav.popBackStack()
+            }
         }
         composable(Routes.CORRECT) { entry ->
             val draftId = entry.savedStateHandle.get<String>("draftId").orEmpty()
             val source = Routes.sourceOf(entry.savedStateHandle.get<String>("source"))
-            FormRoute(container, FormMode.Correct(draftId, source), locale, settings.utcOffsetMinutes, nav::navigate) { nav.popBackStack() }
+            val form = forms.getOrPut(entry.id) { DraftFormPresenter(container, FormMode.Correct(draftId, source)) }
+            FormRoute(container, form, locale, settings.utcOffsetMinutes, nav::navigate) {
+                forms.remove(entry.id)
+                nav.popBackStack()
+            }
         }
         composable(Routes.EVIDENCE) { entry ->
             val draftId = entry.savedStateHandle.get<String>("draftId").orEmpty()
@@ -275,8 +285,13 @@ private fun AppNavHost(
                 onClose = { nav.popBackStack() },
             )
         }
-        composable(Routes.FORM) {
-            val form = remember { DraftFormPresenter(container) }
+        composable(Routes.FORM) { entry ->
+            val form = forms.getOrPut(entry.id) { DraftFormPresenter(container) }
+            val done: () -> Unit = {
+                forms.remove(entry.id)
+                nav.popBackStack()
+                Unit
+            }
             DraftFormScreen(
                 form,
                 nowEpochMs = container.clock::nowEpochMs,
@@ -284,18 +299,18 @@ private fun AppNavHost(
                 locale = locale,
                 onSaved = { result ->
                     capture.showResult(result)
-                    nav.popBackStack()
+                    done()
                 },
-                onDone = { nav.popBackStack() },
+                onDone = done,
                 onEvidence = { nav.navigate(Routes.evidence(it)) },
-                onBack = { nav.popBackStack() },
+                onBack = done,
             )
         }
     }
     // Si algo llega por compartir con la cámara o el formulario abiertos, se vuelve a Inicio.
     LaunchedEffect(pendingShare) {
         val route = nav.currentDestination?.route
-        if (pendingShare != null && (route == Routes.CAMERA || route == Routes.FORM)) nav.popBackStack(Routes.HOME, inclusive = false)
+        if (pendingShare != null && route == Routes.CAMERA) nav.popBackStack(Routes.HOME, inclusive = false)
     }
 }
 
@@ -303,13 +318,12 @@ private fun AppNavHost(
 @Composable
 private fun FormRoute(
     container: AppContainer,
-    mode: FormMode,
+    form: DraftFormPresenter,
     locale: UserLocale,
     utcOffsetMinutes: Int,
     navigate: (String) -> Unit,
     onDone: () -> Unit,
 ) {
-    val form = remember(mode) { DraftFormPresenter(container, mode) }
     DraftFormScreen(
         form,
         nowEpochMs = container.clock::nowEpochMs,

@@ -275,4 +275,8 @@
     <string name="settings_quote_overflow">Check this rate: its equivalent amount is too large to display.</string>
     <string name="form_saving">Saving…</string>
     <string name="form_storage_error">Could not save. Your fields are still here; please try again.</string>
+    <string name="form_exit_title">Leave without saving?</string>
+    <string name="form_exit_note">Changes in this form will be lost. Leaving does not change any balance.</string>
+    <string name="form_exit_leave">Leave without saving</string>
+    <string name="form_exit_stay">Keep editing</string>
 </resources>

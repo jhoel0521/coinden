@@ -58,6 +58,7 @@ class DraftFormWriteTest {
             val first = launch { p.save() }
             runCurrent()
             kotlin.test.assertTrue(p.state.value.busy)
+            assertEquals(FormExit.BLOCKED, p.requestExit())
             p.onAmountChange("99")
             assertEquals("12", p.state.value.amount)
             val second = launch { p.save() }

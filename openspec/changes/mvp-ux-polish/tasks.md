@@ -10,11 +10,11 @@ Cada bloque funcional se entrega con pruebas, recursos es/en/pt, actualización 
 ## 2. Guardado único y errores del formulario
 
 - [x] 2.1 Cubrir con pruebas rojas los cuatro escenarios de «Acciones del Formulario sin Duplicados» en `capture-ui`; implementar bloqueo, progreso, recuperación y resultado único en presentador/vista. Verificar pruebas dirigidas de formulario y que los saldos no cambian al guardar.
-- [ ] 2.2 Registrar resultados y comandos de 2.1 en `continuidad.md`, verificar lint y traducciones, commitear y pushear el bloque; comprobar igualdad de HEAD y rama remota.
+- [x] 2.2 Registrar resultados y comandos de 2.1 en `continuidad.md`, verificar lint y traducciones, commitear y pushear el bloque; comprobar igualdad de HEAD y rama remota.
 
 ## 3. Salida consciente y evidencia
 
-- [ ] 3.1 Cubrir primero los cinco escenarios de «Salida Consciente del Formulario» en `capture-ui`; implementar baseline, diálogo y Atrás del sistema, conservar edición al volver de evidencia y bloquear salida durante escritura. Verificar lógica con pruebas de presentador y navegación/control superior/sistema en Android.
+- [x] 3.1 Cubrir primero los cinco escenarios de «Salida Consciente del Formulario» en `capture-ui`; implementar baseline, diálogo y Atrás del sistema, conservar edición al volver de evidencia y bloquear salida durante escritura. Verificar lógica con pruebas de presentador y navegación/control superior/sistema en Android.
 - [ ] 3.2 Registrar resultados y comandos de 3.1, verificar lint y recursos es/en/pt, commitear y pushear el bloque; comprobar igualdad de HEAD y rama remota.
 
 ## 4. Carga y recuperación de pantallas

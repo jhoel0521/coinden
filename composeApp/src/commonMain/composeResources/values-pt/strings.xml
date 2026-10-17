@@ -275,4 +275,8 @@
     <string name="settings_quote_overflow">Confira esta taxa: o valor equivalente é grande demais para exibir.</string>
     <string name="form_saving">Salvando…</string>
     <string name="form_storage_error">Não foi possível salvar. Seus campos continuam aqui; tente novamente.</string>
+    <string name="form_exit_title">Sair sem salvar?</string>
+    <string name="form_exit_note">As alterações deste formulário serão perdidas. Sair não altera nenhum saldo.</string>
+    <string name="form_exit_leave">Sair sem salvar</string>
+    <string name="form_exit_stay">Continuar editando</string>
 </resources>

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -67,6 +68,10 @@ import coinden.composeapp.generated.resources.form_currency_wallet
 import coinden.composeapp.generated.resources.form_date
 import coinden.composeapp.generated.resources.form_discard
 import coinden.composeapp.generated.resources.form_dismiss_change
+import coinden.composeapp.generated.resources.form_exit_leave
+import coinden.composeapp.generated.resources.form_exit_note
+import coinden.composeapp.generated.resources.form_exit_stay
+import coinden.composeapp.generated.resources.form_exit_title
 import coinden.composeapp.generated.resources.form_fill
 import coinden.composeapp.generated.resources.form_keep
 import coinden.composeapp.generated.resources.form_kind
@@ -133,6 +138,15 @@ fun DraftFormScreen(
     val mode = state.mode
     var dateChoice by remember { mutableStateOf(DateChoice.TODAY) }
     var picking by remember { mutableStateOf(false) }
+    var askExit by remember { mutableStateOf(false) }
+    val requestBack: () -> Unit = {
+        when (presenter.requestExit()) {
+            FormExit.LEAVE -> onBack()
+            FormExit.ASK -> askExit = true
+            FormExit.BLOCKED -> Unit
+        }
+    }
+    FormBackHandler(enabled = true, onBack = requestBack)
     LaunchedEffect(presenter) {
         presenter.load()
         if (mode != FormMode.New && presenter.state.value.occurredAtEpochMs != null) dateChoice = DateChoice.OTHER
@@ -145,7 +159,7 @@ fun DraftFormScreen(
     CompositionLocalProvider(LocalFormEnabled provides (!state.busy && !state.completed)) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).imePadding()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack, enabled = !state.busy) { Icon(CoinDenIcon.CLOSE.vector, stringResource(Res.string.back)) }
+                IconButton(onClick = requestBack, enabled = !state.busy) { Icon(CoinDenIcon.CLOSE.vector, stringResource(Res.string.back)) }
                 val title =
                     when (mode) {
                         FormMode.New -> Res.string.form_title
@@ -289,6 +303,20 @@ fun DraftFormScreen(
         }
     }
 
+    if (askExit) {
+        AlertDialog(
+            onDismissRequest = { askExit = false },
+            title = { Text(stringResource(Res.string.form_exit_title)) },
+            text = { Text(stringResource(Res.string.form_exit_note)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    askExit = false
+                    onBack()
+                }) { Text(stringResource(Res.string.form_exit_leave)) }
+            },
+            dismissButton = { TextButton(onClick = { askExit = false }) { Text(stringResource(Res.string.form_exit_stay)) } },
+        )
+    }
     if (picking) {
         val picker = rememberDatePickerState(initialSelectedDateMillis = state.occurredAtEpochMs ?: nowEpochMs())
         DatePickerDialog(

@@ -4,7 +4,7 @@
 
 - Rama de trabajo: `codex/rumbo-al-mvp`, remoto `origin` (`jhoel0521/coinden`). No crear otra rama sin motivo ni sobrescribir cambios de colegas.
 - Plan completo: propuesta, tres deltas, diseño y tareas. `openspec validate mvp-ux-polish --strict` pasó.
-- La persona confirmó aplicar el cambio. Entorno y línea base completos; guardado único implementado y verificado (2.1). Continúa el bloque de salida consciente (3.1); no confundir artefactos completos con funcionalidad terminada.
+- La persona confirmó aplicar el cambio. Entorno, guardado único y salida consciente implementados y verificados. Continúa el bloque de cargas recuperables (4.1); no confundir artefactos completos con funcionalidad terminada.
 - Se mantienen las entregas incrementales con commit y push. Marcar cada tarea de publicación solo después de verificar el remoto.
 - Cotizaciones automáticas fuera del MVP por decisión explícita. El bloque 6 actualizará README; el plan ya conserva esta decisión.
 
@@ -45,8 +45,18 @@
 
 ### Bloque 2: guardado único
 
+Publicado y HEAD remoto verificado: `4e7a1d1`.
+
 `DraftFormWriteTest`: cuatro pruebas primero fallaron con el código anterior (doble toque, fallo previo a captura, fallo en revisión, confirmar frente a descartar). Ahora pasan; verifican también progreso, campos intactos y saldo sin cambios. La escritura guarda el ID devuelto para retomar revisión y entrega resultado/navegación una sola vez. `save()` devuelve null si está ocupado, terminado o falla; UI deshabilitada durante escritura y avisos es/en/pt fuera del scroll.
 
 Comando de verificación: `gradlew.bat :composeApp:ktlintFormat ktlintCheck :composeApp:testDebugUnitTest --console=plain` → `BUILD SUCCESSFUL`. Log local: `coinden-write-verified.log` en Temp. La firma nullable actualiza los consumidores existentes. Sigue fuera de alcance una caída del proceso o fallo que ocurra tras persistir pero antes de devolver el ID; no se afirma transaccionalidad nueva.
+
+### Bloque 3: salida consciente
+
+`DraftFormExitTest` reprodujo en rojo que volver de evidencia pisaba el monto editado. Ahora se guarda el presentador por entrada de navegación y la carga inicial ocurre una sola vez. Snapshot explícito de campos editables detecta cambios y su reversión; `requestExit` decide salir, preguntar o bloquear mientras escribe. Un puerto expect/actual conecta Atrás Android, sin nuevas dependencias. Compartir mientras el formulario está abierto ya no fuerza su cierre; espera a Inicio.
+
+`gradlew.bat :composeApp:ktlintFormat :composeApp:testDebugUnitTest :composeApp:assembleDebug --console=plain` pasó. Pruebas de salida limpia/revertida, edición de corrección sin tocar saldo, recarga tras evidencia y bloqueo durante escritura; recursos es/en/pt verificados por las pruebas existentes. Lint específico registrado en `coinden-exit-lint.log`.
+
+Emulador: completado onboarding (USD por región US del AVD, billetera de prueba con 100 USD), salida limpia con Atrás del sistema sin diálogo, edición a 12 y Atrás del sistema con diálogo, seguir editando conservó 12, botón superior también mostró diálogo y salir sin guardar volvió con saldo 100 y cero pendientes. Luego frase «almuerzo 12» → borrador de 12 sin descontar saldo; revisión cambió a 13, abrió evidencia y volvió con 13 intacto, sin aviso ni nueva escritura. Capturas `evidencia/salida-dialogo.png` y `evidencia/edicion-tras-evidencia.png`. La revisión de 13 queda abierta y sin confirmar al final de este recorrido para continuar pruebas.
 
 La auditoría previa está en `docs/audits/2026-10-16-mvp.md`; la validación manual pendiente se sigue en https://github.com/jhoel0521/coinden/issues/2. La inspección visual de este turno se limita a las dos bienvenidas capturadas. Las pruebas previas a este cambio no demuestran que los nuevos escenarios pasen. No se afirma prueba de TalkBack, cámara, voz ni recorrido completo en el emulador.

@@ -33,6 +33,8 @@ import kotlinx.coroutines.flow.update
 /** Tipos de movimiento del formulario. */
 enum class FormKind { EXPENSE, INCOME }
 
+enum class FormExit { LEAVE, ASK, BLOCKED }
+
 /**
  * Para qué se abre el formulario: escribir uno nuevo, revisar un borrador pendiente o corregir un
  * movimiento confirmado (a mano, o con el cambio pendiente que trajo el comprobante [sourceDraftId]).
@@ -85,6 +87,7 @@ data class DraftFormState(
     val busy: Boolean = false,
     val storageError: Boolean = false,
     val completed: Boolean = false,
+    val dirty: Boolean = false,
 ) {
     /** El monto nuevo es el doble o más, o la mitad o menos, del anterior. */
     val largeAmount: Boolean get() = changes.any { it is FieldChange.Amount && it.large }
@@ -105,6 +108,18 @@ class DraftFormPresenter(
 
     private var directory = WalletDirectory(emptyList())
     private var capturedId: String? = null
+    private var loaded = false
+    private var baseline: List<Any?> = emptyList()
+
+    private fun DraftFormState.fields(): List<Any?> =
+        listOf(phrase, kind, amount, currency, walletId, method, category, occurredAtEpochMs, note, reference)
+
+    fun requestExit(): FormExit =
+        when {
+            state.value.busy -> FormExit.BLOCKED
+            state.value.dirty && !state.value.completed -> FormExit.ASK
+            else -> FormExit.LEAVE
+        }
 
     /** Al corregir: el movimiento confirmado y su categoría, contra los que se comparan los cambios. */
     private var before: Pair<ReadyMovement, CategoryRef?>? = null
@@ -114,6 +129,7 @@ class DraftFormPresenter(
 
     /** Las billeteras activas; la por defecto queda elegida. Al revisar o corregir, precarga los datos. */
     suspend fun load() {
+        if (loaded) return
         directory = container.drafts.directory(container.ownerId)
         val wallets = directory.wallets.filter { it.isActive }.map { FormWallet(it.id, it.name, it.currency, it.type) }
         mutableState.update { it.copy(wallets = wallets) }
@@ -122,6 +138,8 @@ class DraftFormPresenter(
             is FormMode.Review -> loadReview(mode.draftId)
             is FormMode.Correct -> loadCorrection(mode)
         }
+        baseline = state.value.fields()
+        loaded = true
     }
 
     private suspend fun loadReview(draftId: String) {
@@ -226,7 +244,11 @@ class DraftFormPresenter(
 
     private fun edit(change: (DraftFormState) -> DraftFormState) {
         if (state.value.busy || state.value.completed) return
-        mutableState.update { change(it).copy(problem = null, storageError = false) }
+        mutableState.update {
+            change(it).let { next ->
+                next.copy(problem = null, storageError = false, dirty = next.fields() != baseline)
+            }
+        }
         refreshChanges()
     }
 
