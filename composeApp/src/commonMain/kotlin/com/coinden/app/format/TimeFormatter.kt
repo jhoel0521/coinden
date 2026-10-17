@@ -14,7 +14,7 @@ object TimeFormatter {
         epochMs: Long,
         utcOffsetMinutes: Int,
     ): String {
-        val minutes = Math.floorMod(epochMs + utcOffsetMinutes * 60_000L, DAY_MS) / 60_000L
+        val minutes = (epochMs + utcOffsetMinutes * 60_000L).mod(DAY_MS) / 60_000L
         return "${(minutes / 60).toString().padStart(2, '0')}:${(minutes % 60).toString().padStart(2, '0')}"
     }
 
@@ -24,7 +24,7 @@ object TimeFormatter {
         utcOffsetMinutes: Int,
         locale: UserLocale,
     ): String {
-        val days = Math.floorDiv(epochMs + utcOffsetMinutes * 60_000L, DAY_MS)
+        val days = (epochMs + utcOffsetMinutes * 60_000L).floorDiv(DAY_MS)
         val (month, day) = monthDayOf(days)
         val dd = day.toString().padStart(2, '0')
         val mm = month.toString().padStart(2, '0')
@@ -35,7 +35,7 @@ object TimeFormatter {
     /** Mes y día de un día civil contado desde 1970-01-01 (algoritmo de Howard Hinnant). */
     private fun monthDayOf(daysSinceEpoch: Long): Pair<Int, Int> {
         val z = daysSinceEpoch + 719_468
-        val era = Math.floorDiv(z, 146_097L)
+        val era = z.floorDiv(146_097L)
         val doe = z - era * 146_097
         val yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365
         val doy = doe - (365 * yoe + yoe / 4 - yoe / 100)

@@ -110,7 +110,7 @@ class FindSameMovementQuestionsUseCase(
                     capturedAt = draft.header.capturedAtEpochMs,
                     kind = facts?.kind,
                     amount = facts?.amount,
-                    day = Math.floorDiv(occurredAt + utcOffsetMinutes * 60_000L, DAY_MS),
+                    day = (occurredAt + utcOffsetMinutes * 60_000L).floorDiv(DAY_MS),
                     referenceKey = facts?.reference?.let(ReferenceKey::of)?.takeIf { it.isNotEmpty() },
                     // Solo un comprobante (varias líneas): dos frases cortas iguales son dos gastos posibles.
                     receiptText =

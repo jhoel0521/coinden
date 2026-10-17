@@ -76,6 +76,20 @@ Implementado en `DraftCard`/`DraftCardView`, `HistoryPresenter`/`HistoryScreen` 
 
 ### Bloque 6: claridad del patrimonio y alcance del MVP
 
-Implementado en `HomePresenter`, `HomeScreen`, recursos `es`/`en`/`pt` (`home_partial` y `home_unconverted` con explicación de que no se incluye en el total), pruebas en `HomePresenterTest` y `SpendingResourcesTest`, y actualización de `README.md` moviendo `rate-fetch-adapter` (cotizaciones por red/enlaces) a la sección *"Después del MVP"*.
+Publicado en `23dd131`. Implementado en `HomePresenter`, `HomeScreen`, recursos `es`/`en`/`pt` (`home_partial` y `home_unconverted` con explicación de que no se incluye en el total), pruebas en `HomePresenterTest` y `SpendingResourcesTest`, y actualización de `README.md` moviendo `rate-fetch-adapter` (cotizaciones por red/enlaces) a la sección *"Después del MVP"*.
+
+### Pulido adicional de íconos, UX/UI y compatibilidad KMP (Android / iOS)
+
+Implementado en código:
+- `composeApp/src/androidMain/res/drawable/ic_launcher_monochrome.xml`: completado el isotipo monocromo para Android 13+ con el recorte de la boca (`M46 104 V95...`) y los trazos de la "C" y la "D" en los ojos, manteniendo simetría con `ic_launcher_foreground.xml` y `CoinDenLogo.kt`.
+- Tipografía tabular (`CoinDenTheme.amounts.amount` / `amountLarge`) aplicada a los importes de `HistoryScreen.kt` y `SpendingInsightsScreen.kt`, y altura mínima de `48.dp` en botones de `OnboardingScreens.kt` y `PerceptionScreens.kt`.
+- Limpieza de APIs exclusivas de JVM en `commonMain` / `commonTest` para dejar libre el camino a iOS (`iosArm64` / `iosSimulatorArm64`): reemplazados `Math.floorDiv`/`Math.floorMod` en `SameMovementUseCases.kt` y `TimeFormatter.kt` por funciones de la stdlib de Kotlin, y reemplazada `java.time.*` en `SpendingMonth.kt` por cálculo civil de Howard Hinnant en Kotlin puro.
+
+### Próximo paso para el siguiente agente (Bloque 7: validación final)
+
+Todo el código de los bloques 1 a 6 y el pulido de íconos/KMP ya está escrito, commiteado y pusheado en `origin/codex/rumbo-al-mvp`. Para cerrar el Bloque 7 (`7.1`, `7.2`, `7.3`) cuando se retome la sesión de validación:
+1. Verificar que `local.properties` apunte al Android SDK instalado en la máquina (o definir `ANDROID_HOME`).
+2. Ejecutar `npm test`, `npm run lint`, `npm run build:android`, `openspec validate mvp-ux-polish --strict` y `./gradlew :core:data-local:connectedDebugAndroidTest` en el emulador.
+3. Instalar el APK compilado en el emulador y completar el recorrido visual de cierre (`7.2`) y actualización final (`7.3`).
 
 La auditoría integral actualizada está en `docs/audits/2026-10-16-mvp.md`; la validación manual pendiente se sigue en https://github.com/jhoel0521/coinden/issues/2. No se afirma prueba de TalkBack, cámara, voz ni recorrido completo en el emulador.

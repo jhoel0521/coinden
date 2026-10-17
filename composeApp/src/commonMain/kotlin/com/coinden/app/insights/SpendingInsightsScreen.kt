@@ -58,6 +58,7 @@ import coinden.composeapp.generated.resources.spending_title
 import coinden.composeapp.generated.resources.spending_total
 import com.coinden.app.capture.label
 import com.coinden.app.format.MoneyFormatter
+import com.coinden.app.theme.CoinDenTheme
 import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.interpret.UserLocale
 import kotlinx.coroutines.launch
@@ -134,7 +135,7 @@ fun SpendingInsightsScreen(
                                     } else {
                                         stringResource(Res.string.spending_no_conversion)
                                     },
-                                    style = MaterialTheme.typography.headlineMedium,
+                                    style = CoinDenTheme.amounts.amountLarge,
                                 )
                                 Text(stringResource(Res.string.spending_estimate), style = MaterialTheme.typography.bodySmall)
                                 if (state.partial) Text(stringResource(Res.string.spending_missing_rate))
@@ -170,7 +171,7 @@ private fun SpendingCategoryRow(
                 } else {
                     stringResource(Res.string.spending_no_conversion)
                 },
-                style = MaterialTheme.typography.titleLarge,
+                style = CoinDenTheme.amounts.amount,
             )
             Text(stringResource(Res.string.spending_original), style = MaterialTheme.typography.labelMedium)
             row.total.byCurrency.forEach { Text(MoneyFormatter.format(it, locale)) }

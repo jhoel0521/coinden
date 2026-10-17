@@ -31,7 +31,6 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -272,7 +271,7 @@ class SpendingInsightsPresenterTest {
                 c.storage.wallets
                     .listWallets(c.ownerId)
                     .first { it.type == WalletType.BANK }
-            val old = Instant.parse("2024-01-01T00:00:00Z").toEpochMilli()
+            val old = SpendingMonth(2024, 1).bounds(0).first
             val wallet =
                 assertIs<WalletOperationResult.WalletCreated>(
                     c.createWallet(c.ownerId, "Sophie", Currency.EUR, WalletType.CASH, money("500", Currency.EUR), occurredAtEpochMs = old),

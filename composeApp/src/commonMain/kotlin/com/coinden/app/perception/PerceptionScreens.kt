@@ -178,7 +178,10 @@ fun VoiceModelsScreen(
                         row.installed ->
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(stringResource(Res.string.models_installed), modifier = Modifier.weight(1f))
-                                OutlinedButton(onClick = { presenter.delete(row.model) }) { Text(stringResource(Res.string.models_delete)) }
+                                OutlinedButton(
+                                    onClick = { presenter.delete(row.model) },
+                                    modifier = Modifier.heightIn(min = 48.dp),
+                                ) { Text(stringResource(Res.string.models_delete)) }
                             }
                         else ->
                             Button(

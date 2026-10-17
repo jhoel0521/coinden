@@ -45,6 +45,7 @@ import com.coinden.app.capture.label
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.format.TimeFormatter
 import com.coinden.app.theme.CoinDenIcon
+import com.coinden.app.theme.CoinDenTheme
 import com.coinden.app.ui.LoadNotice
 import com.coinden.app.ui.ScreenLoad
 import com.coinden.core.domain.model.category.CategoryRef
@@ -101,7 +102,7 @@ fun HistoryScreen(
                                 modifier = Modifier.weight(1f),
                             )
                             val sign = if (item.kind == MovementKindView.EXPENSE) "-" else ""
-                            Text(sign + MoneyFormatter.format(item.amount, locale), style = MaterialTheme.typography.titleMedium)
+                            Text(sign + MoneyFormatter.format(item.amount, locale), style = CoinDenTheme.amounts.amount)
                         }
                         val details =
                             listOfNotNull(

@@ -296,6 +296,7 @@ fun CurrenciesScreen(
                             )
                             TextButton(
                                 onClick = { presenter.setRate(choice.currency.code, "") },
+                                modifier = Modifier.heightIn(min = 48.dp),
                             ) { Text(stringResource(Res.string.rate_set)) }
                         } else {
                             OutlinedTextField(
