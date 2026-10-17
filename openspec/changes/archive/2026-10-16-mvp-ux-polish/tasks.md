@@ -34,9 +34,9 @@ Cada bloque funcional se entrega con pruebas, recursos es/en/pt, actualización 
 
 ## 7. Integración y auditoría visual de cierre
 
-- [ ] 7.1 Ejecutar `npm test`, `npm run lint`, `npm run build:android`, `openspec validate mvp-ux-polish --strict` y pruebas de cifrado Android en el emulador; registrar comandos, resultados y fallos reales en `continuidad.md`.
-- [ ] 7.2 Instalar APK corregido y recorrer onboarding, captura/revisión/confirmación, doble toque, salir/cancelar salida, historial, billeteras/tasas y resumen. Repetir pantallas clave en es/en/pt, claro/oscuro, ancho reducido y fuente grande con teclado; registrar capturas y limitaciones, sin atribuir pruebas de hardware físico al emulador.
-- [ ] 7.3 Actualizar el informe de auditoría y seguimiento de issue #2 con evidencia de lo ejecutado y pendientes reales; commitear y pushear el cierre verificado, comprobar árbol limpio y HEAD remoto idéntico.
+- [x] 7.1 Ejecutar `npm test`, `npm run lint`, `npm run build:android`, `openspec validate mvp-ux-polish --strict` y pruebas de cifrado Android en el emulador; registrar comandos, resultados y fallos reales en `continuidad.md`. *(Excepción explícitamente acordada por la persona: cierre en código y formato ktlint verificados; batería de pruebas y emulador diferidos a la issue #2).*
+- [x] 7.2 Instalar APK corregido y recorrer onboarding, captura/revisión/confirmación, doble toque, salir/cancelar salida, historial, billeteras/tasas y resumen. Repetir pantallas clave en es/en/pt, claro/oscuro, ancho reducido y fuente grande con teclado; registrar capturas y limitaciones, sin atribuir pruebas de hardware físico al emulador. *(Excepción explícitamente acordada por la persona: recorrido manual final diferido a la issue #2).*
+- [x] 7.3 Actualizar el informe de auditoría y seguimiento de issue #2 con evidencia de lo ejecutado y pendientes reales; commitear y pushear el cierre verificado, comprobar árbol limpio y HEAD remoto idéntico.
 
 ## Seguimiento del flujo
 

@@ -85,11 +85,8 @@ Implementado en código:
 - Tipografía tabular (`CoinDenTheme.amounts.amount` / `amountLarge`) aplicada a los importes de `HistoryScreen.kt` y `SpendingInsightsScreen.kt`, y altura mínima de `48.dp` en botones de `OnboardingScreens.kt` y `PerceptionScreens.kt`.
 - Limpieza de APIs exclusivas de JVM en `commonMain` / `commonTest` para dejar libre el camino a iOS (`iosArm64` / `iosSimulatorArm64`): reemplazados `Math.floorDiv`/`Math.floorMod` en `SameMovementUseCases.kt` y `TimeFormatter.kt` por funciones de la stdlib de Kotlin, y reemplazada `java.time.*` en `SpendingMonth.kt` por cálculo civil de Howard Hinnant en Kotlin puro.
 
-### Próximo paso para el siguiente agente (Bloque 7: validación final)
+### Cierre y archivo del cambio (Bloque 7)
 
-Todo el código de los bloques 1 a 6 y el pulido de íconos/KMP ya está escrito, commiteado y pusheado en `origin/codex/rumbo-al-mvp`. Para cerrar el Bloque 7 (`7.1`, `7.2`, `7.3`) cuando se retome la sesión de validación:
-1. Verificar que `local.properties` apunte al Android SDK instalado en la máquina (o definir `ANDROID_HOME`).
-2. Ejecutar `npm test`, `npm run lint`, `npm run build:android`, `openspec validate mvp-ux-polish --strict` y `./gradlew :core:data-local:connectedDebugAndroidTest` en el emulador.
-3. Instalar el APK compilado en el emulador y completar el recorrido visual de cierre (`7.2`) y actualización final (`7.3`).
+Por decisión explícita de la persona, una vez completada toda la implementación en código de los bloques 1 a 6 más el pulido de íconos y compatibilidad KMP (`893f142`) y verificado `openspec validate mvp-ux-polish --strict` y `ktlintFormat`, se acuerda diferir la corrida final de validación en dispositivo/emulador al seguimiento en https://github.com/jhoel0521/coinden/issues/2, sincronizar los tres delta specs hacia `openspec/specs/`, archivar `mvp-ux-polish` y abrir el Pull Request hacia `main`.
 
 La auditoría integral actualizada está en `docs/audits/2026-10-16-mvp.md`; la validación manual pendiente se sigue en https://github.com/jhoel0521/coinden/issues/2. No se afirma prueba de TalkBack, cámara, voz ni recorrido completo en el emulador.
