@@ -67,4 +67,11 @@ Emulador: completado onboarding (USD por región US del AVD, billetera de prueba
 
 Publicado en `ad8e78f` (`feat(ux): distinguir carga, error y reintento en Inicio, historial y bandeja`). Se implementó `LoadNotice` (`ScreenLoad.LOADING`, `READY`, `ERROR`), señal de datos anteriores desactualizados (`load_stale`), control de generación contra respuestas fuera de orden y bloqueo de acciones incompatibles en `HomePresenter`/`HomeScreen`, `ReviewInboxPresenter`/`ReviewInboxScreen` e `HistoryPresenter`/`HistoryScreen`, junto con `ScreenLoadingTest.kt` y traducciones `es`/`en`/`pt`.
 
+### Bloque 5: nombres de categorías propias
+
+Implementado en `DraftCard`/`DraftCardView`, `HistoryPresenter`/`HistoryScreen` y `DraftFormPresenter`/`DraftFormScreen`, más prueba de escenarios con Carlos, John y Sophie en `HistoryPresenterTest`:
+- `CategoryView` e `HistoryItem` transportan el nombre guardado de `CategoryRef.Custom` resuelto desde `customCategoriesOf(ownerId)` (incluyendo categorías archivadas).
+- Si una categoría propia ya no tiene nombre disponible, la vista usa `Res.string.spending_category_missing` sin exponer nunca su UUID ni la etiqueta genérica `category_custom`.
+- `DraftFormPresenter` carga las categorías propias del usuario, conserva en las opciones cualquier categoría propia ya asignada (aunque esté archivada o sin nombre) y resuelve su nombre real tanto en los chips como en `beforeText` (`"antes: ..."`).
+
 La auditoría integral actualizada está en `docs/audits/2026-10-16-mvp.md`; la validación manual pendiente se sigue en https://github.com/jhoel0521/coinden/issues/2. No se afirma prueba de TalkBack, cámara, voz ni recorrido completo en el emulador.

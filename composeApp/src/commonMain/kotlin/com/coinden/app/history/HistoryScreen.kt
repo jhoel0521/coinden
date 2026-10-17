@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.back
-import coinden.composeapp.generated.resources.category_custom
 import coinden.composeapp.generated.resources.category_none
 import coinden.composeapp.generated.resources.field_reference
 import coinden.composeapp.generated.resources.form_see_evidence
@@ -39,6 +38,7 @@ import coinden.composeapp.generated.resources.history_corrected
 import coinden.composeapp.generated.resources.history_empty
 import coinden.composeapp.generated.resources.history_evidence
 import coinden.composeapp.generated.resources.history_title
+import coinden.composeapp.generated.resources.spending_category_missing
 import com.coinden.app.capture.FormMode
 import com.coinden.app.capture.MovementKindView
 import com.coinden.app.capture.label
@@ -107,7 +107,7 @@ fun HistoryScreen(
                             listOfNotNull(
                                 TimeFormatter.dayMonthTime(item.occurredAtEpochMs, utcOffsetMinutes, locale),
                                 item.walletName,
-                                if (item.kind == MovementKindView.EXPENSE) categoryLabel(item.category) else null,
+                                if (item.kind == MovementKindView.EXPENSE) categoryLabel(item.category, item.customCategoryName) else null,
                                 item.reference?.let { "${stringResource(Res.string.field_reference)} $it" },
                             )
                         Text(details.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
@@ -142,9 +142,12 @@ fun HistoryScreen(
 }
 
 @Composable
-private fun categoryLabel(category: CategoryRef?): String =
+private fun categoryLabel(
+    category: CategoryRef?,
+    customName: String?,
+): String =
     when (category) {
         null -> stringResource(Res.string.category_none)
         is CategoryRef.Base -> stringResource(category.category.label())
-        is CategoryRef.Custom -> stringResource(Res.string.category_custom)
+        is CategoryRef.Custom -> customName ?: stringResource(Res.string.spending_category_missing)
     }

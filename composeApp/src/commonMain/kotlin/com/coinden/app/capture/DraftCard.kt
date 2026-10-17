@@ -32,6 +32,8 @@ data class CategoryView(
     val ref: CategoryRef,
     /** null: la eligió la persona en el formulario. */
     val reason: SuggestionReason?,
+    /** Nombre guardado si es categoría propia; null si es base o ya no está disponible. */
+    val customName: String? = null,
 )
 
 /** Un borrador capturado, en datos semánticos: sin textos ni formatos. */
@@ -83,13 +85,17 @@ class DraftCards(
 ) {
     suspend fun of(drafts: List<Draft>): List<DraftCard> {
         val directory = container.drafts.directory(container.ownerId)
+        val customNames =
+            container.storage.categorization
+                .customCategoriesOf(container.ownerId)
+                .associate { it.id to it.name }
         val questions =
             container.findSameMovementQuestions(container.ownerId, container.utcOffsetMinutes).associateBy { it.draftId }
         return drafts.map { draft ->
-            val card = card(draft, directory)
+            val card = card(draft, directory, customNames)
             val question = questions[draft.id] ?: return@map card
             val other = container.drafts.load(question.otherDraftId) ?: return@map card
-            val otherCard = card(other, directory)
+            val otherCard = card(other, directory, customNames)
             card.copy(
                 question =
                     SameMovementView(
@@ -116,6 +122,7 @@ class DraftCards(
     private suspend fun card(
         draft: Draft,
         directory: WalletDirectory,
+        customNames: Map<String, String>,
     ): DraftCard {
         val proposal =
             when (draft) {
@@ -138,7 +145,10 @@ class DraftCards(
             walletSuggested = proposal?.origins?.get(DraftField.WALLET) == FieldOrigin.SUGGESTED,
             confidence = draft.confidence,
             paymentMethod = proposal?.let(::paymentMethodOf),
-            category = suggestion?.let { CategoryView(it.category, it.reason) },
+            category =
+                suggestion?.let {
+                    CategoryView(it.category, it.reason, (it.category as? CategoryRef.Custom)?.let { c -> customNames[c.id] })
+                },
             walletSuggestion = proposal?.let(::walletSuggestionOf),
             evidenceSource = evidence.source,
             attachmentRef = evidence.attachmentRef,

@@ -60,6 +60,13 @@ data class FormWallet(
     val type: WalletType,
 )
 
+/** Una categoría propia disponible o asociada al movimiento en el formulario. */
+data class FormCustomCategory(
+    val id: String,
+    val name: String?,
+    val archived: Boolean = false,
+)
+
 data class DraftFormState(
     /** "Escríbelo como te salga": llena los campos con el intérprete. */
     val phrase: String = "",
@@ -77,6 +84,7 @@ data class DraftFormState(
     /** Número de transacción (opcional). */
     val reference: String = "",
     val wallets: List<FormWallet> = emptyList(),
+    val customCategories: List<FormCustomCategory> = emptyList(),
     val mode: FormMode = FormMode.New,
     /** Al corregir: lo que cambia respecto del movimiento confirmado, con su valor anterior. */
     val changes: List<FieldChange> = emptyList(),
@@ -91,6 +99,8 @@ data class DraftFormState(
 ) {
     /** El monto nuevo es el doble o más, o la mitad o menos, del anterior. */
     val largeAmount: Boolean get() = changes.any { it is FieldChange.Amount && it.large }
+
+    fun customCategoryName(id: String): String? = customCategories.firstOrNull { it.id == id }?.name
 }
 
 /**
@@ -132,14 +142,33 @@ class DraftFormPresenter(
         if (loaded) return
         directory = container.drafts.directory(container.ownerId)
         val wallets = directory.wallets.filter { it.isActive }.map { FormWallet(it.id, it.name, it.currency, it.type) }
-        mutableState.update { it.copy(wallets = wallets) }
+        val customCategories =
+            container.storage.categorization
+                .customCategoriesOf(container.ownerId)
+                .map { FormCustomCategory(it.id, it.name, it.archived) }
+        mutableState.update { it.copy(wallets = wallets, customCategories = customCategories) }
         when (mode) {
             FormMode.New -> mutableState.update { it.copy(walletId = it.walletId ?: directory.defaultWalletId) }
             is FormMode.Review -> loadReview(mode.draftId)
             is FormMode.Correct -> loadCorrection(mode)
         }
+        ensureReferencedCustomCategories()
         baseline = state.value.fields()
         loaded = true
+    }
+
+    private fun ensureReferencedCustomCategories() {
+        mutableState.update { s ->
+            val known = s.customCategories.map { it.id }.toSet()
+            val refs =
+                listOfNotNull(
+                    s.category as? CategoryRef.Custom,
+                    before?.second as? CategoryRef.Custom,
+                ).map { it.id }
+                    .distinct()
+                    .filterNot { it in known }
+            if (refs.isEmpty()) s else s.copy(customCategories = s.customCategories + refs.map { FormCustomCategory(it, null) })
+        }
     }
 
     private suspend fun loadReview(draftId: String) {
@@ -286,7 +315,10 @@ class DraftFormPresenter(
                     }
                 }
             val card = cards.of(listOf(draft)).single()
-            val chosen = s.category?.let { CategoryView(it, reason = null) } ?: card.category
+            val chosen =
+                s.category?.let { ref ->
+                    CategoryView(ref, reason = null, customName = (ref as? CategoryRef.Custom)?.let { s.customCategoryName(it.id) })
+                } ?: card.category
             CaptureResult(listOf(card.copy(category = chosen)))
         }
 

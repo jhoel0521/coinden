@@ -24,8 +24,8 @@ Cada bloque funcional se entrega con pruebas, recursos es/en/pt, actualización 
 
 ## 5. Nombres de categorías propias
 
-- [ ] 5.1 Cubrir primero los cuatro escenarios de «Nombre de Categorías Propias en el Recorrido»; resolver nombres activos/archivados, fallback sin IDs y selección/comparación del formulario. Verificar tarjetas, historial y correcciones con las pruebas de Carlos, John y Sophie.
-- [ ] 5.2 Registrar resultados y comandos de 5.1, verificar lint y recursos, commitear y pushear el bloque; comprobar igualdad de HEAD y rama remota.
+- [x] 5.1 Cubrir primero los cuatro escenarios de «Nombre de Categorías Propias en el Recorrido»; resolver nombres activos/archivados, fallback sin IDs y selección/comparación del formulario. Verificar tarjetas, historial y correcciones con las pruebas de Carlos, John y Sophie.
+- [x] 5.2 Registrar resultados y comandos de 5.1, verificar lint y recursos, commitear y pushear el bloque; comprobar igualdad de HEAD y rama remota.
 
 ## 6. Claridad del patrimonio y alcance del MVP
 

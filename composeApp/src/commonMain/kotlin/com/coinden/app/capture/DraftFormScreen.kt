@@ -51,7 +51,6 @@ import androidx.compose.ui.unit.dp
 import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.back
 import coinden.composeapp.generated.resources.capture_hint
-import coinden.composeapp.generated.resources.category_custom
 import coinden.composeapp.generated.resources.category_none
 import coinden.composeapp.generated.resources.dialog_cancel
 import coinden.composeapp.generated.resources.dialog_ok
@@ -96,6 +95,7 @@ import coinden.composeapp.generated.resources.form_yesterday
 import coinden.composeapp.generated.resources.kind_expense
 import coinden.composeapp.generated.resources.kind_income
 import coinden.composeapp.generated.resources.same_no
+import coinden.composeapp.generated.resources.spending_category_missing
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.format.TimeFormatter
 import com.coinden.app.theme.CoinDenIcon
@@ -154,7 +154,8 @@ fun DraftFormScreen(
     val changes = state.changes.associateBy { it.field }
 
     @Composable
-    fun before(field: CorrectionField): String? = changes[field]?.let { beforeText(it, state.wallets, locale, utcOffsetMinutes) }
+    fun before(field: CorrectionField): String? =
+        changes[field]?.let { beforeText(it, state.wallets, state.customCategories, locale, utcOffsetMinutes) }
 
     CompositionLocalProvider(LocalFormEnabled provides (!state.busy && !state.completed)) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).imePadding()) {
@@ -251,6 +252,16 @@ fun DraftFormScreen(
                             val ref = CategoryRef.Base(category)
                             Choice(state.category == ref, category.label()) { presenter.onCategoryChange(ref) }
                         }
+                        val selectedCustom = (state.category as? CategoryRef.Custom)?.id
+                        val previousCustom =
+                            (changes[CorrectionField.CATEGORY]?.let { (it as? FieldChange.Category)?.before } as? CategoryRef.Custom)?.id
+                        state.customCategories
+                            .filter { !it.archived || it.id == selectedCustom || it.id == previousCustom }
+                            .forEach { custom ->
+                                val ref = CategoryRef.Custom(custom.id)
+                                val label = custom.name ?: stringResource(Res.string.spending_category_missing)
+                                ChoiceText(state.category == ref, label) { presenter.onCategoryChange(ref) }
+                            }
                     }
                 }
 
@@ -402,6 +413,7 @@ private fun Actions(
 fun beforeText(
     change: FieldChange,
     wallets: List<FormWallet>,
+    customCategories: List<FormCustomCategory> = emptyList(),
     locale: UserLocale,
     utcOffsetMinutes: Int,
 ): String {
@@ -418,7 +430,9 @@ fun beforeText(
                 when (val c = change.before) {
                     null -> stringResource(Res.string.category_none)
                     is CategoryRef.Base -> stringResource(c.category.label())
-                    is CategoryRef.Custom -> stringResource(Res.string.category_custom)
+                    is CategoryRef.Custom ->
+                        customCategories.firstOrNull { it.id == c.id }?.name
+                            ?: stringResource(Res.string.spending_category_missing)
                 }
             is FieldChange.Reference -> change.before
         }

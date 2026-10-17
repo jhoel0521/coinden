@@ -22,6 +22,7 @@ data class HistoryItem(
     val walletName: String?,
     val occurredAtEpochMs: Long,
     val category: CategoryRef?,
+    val customCategoryName: String? = null,
     val reference: String?,
     /** Evidencias guardadas: la original más las unidas o de comprobantes. */
     val evidenceCount: Int,
@@ -63,6 +64,10 @@ class HistoryPresenter(
     private suspend fun readSnapshot(): HistoryState {
         val owner = container.ownerId
         val directory = container.drafts.directory(owner)
+        val customNames =
+            container.storage.categorization
+                .customCategoriesOf(owner)
+                .associate { it.id to it.name }
         val items =
             container.movementHistory(owner).map { entry ->
                 val draft = entry.draft
@@ -73,6 +78,7 @@ class HistoryPresenter(
                         is ReadyMovement.Transfer -> Facts(MovementKindView.TRANSFER, m.out, m.fromWalletId, m.reference)
                         is ReadyMovement.AdjustTo -> Facts(MovementKindView.ADJUSTMENT, m.target, m.walletId, null)
                     }
+                val category = entry.classification?.category
                 HistoryItem(
                     draftId = draft.id,
                     kind = kind,
@@ -80,7 +86,8 @@ class HistoryPresenter(
                     amount = amount,
                     walletName = directory.byId(walletId)?.name,
                     occurredAtEpochMs = draft.movement.occurredAtEpochMs,
-                    category = entry.classification?.category,
+                    category = category,
+                    customCategoryName = (category as? CategoryRef.Custom)?.let { customNames[it.id] },
                     reference = reference,
                     evidenceCount = 1 + draft.header.extraEvidence.size,
                     corrected =
