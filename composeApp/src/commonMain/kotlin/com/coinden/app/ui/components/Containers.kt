@@ -1,6 +1,7 @@
 package com.coinden.app.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -277,4 +279,32 @@ fun CdSheet(
             }
         }
     }
+}
+
+/** Tono de una insignia. */
+enum class BadgeTone { Neutral, Success, Warning, Error }
+
+/** Insignia no interactiva (un motivo, un estado): texto corto con fondo suave, sin depender solo del color. */
+@Composable
+fun CdBadge(
+    text: String,
+    tone: BadgeTone = BadgeTone.Neutral,
+    modifier: Modifier = Modifier,
+) {
+    val scheme = MaterialTheme.colorScheme
+    val extra = CoinDenTheme.colors
+    val (bg, fg) =
+        when (tone) {
+            BadgeTone.Neutral -> scheme.secondaryContainer to scheme.onSecondaryContainer
+            BadgeTone.Success -> extra.successContainer to extra.onSuccessContainer
+            BadgeTone.Warning -> extra.warningContainer to extra.onWarningContainer
+            BadgeTone.Error -> scheme.errorContainer to scheme.onErrorContainer
+        }
+    Text(
+        text,
+        style = MaterialTheme.typography.labelMedium,
+        color = fg,
+        maxLines = 1,
+        modifier = modifier.background(bg, RoundedCornerShape(50)).padding(horizontal = 10.dp, vertical = 4.dp),
+    )
 }

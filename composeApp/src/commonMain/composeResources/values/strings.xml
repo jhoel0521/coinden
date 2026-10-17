@@ -285,4 +285,12 @@
     <string name="load_stale">Los datos anteriores no están actualizados.</string>
     <string name="form_more_details">Más detalles</string>
     <string name="form_more_categories">Más…</string>
+    <string name="inbox_reason_pending_change">Cambio pendiente</string>
+    <string name="inbox_reason_same_question">¿Mismo gasto?</string>
+    <string name="inbox_reason_unread">Sin leer todavía</string>
+    <string name="inbox_reason_not_movement">No es un movimiento</string>
+    <string name="inbox_reason_missing_amount">Falta el monto</string>
+    <string name="inbox_reason_missing_wallet">Falta la billetera</string>
+    <string name="inbox_reason_suggested_wallet">Billetera sugerida</string>
+    <string name="inbox_reason_check_data">Revisa los datos</string>
 </resources>

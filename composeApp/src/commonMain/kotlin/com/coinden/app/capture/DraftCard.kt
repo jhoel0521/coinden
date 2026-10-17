@@ -62,6 +62,8 @@ data class DraftCard(
     val extraEvidence: Int = 0,
     /** "¿Es el mismo gasto que...?", si puede ser el mismo movimiento que otra captura. */
     val question: SameMovementView? = null,
+    /** La nota del movimiento (lo que la persona dijo o el comercio), para la fila compacta. */
+    val note: String? = null,
     /** Qué conviene decir la próxima vez (vacío si no faltó nada). */
     val tips: Set<CaptureTip> = emptySet(),
     /** Frase de ejemplo con las palabras de la persona («power 10 bnb»), si el consejo es decir la billetera. */
@@ -155,6 +157,7 @@ class DraftCards(
             reference = referenceOf(draft, proposal),
             extraEvidence = draft.header.extraEvidence.size,
             perceivedText = draft.header.perceivedText,
+            note = noteOf(draft),
             tips = tips,
             tipExample = if (CaptureTip.SAY_WALLET in tips) exampleOf(draft, proposal, directory) else null,
         )

@@ -285,4 +285,12 @@
     <string name="load_stale">Previously shown data is not up to date.</string>
     <string name="form_more_details">More details</string>
     <string name="form_more_categories">More…</string>
+    <string name="inbox_reason_pending_change">Pending change</string>
+    <string name="inbox_reason_same_question">Same expense?</string>
+    <string name="inbox_reason_unread">Not read yet</string>
+    <string name="inbox_reason_not_movement">Not a movement</string>
+    <string name="inbox_reason_missing_amount">Amount missing</string>
+    <string name="inbox_reason_missing_wallet">Wallet missing</string>
+    <string name="inbox_reason_suggested_wallet">Suggested wallet</string>
+    <string name="inbox_reason_check_data">Check the details</string>
 </resources>
