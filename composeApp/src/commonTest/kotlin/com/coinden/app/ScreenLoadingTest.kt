@@ -57,16 +57,16 @@ class ScreenLoadingTest {
                                 } else {
                                     listOf(
                                         HistoryItem(
-                                            "id",
-                                            MovementKindView.EXPENSE,
-                                            n.toString(),
-                                            Money.parseCanonical("1", Currency.USD),
-                                            "wallet",
-                                            0,
-                                            null,
-                                            null,
-                                            1,
-                                            false,
+                                            draftId = "id",
+                                            kind = MovementKindView.EXPENSE,
+                                            note = n.toString(),
+                                            amount = Money.parseCanonical("1", Currency.USD),
+                                            walletName = "wallet",
+                                            occurredAtEpochMs = 0,
+                                            category = null,
+                                            reference = null,
+                                            evidenceCount = 1,
+                                            corrected = false,
                                         ),
                                     )
                                 },
