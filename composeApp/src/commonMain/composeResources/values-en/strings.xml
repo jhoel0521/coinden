@@ -279,4 +279,7 @@
     <string name="form_exit_note">Changes in this form will be lost. Leaving does not change any balance.</string>
     <string name="form_exit_leave">Leave without saving</string>
     <string name="form_exit_stay">Keep editing</string>
+    <string name="load_loading">Loading data…</string>
+    <string name="load_error">Could not load the data. You can try again.</string>
+    <string name="load_stale">Previously shown data is not up to date.</string>
 </resources>

@@ -279,4 +279,7 @@
     <string name="form_exit_note">Se perderán los cambios de este formulario. Ningún saldo se modifica al salir.</string>
     <string name="form_exit_leave">Salir sin guardar</string>
     <string name="form_exit_stay">Seguir editando</string>
+    <string name="load_loading">Cargando datos…</string>
+    <string name="load_error">No se pudieron cargar los datos. Puedes reintentar.</string>
+    <string name="load_stale">Los datos anteriores no están actualizados.</string>
 </resources>

@@ -63,6 +63,7 @@ import com.coinden.app.onboarding.label
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.theme.CoinDenTheme
 import com.coinden.app.theme.CoinDenWordmark
+import com.coinden.app.ui.LoadNotice
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.wallet.WalletType
 import kotlinx.coroutines.launch
@@ -112,56 +113,59 @@ fun HomeScreen(
                     }
                 }
             }
-            item {
-                Surface(shape = MaterialTheme.shapes.large, color = scheme.primaryContainer, contentColor = scheme.onPrimaryContainer) {
-                    Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(stringResource(Res.string.home_total), style = MaterialTheme.typography.labelLarge)
-                        Text(state.total?.let { MoneyFormatter.format(it, locale) }.orEmpty(), style = CoinDenTheme.amounts.amountLarge)
-                        if (state.unconverted.isNotEmpty()) {
-                            val apart = state.unconverted.joinToString(" · ") { MoneyFormatter.format(it, locale) }
-                            Text(stringResource(Res.string.home_unconverted, apart), style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                }
-            }
-            item {
-                Surface(shape = MaterialTheme.shapes.medium, color = scheme.surfaceContainerHigh) {
-                    Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(stringResource(Res.string.home_pending, state.pendingDrafts), style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            stringResource(Res.string.home_pending_note),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = scheme.onSurfaceVariant,
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = onReview, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                                Text(stringResource(Res.string.home_review, state.pendingDrafts))
-                            }
-                            OutlinedButton(onClick = onHistory, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                                Text(stringResource(Res.string.home_history))
+            item { LoadNotice(state.load, state.loaded, onRetry = { scope.launch { presenter.load() } }) }
+            if (state.loaded) {
+                item {
+                    Surface(shape = MaterialTheme.shapes.large, color = scheme.primaryContainer, contentColor = scheme.onPrimaryContainer) {
+                        Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(stringResource(Res.string.home_total), style = MaterialTheme.typography.labelLarge)
+                            Text(state.total?.let { MoneyFormatter.format(it, locale) }.orEmpty(), style = CoinDenTheme.amounts.amountLarge)
+                            if (state.unconverted.isNotEmpty()) {
+                                val apart = state.unconverted.joinToString(" · ") { MoneyFormatter.format(it, locale) }
+                                Text(stringResource(Res.string.home_unconverted, apart), style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
                 }
-            }
-            item {
-                OutlinedButton(onClick = onSpending, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                    Text(stringResource(Res.string.spending_title))
+                item {
+                    Surface(shape = MaterialTheme.shapes.medium, color = scheme.surfaceContainerHigh) {
+                        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(stringResource(Res.string.home_pending, state.pendingDrafts), style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                stringResource(Res.string.home_pending_note),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = scheme.onSurfaceVariant,
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(onClick = onReview, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                                    Text(stringResource(Res.string.home_review, state.pendingDrafts))
+                                }
+                                OutlinedButton(onClick = onHistory, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                                    Text(stringResource(Res.string.home_history))
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-            item {
-                Text(
-                    stringResource(Res.string.home_wallets),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-            }
-            item {
-                TextButton(onClick = onSettings, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                    Text(stringResource(Res.string.settings_title))
+                item {
+                    OutlinedButton(onClick = onSpending, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                        Text(stringResource(Res.string.spending_title))
+                    }
                 }
+                item {
+                    Text(
+                        stringResource(Res.string.home_wallets),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+                item {
+                    TextButton(onClick = onSettings, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                        Text(stringResource(Res.string.settings_title))
+                    }
+                }
+                items(state.wallets, key = { it.id }) { wallet -> WalletRow(wallet, locale) }
             }
-            items(state.wallets, key = { it.id }) { wallet -> WalletRow(wallet, locale) }
             item {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(

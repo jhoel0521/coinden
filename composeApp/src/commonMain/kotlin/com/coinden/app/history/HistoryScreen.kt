@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -44,8 +45,11 @@ import com.coinden.app.capture.label
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.format.TimeFormatter
 import com.coinden.app.theme.CoinDenIcon
+import com.coinden.app.ui.LoadNotice
+import com.coinden.app.ui.ScreenLoad
 import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.interpret.UserLocale
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 /** Lo confirmado, del más reciente al más antiguo, con su evidencia y Corregir. */
@@ -59,6 +63,7 @@ fun HistoryScreen(
     onBack: () -> Unit,
 ) {
     val state by presenter.state.collectAsState()
+    val scope = rememberCoroutineScope()
     val scheme = MaterialTheme.colorScheme
     LaunchedEffect(presenter) { presenter.load() }
 
@@ -67,12 +72,13 @@ fun HistoryScreen(
             IconButton(onClick = onBack) { Icon(CoinDenIcon.CLOSE.vector, stringResource(Res.string.back)) }
             Text(stringResource(Res.string.history_title), style = MaterialTheme.typography.titleLarge)
         }
+        LoadNotice(state.load, state.loaded, onRetry = { scope.launch { presenter.load() } })
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            if (state.loaded && state.items.isEmpty()) {
+            if (state.load == ScreenLoad.READY && state.items.isEmpty()) {
                 item {
                     Text(
                         stringResource(Res.string.history_empty),
