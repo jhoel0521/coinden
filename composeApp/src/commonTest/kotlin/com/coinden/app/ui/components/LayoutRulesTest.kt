@@ -122,4 +122,11 @@ class LayoutRulesTest {
         assertEquals(false, GridLayout.lastSpansRow(count = 13, columns = 3))
         assertEquals(false, GridLayout.lastSpansRow(count = 12, columns = 2))
     }
+
+    @Test
+    fun `cada campo le da al teclado una tecla que hace algo`() {
+        assertEquals(ImeKey.Done, ImeRule.of(hasAction = true, search = false))
+        assertEquals(ImeKey.Search, ImeRule.of(hasAction = false, search = true))
+        assertEquals(ImeKey.Next, ImeRule.of(hasAction = false, search = false))
+    }
 }

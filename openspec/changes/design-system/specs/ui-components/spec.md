@@ -103,3 +103,23 @@ Un componente DEBE (MUST) acomodar su espaciado y su ancho a su padre. Dentro de
 #### Scenario: Botón dentro de una tarjeta
 - **WHEN** una tarjeta de la bandeja tiene su acción "Revisar"
 - **THEN** la acción usa el ancho interior de la tarjeta y no agrega un margen propio
+
+### Requirement: Tecla del Teclado en Cada Campo
+Cada campo DEBE (MUST) darle al teclado una tecla que haga algo: si el campo tiene una acción propia, "Listo" la ejecuta y cierra el teclado; si no, "Siguiente" pasa al próximo campo y, en el último, cierra el teclado. Un buscador muestra "Buscar" y cierra el teclado dejando los resultados a la vista.
+
+#### Scenario: Pasar de un campo al siguiente
+- **WHEN** Carlos escribe el código de su moneda propia y toca "Siguiente" en el teclado
+- **THEN** el cursor pasa al campo "Nombre"
+
+#### Scenario: Último campo con acción
+- **WHEN** Carlos escribe el saldo de hoy de una billetera y toca "Listo"
+- **THEN** la billetera se agrega como si tocara "Agregar billetera" y el teclado se cierra
+
+#### Scenario: Frase del formulario
+- **WHEN** Carlos escribe "almuerzo 45 bnb" en "Escríbelo como te salga" y toca "Listo"
+- **THEN** el formulario se llena como si tocara "Llenar"
+
+#### Scenario: Último campo sin acción
+- **WHEN** Carlos escribe la referencia, el último campo del formulario, y toca la tecla del teclado
+- **THEN** el teclado se cierra y Carlos ve el botón "Guardar"
+

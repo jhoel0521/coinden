@@ -166,3 +166,20 @@ object TileLayout {
         }
     }
 }
+
+/** La tecla de acción que muestra el teclado en un campo. */
+enum class ImeKey { Next, Done, Search }
+
+/** Cada campo le da al teclado una tecla que hace algo. */
+object ImeRule {
+    /** [hasAction]: el campo tiene la acción de su formulario. [search]: es un buscador. */
+    fun of(
+        hasAction: Boolean,
+        search: Boolean,
+    ): ImeKey =
+        when {
+            hasAction -> ImeKey.Done
+            search -> ImeKey.Search
+            else -> ImeKey.Next
+        }
+}

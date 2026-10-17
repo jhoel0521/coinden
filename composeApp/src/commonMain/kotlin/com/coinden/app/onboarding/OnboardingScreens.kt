@@ -254,6 +254,7 @@ fun CurrenciesScreen(
                     presenter.search(it)
                 },
                 label = stringResource(Res.string.currencies_search),
+                search = true,
             )
         }
         if (query.isNotBlank()) {
@@ -333,6 +334,7 @@ private fun CustomCurrencyForm(
     var name by remember { mutableStateOf("") }
     var symbol by remember { mutableStateOf("") }
     var decimals by remember { mutableStateOf("2") }
+    val add = { if (presenter.addCustomCurrency(code, name, symbol, decimals)) onAdded() }
     CdCard(tone = CardTone.Raised) {
         CdSection(title = null, error = error) {
             CdField(code, { code = it }, label = stringResource(Res.string.custom_code))
@@ -344,6 +346,7 @@ private fun CustomCurrencyForm(
                     { decimals = it },
                     label = stringResource(Res.string.custom_decimals),
                     keyboardType = KeyboardType.Number,
+                    onImeAction = add,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -351,7 +354,7 @@ private fun CustomCurrencyForm(
                 listOf(
                     CdActionSpec(
                         stringResource(Res.string.custom_add),
-                        { if (presenter.addCustomCurrency(code, name, symbol, decimals)) onAdded() },
+                        add,
                     ),
                 ),
             )
@@ -374,6 +377,12 @@ fun WalletsScreen(
     var type by remember { mutableStateOf(WalletType.CASH) }
     var currency by remember(state.localCurrency) { mutableStateOf(state.localCurrency) }
     var opening by remember { mutableStateOf("") }
+    val addWallet = {
+        if (presenter.addWallet(name, type, currency, opening)) {
+            name = ""
+            opening = ""
+        }
+    }
 
     StepScaffold(
         step = 3,
@@ -440,17 +449,13 @@ fun WalletsScreen(
                         label = stringResource(Res.string.wallet_opening) + " (${currency.code})",
                         suffix = currency.code,
                         keyboardType = KeyboardType.Decimal,
+                        onImeAction = addWallet,
                     )
                     CdActions(
                         listOf(
                             CdActionSpec(
                                 stringResource(Res.string.wallet_add),
-                                {
-                                    if (presenter.addWallet(name, type, currency, opening)) {
-                                        name = ""
-                                        opening = ""
-                                    }
-                                },
+                                addWallet,
                                 icon = CoinDenIcon.PLUS.vector,
                             ),
                         ),

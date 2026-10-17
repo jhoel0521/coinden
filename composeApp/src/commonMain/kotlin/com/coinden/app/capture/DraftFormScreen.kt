@@ -188,6 +188,7 @@ fun DraftFormScreen(
                         label = stringResource(Res.string.form_phrase),
                         placeholder = stringResource(Res.string.capture_hint),
                         singleLine = false,
+                        onImeAction = { if (state.phrase.isNotBlank()) scope.launch { presenter.fillFromPhrase() } },
                         enabled = enabled,
                     )
                     CdActions(

@@ -42,6 +42,12 @@
 - [x] 5.5 Categorías como mosaicos: 3 más usadas y "Más…", hoja con mosaicos; íconos de cada categoría base y `TAG` para las propias.
 - [x] 5.6 Capturas de categorías (fila y hoja) en claro, oscuro y letra 1,3.
 
+## 6. Teclado
+
+- [x] 6.1 Prueba y regla pura `ImeRule.of` (Listo con acción, Buscar en buscadores, Siguiente en los demás).
+- [x] 6.2 `CdField` mueve el foco o cierra el teclado según la tecla; las pantallas pasan su acción ("Llenar", "Agregar billetera", "Agregar moneda", "Guardar" la tasa) y el buscador es de tipo búsqueda.
+- [x] 6.3 Verificar en el emulador: formulario y ajustes (el onboarding usa el mismo `CdField`; no se reinició para no borrar los datos del emulador).
+
 ## Workflow follow-up
 
 - Archivar `design-system` tras unir el PR.

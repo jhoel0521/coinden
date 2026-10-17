@@ -104,6 +104,10 @@ Tocar la fila abre el formulario, como hoy. La tarjeta completa (`DraftCardView`
 
 La elegida lleva relleno `secondaryContainer`, borde `primary` y el ícono en `primary`; las demás, borde suave. El ícono sale del catálogo `CoinDenIcon`, que suma `HELP` para "Sin indicar". Con más de 5 opciones (las categorías), la fila muestra `TileLayout.top = 3` más usadas, con la elegida siempre entre ellas, y un mosaico "Más…" que abre `CdChoiceGrid` en una hoja; la cuadrícula también dibuja mosaicos cuando todas sus opciones tienen ícono. Cada categoría base tiene su ícono (`BaseCategory.icon()`), las propias usan `TAG` y "Sin categoría" usa `HELP`. Lo usan el medio de pago, la categoría del formulario y el tipo de billetera (onboarding y ajustes). La cuadrícula de texto queda para opciones sin ícono, como las monedas.
 
+### D10. La tecla del teclado
+
+`ImeRule.of(hasAction, search)` decide la tecla: `Done` si el campo trae `onImeAction`, `Search` en un buscador y `Next` en los demás. `CdField` la aplica con `KeyboardActions`: `Next` llama a `focusManager.moveFocus(FocusDirection.Next)` y, si no hay otro campo, cierra el teclado; `Done` y `Search` ejecutan la acción (si hay) y cierran el teclado. Una frase de varias líneas con acción también usa `Done`, porque lo dicho es una sola frase. Las pantallas pasan como acción la misma lambda del botón de su formulario: "Llenar", "Agregar billetera", "Agregar moneda" o "Guardar" la tasa.
+
 ## Risks / Trade-offs
 
 - [Migrar 11 pantallas puede romper pruebas de presentadores] → Los presentadores no cambian, salvo la moneda derivada, el "Más detalles" abierto y las categorías más usadas, que tienen pruebas nuevas. Las pantallas no tienen pruebas de UI, así que se verifican en el emulador.
