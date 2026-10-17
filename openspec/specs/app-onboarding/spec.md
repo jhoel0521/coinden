@@ -6,15 +6,19 @@ Lleva a la persona, la primera vez que abre CoinDen, de la bienvenida a su Inici
 ## Requirements
 
 ### Requirement: Bienvenida Multilingüe con Elección de Idioma
-La primera vez que se abre la app DEBE (MUST) mostrarse una bienvenida con el saludo en español, inglés y portugués, que permita elegir el idioma de la app y proponga el del teléfono si es uno de esos tres (si no, inglés). Debe indicar que no hace falta cuenta ni registro.
+La primera vez que se abre la app DEBE (MUST) mostrarse una bienvenida con el saludo en el idioma elegido, que permita elegir español, inglés o portugués y proponga el del teléfono si es uno de esos tres (si no, inglés). Los nombres de los idiomas se muestran en su propia lengua. Debe indicar que no hace falta cuenta ni registro.
 
 #### Scenario: Teléfono en portugués
 - **WHEN** Ana abre la app por primera vez con el teléfono en portugués
-- **THEN** la bienvenida propone portugués y muestra el saludo en los tres idiomas
+- **THEN** la bienvenida propone portugués y muestra su saludo en portugués
 
 #### Scenario: Teléfono en un idioma no soportado
 - **WHEN** Wei abre la app por primera vez con el teléfono en chino
 - **THEN** la bienvenida propone inglés
+
+#### Scenario: Cambiar el saludo sin perder la pantalla
+- **WHEN** John elige inglés o portugués desde una pantalla de la app
+- **THEN** los textos siguen su selección sin reiniciar la navegación y la bienvenida no conserva un título fijo en español
 
 ### Requirement: Idioma de la App
 Todos los textos de la interfaz DEBEN (MUST) existir en español, inglés y portugués y mostrarse en el idioma elegido, que se guarda en el dispositivo y se mantiene al reabrir. El idioma elegido activa su paquete de idioma en el intérprete, junto con el inglés base.

@@ -29,6 +29,8 @@ import com.coinden.app.home.HomeScreen
 import com.coinden.app.i18n.ProvideAppLocale
 import com.coinden.app.inbox.ReviewInboxPresenter
 import com.coinden.app.inbox.ReviewInboxScreen
+import com.coinden.app.insights.SpendingInsightsPresenter
+import com.coinden.app.insights.SpendingInsightsScreen
 import com.coinden.app.onboarding.CurrenciesScreen
 import com.coinden.app.onboarding.OnboardingPresenter
 import com.coinden.app.onboarding.OnboardingStep
@@ -39,6 +41,8 @@ import com.coinden.app.perception.PrivacyPresenter
 import com.coinden.app.perception.PrivacyScreen
 import com.coinden.app.perception.VoiceModelsPresenter
 import com.coinden.app.perception.VoiceModelsScreen
+import com.coinden.app.settings.WalletSettingsPresenter
+import com.coinden.app.settings.WalletSettingsScreen
 import com.coinden.app.theme.CoinDenTheme
 import com.coinden.core.domain.model.interpret.UserLocale
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +60,8 @@ private object Routes {
     const val VOICE_MODELS = "voice-models"
     const val INBOX = "inbox"
     const val HISTORY = "history"
+    const val SPENDING = "spending"
+    const val SETTINGS = "settings"
     const val REVIEW = "review/{draftId}"
     const val CORRECT = "correct/{draftId}/{source}"
     const val EVIDENCE = "evidence/{draftId}"
@@ -212,7 +218,17 @@ private fun AppNavHost(
                 onVoiceModels = { nav.navigate(Routes.VOICE_MODELS) },
                 onReview = { nav.navigate(Routes.INBOX) },
                 onHistory = { nav.navigate(Routes.HISTORY) },
+                onSpending = { nav.navigate(Routes.SPENDING) },
+                onSettings = { nav.navigate(Routes.SETTINGS) },
             )
+        }
+        composable(Routes.SPENDING) {
+            val spending = remember { SpendingInsightsPresenter(container) }
+            SpendingInsightsScreen(spending, locale, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.SETTINGS) {
+            val settingsPresenter = remember { WalletSettingsPresenter(container) }
+            WalletSettingsScreen(settingsPresenter, container, locale, onBack = { nav.popBackStack() })
         }
         composable(Routes.INBOX) {
             val inbox = remember { ReviewInboxPresenter(container) }

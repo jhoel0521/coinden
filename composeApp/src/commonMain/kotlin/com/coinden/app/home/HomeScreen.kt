@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -50,6 +52,8 @@ import coinden.composeapp.generated.resources.language_es
 import coinden.composeapp.generated.resources.language_pt
 import coinden.composeapp.generated.resources.logo_description
 import coinden.composeapp.generated.resources.privacy_note
+import coinden.composeapp.generated.resources.settings_title
+import coinden.composeapp.generated.resources.spending_title
 import com.coinden.app.capture.CaptureBar
 import com.coinden.app.capture.CaptureNoticeCard
 import com.coinden.app.capture.CapturePresenter
@@ -65,6 +69,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 /** Inicio según el tablero "Inicio": patrimonio, borradores por revisar, billeteras y la barra de captura. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HomeScreen(
     presenter: HomePresenter,
@@ -80,6 +85,8 @@ fun HomeScreen(
     onVoiceModels: () -> Unit = {},
     onReview: () -> Unit = {},
     onHistory: () -> Unit = {},
+    onSpending: () -> Unit = {},
+    onSettings: () -> Unit = {},
 ) {
     val state by presenter.state.collectAsState()
     val captureState by capture.state.collectAsState()
@@ -138,11 +145,21 @@ fun HomeScreen(
                 }
             }
             item {
+                OutlinedButton(onClick = onSpending, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                    Text(stringResource(Res.string.spending_title))
+                }
+            }
+            item {
                 Text(
                     stringResource(Res.string.home_wallets),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(top = 4.dp),
                 )
+            }
+            item {
+                TextButton(onClick = onSettings, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                    Text(stringResource(Res.string.settings_title))
+                }
             }
             items(state.wallets, key = { it.id }) { wallet -> WalletRow(wallet, locale) }
             item {
@@ -167,7 +184,7 @@ fun HomeScreen(
                         style = MaterialTheme.typography.labelLarge,
                         color = scheme.onSurfaceVariant,
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         LANGUAGES.forEach { (code, name) ->
                             FilterChip(
                                 selected = language == code,

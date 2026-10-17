@@ -81,9 +81,7 @@ import coinden.composeapp.generated.resources.wallet_type_digital
 import coinden.composeapp.generated.resources.wallets_hint
 import coinden.composeapp.generated.resources.wallets_subtitle
 import coinden.composeapp.generated.resources.wallets_title
-import coinden.composeapp.generated.resources.welcome_greeting_en
-import coinden.composeapp.generated.resources.welcome_greeting_es
-import coinden.composeapp.generated.resources.welcome_greeting_pt
+import coinden.composeapp.generated.resources.welcome_greeting
 import coinden.composeapp.generated.resources.welcome_language
 import coinden.composeapp.generated.resources.welcome_no_account
 import coinden.composeapp.generated.resources.welcome_start
@@ -157,6 +155,7 @@ private fun ErrorText(text: String) {
 }
 
 /** Paso 1: bienvenida en los tres idiomas y elección de idioma. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun WelcomeScreen(
     presenter: OnboardingPresenter,
@@ -168,30 +167,16 @@ fun WelcomeScreen(
     val languages = listOf("es" to Res.string.language_es, "en" to Res.string.language_en, "pt" to Res.string.language_pt)
     StepScaffold(
         step = 1,
-        title = stringResource(Res.string.welcome_greeting_es),
+        title = stringResource(Res.string.welcome_greeting),
         primaryText = stringResource(Res.string.welcome_start),
         onPrimary = onStart,
         onBack = null,
     ) {
         item { CoinDenLogo(stringResource(Res.string.logo_description), size = 72.dp) }
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    stringResource(Res.string.welcome_greeting_en),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = scheme.onSurfaceVariant,
-                )
-                Text(
-                    stringResource(Res.string.welcome_greeting_pt),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = scheme.onSurfaceVariant,
-                )
-            }
-        }
         item { Text(stringResource(Res.string.welcome_subtitle), style = MaterialTheme.typography.bodyLarge) }
         item { Text(stringResource(Res.string.welcome_language), style = MaterialTheme.typography.titleMedium) }
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 languages.forEach { (code, label) ->
                     FilterChip(
                         selected = state.language == code,

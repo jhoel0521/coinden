@@ -29,6 +29,7 @@ import com.coinden.core.domain.port.output.WalletAliasRepositoryPort
 import com.coinden.core.domain.port.output.WalletRepositoryPort
 import com.coinden.core.domain.usecase.GetConsolidatedPortfolioUseCase
 import com.coinden.core.domain.usecase.category.CategorizationContext
+import com.coinden.core.domain.usecase.category.SpendingByCategoryUseCase
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
 import com.coinden.core.domain.usecase.draft.ConfirmDraftUseCase
 import com.coinden.core.domain.usecase.draft.ConfirmReadyDraftsUseCase
@@ -104,6 +105,7 @@ class AppContainer(
 
     val ledger = LedgerContext(storage.wallets, ids, clock, device)
     val categorization = CategorizationContext(storage.categorization, storage.wallets, packs, ids, clock, device)
+    val spendingByCategory = SpendingByCategoryUseCase(categorization, storage.profiles, cryptoRates = emptyList())
     val drafts =
         DraftContext(
             drafts = storage.drafts,
@@ -156,7 +158,7 @@ class AppContainer(
     /** Desfase de la zona horaria del teléfono: define el "mismo día" de dos capturas. */
     val utcOffsetMinutes: Int get() = regional.settings().utcOffsetMinutes
     val walletBalances = GetActiveWalletBalancesUseCase(storage.wallets)
-    val portfolio = GetConsolidatedPortfolioUseCase(storage.profiles)
+    val portfolio = GetConsolidatedPortfolioUseCase(storage.profiles, cryptoRates = emptyList())
 
     /** El onboarding terminó si hay perfil de moneda y al menos una billetera activa. */
     suspend fun isOnboarded(): Boolean =

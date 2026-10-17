@@ -30,6 +30,7 @@ import com.coinden.core.domain.usecase.wallet.RegisterTransferUseCase
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 
 class SpendingByCategoryTest {
@@ -125,5 +126,16 @@ class SpendingByCategoryTest {
             val result = report("carlos", at(0), at(20))
             assertEquals(emptyList(), result.rows)
             assertEquals(Money.zero(Currency.USD), result.total) // sin perfil: USD
+        }
+
+    @Test
+    fun `el desbordamiento de Carlos no se presenta como si faltara una tasa`() =
+        runTest {
+            ConfigureLocalCurrencyUseCase(
+                profiles,
+            )("carlos", Currency.BOB, ExchangeRateStrategy.Fixed(ExchangeRate.parse(Currency.USD, Currency.BOB, "11.20")))
+            val meru = wallet("Meru", usd("90000000000000000"), WalletType.DIGITAL)
+            spend(meru, usd("90000000000000000"), 12, BaseCategory.SUBSCRIPTIONS, "suscripcion")
+            assertFailsWith<ArithmeticException> { report("carlos", at(0), at(20)) }
         }
 }
