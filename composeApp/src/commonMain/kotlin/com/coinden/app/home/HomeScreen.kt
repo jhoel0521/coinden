@@ -51,7 +51,6 @@ import coinden.composeapp.generated.resources.home_wallets
 import coinden.composeapp.generated.resources.language_en
 import coinden.composeapp.generated.resources.language_es
 import coinden.composeapp.generated.resources.language_pt
-import coinden.composeapp.generated.resources.logo_description
 import coinden.composeapp.generated.resources.privacy_note
 import coinden.composeapp.generated.resources.settings_title
 import coinden.composeapp.generated.resources.spending_title
@@ -63,8 +62,8 @@ import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.onboarding.label
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.theme.CoinDenTheme
-import com.coinden.app.theme.CoinDenWordmark
 import com.coinden.app.ui.LoadNotice
+import com.coinden.app.ui.components.BrandMark
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.wallet.WalletType
 import kotlinx.coroutines.launch
@@ -107,7 +106,7 @@ fun HomeScreen(
         ) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.weight(1f)) { CoinDenWordmark(stringResource(Res.string.logo_description)) }
+                    BrandMark(Modifier.weight(1f))
                     TextButton(onClick = onPrivacy, modifier = Modifier.heightIn(min = 48.dp)) {
                         Icon(CoinDenIcon.SHIELD.vector, contentDescription = null, modifier = Modifier.size(18.dp))
                         Text(stringResource(Res.string.home_privacy), modifier = Modifier.padding(start = 6.dp))

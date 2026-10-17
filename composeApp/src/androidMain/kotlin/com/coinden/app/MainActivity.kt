@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import com.coinden.app.capture.AndroidCapturePlatform
 import com.coinden.app.capture.SharedContent
@@ -19,6 +20,8 @@ class MainActivity : ComponentActivity() {
     private val shared = MutableStateFlow<SharedContent?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Splash de la marca (#1C140F con el ícono) en todas las versiones; luego el tema de la app.
+        installSplashScreen()
         // targetSdk 36 dibuja de borde a borde; la pantalla respeta las barras del sistema.
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)

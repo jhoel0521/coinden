@@ -59,7 +59,6 @@ import coinden.composeapp.generated.resources.finish
 import coinden.composeapp.generated.resources.language_en
 import coinden.composeapp.generated.resources.language_es
 import coinden.composeapp.generated.resources.language_pt
-import coinden.composeapp.generated.resources.logo_description
 import coinden.composeapp.generated.resources.next
 import coinden.composeapp.generated.resources.rate_label
 import coinden.composeapp.generated.resources.rate_later
@@ -81,7 +80,6 @@ import coinden.composeapp.generated.resources.wallet_type_digital
 import coinden.composeapp.generated.resources.wallets_hint
 import coinden.composeapp.generated.resources.wallets_subtitle
 import coinden.composeapp.generated.resources.wallets_title
-import coinden.composeapp.generated.resources.welcome_greeting
 import coinden.composeapp.generated.resources.welcome_language
 import coinden.composeapp.generated.resources.welcome_no_account
 import coinden.composeapp.generated.resources.welcome_start
@@ -89,8 +87,8 @@ import coinden.composeapp.generated.resources.welcome_subtitle
 import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.theme.CoinDenIcon
-import com.coinden.app.theme.CoinDenLogo
 import com.coinden.app.theme.CoinDenTheme
+import com.coinden.app.ui.components.BrandLogo
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.wallet.WalletType
@@ -104,7 +102,7 @@ private const val STEPS = 3
 @Composable
 private fun StepScaffold(
     step: Int,
-    title: String,
+    title: String?,
     subtitle: String? = null,
     primaryText: String,
     onPrimary: () -> Unit,
@@ -125,10 +123,12 @@ private fun StepScaffold(
                     color = scheme.primary,
                 )
             }
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(title, style = MaterialTheme.typography.headlineMedium, color = scheme.onSurface)
-                    subtitle?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant) }
+            if (title != null || subtitle != null) {
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        title?.let { Text(it, style = MaterialTheme.typography.headlineMedium, color = scheme.onSurface) }
+                        subtitle?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant) }
+                    }
                 }
             }
             content()
@@ -167,12 +167,13 @@ fun WelcomeScreen(
     val languages = listOf("es" to Res.string.language_es, "en" to Res.string.language_en, "pt" to Res.string.language_pt)
     StepScaffold(
         step = 1,
-        title = stringResource(Res.string.welcome_greeting),
+        // El nombre y el lema van debajo del logo, como texto.
+        title = null,
         primaryText = stringResource(Res.string.welcome_start),
         onPrimary = onStart,
         onBack = null,
     ) {
-        item { CoinDenLogo(stringResource(Res.string.logo_description), size = 72.dp) }
+        item { BrandLogo() }
         item { Text(stringResource(Res.string.welcome_subtitle), style = MaterialTheme.typography.bodyLarge) }
         item { Text(stringResource(Res.string.welcome_language), style = MaterialTheme.typography.titleMedium) }
         item {
