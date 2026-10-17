@@ -152,8 +152,9 @@ fun <T> CdChoiceGrid(
     modifier: Modifier = Modifier,
     minCell: Float = 96f,
 ) {
+    val widest = widestLabel(options)
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val columns = GridLayout.columns(maxWidth.value, minCell)
+        val columns = GridLayout.columns(maxWidth.value, minCell, widest)
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             options.chunked(columns).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -174,8 +175,9 @@ fun <T> CdMultiChoiceGrid(
     modifier: Modifier = Modifier,
     minCell: Float = 72f,
 ) {
+    val widest = widestLabel(options)
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val columns = GridLayout.columns(maxWidth.value, minCell)
+        val columns = GridLayout.columns(maxWidth.value, minCell, widest)
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             options.chunked(columns).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -184,6 +186,23 @@ fun <T> CdMultiChoiceGrid(
                 }
             }
         }
+    }
+}
+
+/** Ancho en dp de la etiqueta más larga, en negrita (como se ve elegida). */
+@Composable
+private fun <T> widestLabel(options: List<CdOption<T>>): Float {
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+    val density = LocalDensity.current
+    return with(density) {
+        options.maxOfOrNull {
+            measurer
+                .measure(it.label, style)
+                .size.width
+                .toDp()
+                .value
+        } ?: 0f
     }
 }
 

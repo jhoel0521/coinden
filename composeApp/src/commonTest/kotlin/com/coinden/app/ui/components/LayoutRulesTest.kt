@@ -51,6 +51,13 @@ class LayoutRulesTest {
     }
 
     @Test
+    fun `la cuadricula da a cada celda el ancho de la etiqueta mas larga sin cortarla`() {
+        // "Tarjeta de crédito" mide ~150 dp: en 340 dp entran 2 columnas, no 3.
+        assertEquals(2, GridLayout.columns(available = 340f, minCell = 96f, widestLabel = 150f))
+        assertEquals(3, GridLayout.columns(available = 340f, minCell = 96f, widestLabel = 40f))
+    }
+
+    @Test
     fun `las mas usadas primero y la elegida siempre visible`() {
         val all = listOf("comida", "super", "transporte", "salud", "ocio", "personas")
         val usage = mapOf("transporte" to 9, "comida" to 7, "salud" to 3)

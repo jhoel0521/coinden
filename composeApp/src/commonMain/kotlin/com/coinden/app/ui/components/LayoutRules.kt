@@ -56,10 +56,15 @@ object ChoiceLayout {
 
 /** Columnas fijas e iguales de una cuadrícula de opciones: entre 2 y 4. */
 object GridLayout {
+    /** Relleno de una celda alrededor de su etiqueta (16 dp por lado y un margen). */
+    private const val CELL_PADDING = 40f
+
+    /** Columnas iguales en las que entra la etiqueta más larga entera ([widestLabel], en dp). */
     fun columns(
         available: Float,
         minCell: Float,
-    ): Int = (available / minCell).toInt().coerceIn(2, 4)
+        widestLabel: Float = 0f,
+    ): Int = (available / maxOf(minCell, widestLabel + CELL_PADDING)).toInt().coerceIn(2, 4)
 }
 
 /** Las opciones más usadas primero (a igual uso, el orden base) y la elegida siempre visible. */

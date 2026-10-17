@@ -3,8 +3,10 @@ package com.coinden.app
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -102,17 +104,20 @@ fun App(
     val language by container.language.collectAsState()
     CoinDenTheme {
         ProvideAppLocale(language) {
-            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-                // Quien ya terminó el onboarding ve una vez la pantalla de privacidad antes de Inicio.
-                val start by produceState<String?>(null) {
-                    value =
-                        when {
-                            !container.isOnboarded() -> Routes.WELCOME
-                            !container.storage.preferences.privacyNoticeSeen() -> Routes.PRIVACY
-                            else -> Routes.HOME
-                        }
+            // Sin Surface: el fondo y el color del contenido se ponen aquí, para claro y oscuro.
+            CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
+                Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+                    // Quien ya terminó el onboarding ve una vez la pantalla de privacidad antes de Inicio.
+                    val start by produceState<String?>(null) {
+                        value =
+                            when {
+                                !container.isOnboarded() -> Routes.WELCOME
+                                !container.storage.preferences.privacyNoticeSeen() -> Routes.PRIVACY
+                                else -> Routes.HOME
+                            }
+                    }
+                    start?.let { AppNavHost(container, it, deviceLanguage, deviceCountry, language, platform, shared, onSharedTaken) }
                 }
-                start?.let { AppNavHost(container, it, deviceLanguage, deviceCountry, language, platform, shared, onSharedTaken) }
             }
         }
     }

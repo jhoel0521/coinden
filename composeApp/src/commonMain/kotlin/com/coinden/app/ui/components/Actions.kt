@@ -4,8 +4,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -77,7 +80,12 @@ fun CdAction(
                 spec.enabled,
                 shape = shape,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                // Deshabilitada, el borde se apaga igual que el texto.
+                border =
+                    BorderStroke(
+                        1.dp,
+                        if (spec.enabled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    ),
             ) { content() }
     }
 }
@@ -124,8 +132,9 @@ fun CdActions(
         when (ActionsLayout.of(actions.size, fitsInRow = needed <= maxWidth.value)) {
             ActionsArrangement.Full -> CdAction(actions.single(), Modifier.fillMaxWidth())
             ActionsArrangement.Row ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    actions.forEach { CdAction(it, Modifier.weight(1f)) }
+                // Hermanos en fila: todos con la altura del más alto (la principal mide 56 dp).
+                Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    actions.forEach { CdAction(it, Modifier.weight(1f).fillMaxHeight()) }
                 }
             ActionsArrangement.Stack ->
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {

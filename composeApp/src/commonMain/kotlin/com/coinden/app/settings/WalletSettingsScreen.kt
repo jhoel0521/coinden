@@ -147,12 +147,6 @@ fun WalletSettingsScreen(
                                 )
                             } else {
                                 listOfNotNull(
-                                    CdActionSpec(
-                                        stringResource(Res.string.settings_archive, row.wallet.name),
-                                        { archiveId = row.wallet.id },
-                                        ActionRole.Danger,
-                                        enabled = !state.busy,
-                                    ),
                                     if (row.wallet.id != state.defaultWalletId) {
                                         CdActionSpec(
                                             stringResource(Res.string.settings_default),
@@ -162,6 +156,12 @@ fun WalletSettingsScreen(
                                     } else {
                                         null
                                     },
+                                    CdActionSpec(
+                                        stringResource(Res.string.settings_archive, row.wallet.name),
+                                        { archiveId = row.wallet.id },
+                                        ActionRole.Danger,
+                                        enabled = !state.busy,
+                                    ),
                                 )
                             }
                         CdActions(actions)
