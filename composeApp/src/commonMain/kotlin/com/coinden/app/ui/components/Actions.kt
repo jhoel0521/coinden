@@ -1,5 +1,6 @@
 package com.coinden.app.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -75,15 +76,7 @@ fun CdAction(
                 spec.enabled,
                 shape = shape,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                border =
-                    ButtonDefaults
-                        .outlinedButtonBorder(
-                            spec.enabled,
-                        ).copy(
-                            brush =
-                                androidx.compose.ui.graphics
-                                    .SolidColor(MaterialTheme.colorScheme.error),
-                        ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
             ) { content() }
     }
 }
