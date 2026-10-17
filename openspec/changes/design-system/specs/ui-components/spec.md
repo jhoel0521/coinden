@@ -44,15 +44,38 @@ Un grupo de elección única DEBE (MUST) elegir su forma según sus opciones: ha
 - **THEN** ve esas 4 y "Más…"; al tocar "Más…" se abren todas en una cuadrícula de 3 columnas y la elegida queda marcada
 
 #### Scenario: Letra grande
-- **WHEN** Carlos usa letra grande y los 4 medios de pago ya no caben en una fila
+- **WHEN** Carlos usa letra grande y las 4 categorías más usadas ya no caben en una fila
 - **THEN** el grupo pasa a una fila deslizable en lugar de cortarse en dos filas
 
 ### Requirement: Cuadrícula sin Opciones Sueltas
 Cuando las opciones se muestran en varias filas (como "Más…" o los tipos de billetera), el sistema DEBE (MUST) usar columnas fijas del mismo ancho, de modo que cada opción tenga el mismo tamaño y la última fila quede alineada con las demás.
 
-#### Scenario: Tipos de billetera
-- **WHEN** Carlos crea una billetera y ve los 5 tipos
+#### Scenario: Monedas que usa
+- **WHEN** Carlos elige sus otras monedas entre las 10 frecuentes
 - **THEN** se muestran en una cuadrícula de columnas del mismo ancho, no como chips de distinto tamaño que dejan uno solo abajo
+
+#### Scenario: Cuatro opciones en tres columnas
+- **WHEN** 4 opciones solo entrarían en 3 columnas
+- **THEN** se ordenan en 2 x 2 en lugar de 3 + 1
+
+#### Scenario: Etiqueta larga
+- **WHEN** una opción de la cuadrícula es "Tarjeta de crédito"
+- **THEN** la cuadrícula usa menos columnas para que la etiqueta se lea entera, sin cortarse con "…"
+
+### Requirement: Opciones con Ícono como Mosaicos
+Cuando todas las opciones de una elección única fija tienen un ícono propio y son 5 o menos, el sistema DEBE (MUST) mostrarlas como una barra de mosaicos del mismo ancho, con el ícono arriba y la etiqueta debajo (hasta 2 líneas). La elegida se distingue con relleno, borde y el ícono en el color principal, no solo por el color. Si a cada mosaico no le quedan al menos 64 dp o su palabra más larga no entra sin partirse, los mosaicos pasan a una cuadrícula de columnas iguales.
+
+#### Scenario: Medio de pago
+- **WHEN** Carlos abre el formulario de un gasto
+- **THEN** ve "Sin indicar", "Efectivo", "Transferencia o QR" y "Tarjeta" en una sola fila de 4 mosaicos con su ícono, sin opciones fuera de la pantalla
+
+#### Scenario: Tipos de billetera en un teléfono
+- **WHEN** Carlos crea una billetera en un teléfono y los 5 tipos no dejan 64 dp por mosaico
+- **THEN** ve los 5 tipos como mosaicos con ícono en una cuadrícula de 3 columnas iguales, y "Tarjeta de crédito" se lee entera
+
+#### Scenario: Tipos de billetera en pantalla ancha
+- **WHEN** a cada uno de los 5 tipos le quedan al menos 64 dp
+- **THEN** se muestran en una sola fila de mosaicos
 
 ### Requirement: Componentes que Se Acomodan a su Padre
 Un componente DEBE (MUST) acomodar su espaciado y su ancho a su padre. Dentro de una tarjeta o sección usa el ancho y el margen de ese contenedor, sin agregar el suyo. Una sección agrupa un título, su contenido y, si hay, el valor anterior ("antes: …") y su error, siempre juntos. Los avisos de error de un grupo se muestran junto a ese grupo, no lejos.

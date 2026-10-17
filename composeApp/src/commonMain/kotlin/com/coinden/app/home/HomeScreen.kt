@@ -47,6 +47,7 @@ import com.coinden.app.capture.CaptureNoticeCard
 import com.coinden.app.capture.CapturePresenter
 import com.coinden.app.capture.CaptureResultSheet
 import com.coinden.app.format.MoneyFormatter
+import com.coinden.app.onboarding.icon
 import com.coinden.app.onboarding.label
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.theme.CoinDenTheme
@@ -63,7 +64,6 @@ import com.coinden.app.ui.components.CdHeaderAction
 import com.coinden.app.ui.components.CdOption
 import com.coinden.app.ui.components.CdSection
 import com.coinden.core.domain.model.interpret.UserLocale
-import com.coinden.core.domain.model.wallet.WalletType
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
@@ -217,14 +217,5 @@ private fun WalletRow(
         }
     }
 }
-
-private fun WalletType.icon(): CoinDenIcon =
-    when (this) {
-        WalletType.CASH -> CoinDenIcon.CASH
-        WalletType.BANK -> CoinDenIcon.BANK
-        WalletType.DIGITAL -> CoinDenIcon.QR
-        WalletType.CRYPTO -> CoinDenIcon.SPARKLE
-        WalletType.CREDIT -> CoinDenIcon.CARD
-    }
 
 private val LANGUAGES = listOf("es" to Res.string.language_es, "en" to Res.string.language_en, "pt" to Res.string.language_pt)

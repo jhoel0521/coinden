@@ -33,6 +33,13 @@
 - [x] 4.1 Activar `RawMaterialUsageTest` con 0 usos sueltos. Verificar que `npm test`, `npm run lint` y `npm run build:android` pasan.
 - [x] 4.2 En el emulador: capturas de antes y después de formulario, bandeja, inicio, onboarding (monedas y tipos) y ajustes, en claro, oscuro y letra 1,3. Verificar que ningún grupo deja una opción sola. Guardarlas en `docs/audits/evidence/2026-10-design-system/` y abrir el PR enlazando la issue #2.
 
+## 5. Mosaicos con ícono
+
+- [x] 5.1 Prueba y regla pura `TileLayout.of` (fila si caben 64 dp por mosaico, si no cuadrícula).
+- [x] 5.2 `CdOption.icon`, mosaicos en `CdChoice` e ícono `HELP`.
+- [x] 5.3 Medio de pago del formulario y tipo de billetera (onboarding y ajustes) con íconos.
+- [x] 5.4 Capturas en el emulador (claro, oscuro, letra 1,3) y agregarlas a la evidencia.
+
 ## Workflow follow-up
 
 - Archivar `design-system` tras unir el PR.

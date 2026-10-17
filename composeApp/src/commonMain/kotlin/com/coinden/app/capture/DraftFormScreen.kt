@@ -237,8 +237,8 @@ fun DraftFormScreen(
 
             CdSection(stringResource(Res.string.field_method)) {
                 CdChoice(
-                    listOf(CdOption<PaymentMethod?>(null, stringResource(Res.string.form_none))) +
-                        PaymentMethod.entries.map { CdOption<PaymentMethod?>(it, stringResource(it.label())) },
+                    listOf(CdOption<PaymentMethod?>(null, stringResource(Res.string.form_none), icon = CoinDenIcon.HELP.vector)) +
+                        PaymentMethod.entries.map { CdOption<PaymentMethod?>(it, stringResource(it.label()), icon = it.icon().vector) },
                     selected = state.method,
                     onSelect = presenter::onMethodChange,
                     enabled = enabled,

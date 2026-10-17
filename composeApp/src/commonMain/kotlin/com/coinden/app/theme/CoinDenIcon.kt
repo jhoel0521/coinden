@@ -34,6 +34,7 @@ enum class CoinDenIcon(
     IMAGE("M4 5h16v14H4zM4 16l5-5 4 4 2-2 5 5M15.5 9.5v.01"),
     PENCIL("M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"),
     STOP("M7 7h10v10H7z"),
+    HELP("M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4v.6M12 16.5v.01"),
     HASH("M10 4L8 20M16 4l-2 16M5 9h15M4 15h15"),
     ;
 

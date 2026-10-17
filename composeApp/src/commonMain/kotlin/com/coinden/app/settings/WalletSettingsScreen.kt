@@ -60,6 +60,7 @@ import coinden.composeapp.generated.resources.wallet_name
 import coinden.composeapp.generated.resources.wallet_opening
 import com.coinden.app.AppContainer
 import com.coinden.app.format.MoneyFormatter
+import com.coinden.app.onboarding.icon
 import com.coinden.app.onboarding.label
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.ui.components.ActionRole
@@ -71,7 +72,6 @@ import com.coinden.app.ui.components.CdActions
 import com.coinden.app.ui.components.CdBadge
 import com.coinden.app.ui.components.CdCard
 import com.coinden.app.ui.components.CdChoice
-import com.coinden.app.ui.components.CdChoiceGrid
 import com.coinden.app.ui.components.CdDialog
 import com.coinden.app.ui.components.CdField
 import com.coinden.app.ui.components.CdNotice
@@ -239,7 +239,10 @@ private fun NewWalletForm(
     val scope = rememberCoroutineScope()
     CdCard(tone = CardTone.Raised) {
         CdField(name, { name = it }, label = stringResource(Res.string.wallet_name), enabled = !state.busy)
-        CdChoiceGrid(WalletType.entries.map { CdOption(it, stringResource(it.label())) }, selected = type, onSelect = { type = it })
+        CdChoice(WalletType.entries.map { CdOption(it, stringResource(it.label()), icon = it.icon().vector) }, selected = type, onSelect = {
+            type =
+                it
+        })
         if (state.currencies.size > 1) {
             CdChoice(
                 state.currencies.map { CdOption(it.code, it.code) },

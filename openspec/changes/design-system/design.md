@@ -96,6 +96,14 @@ Tocar la fila abre el formulario, como hoy. La tarjeta completa (`DraftCardView`
 
 `androidUnitTest/.../RawMaterialUsageTest.kt` recorre `src/commonMain/kotlin` fuera de `ui/components`. Falla si encuentra imports de `androidx.compose.material3` que no estén en la lista permitida (`Text`, `Icon`, `MaterialTheme`, `LocalContentColor`, `HorizontalDivider`, `CircularProgressIndicator`, `ExperimentalMaterial3Api`, `ModalBottomSheet` y el selector de fecha). Corre en `npm test`.
 
+### D9. Mosaicos con ícono
+
+`CdOption` gana un `icon` opcional. `CdChoice` usa `TileLayout.of(count, available, minTile = 64.dp)` cuando todas sus opciones tienen ícono y son 5 o menos:
+- `Row` si `available / count >= minTile`: una barra de mosaicos del mismo ancho (ícono de 24 dp arriba y etiqueta de hasta 2 líneas debajo, 72 dp de alto mínimo).
+- `Grid(columns)` si no: los mismos mosaicos en columnas iguales, con `GridLayout.columns`.
+
+La elegida lleva relleno `secondaryContainer`, borde `primary` y el ícono en `primary`; las demás, borde suave. El ícono sale del catálogo `CoinDenIcon`, que suma `HELP` para "Sin indicar". Lo usan el medio de pago del formulario y el tipo de billetera (onboarding y ajustes). La cuadrícula de texto queda para opciones sin ícono, como las monedas.
+
 ## Risks / Trade-offs
 
 - [Migrar 11 pantallas puede romper pruebas de presentadores] → Los presentadores no cambian, salvo la moneda derivada, el "Más detalles" abierto y las categorías más usadas, que tienen pruebas nuevas. Las pantallas no tienen pruebas de UI, así que se verifican en el emulador.

@@ -90,7 +90,6 @@ import com.coinden.app.ui.components.CdActionSpec
 import com.coinden.app.ui.components.CdActions
 import com.coinden.app.ui.components.CdCard
 import com.coinden.app.ui.components.CdChoice
-import com.coinden.app.ui.components.CdChoiceGrid
 import com.coinden.app.ui.components.CdErrorText
 import com.coinden.app.ui.components.CdField
 import com.coinden.app.ui.components.CdIconAction
@@ -416,10 +415,20 @@ fun WalletsScreen(
                         label = stringResource(Res.string.wallet_name),
                         placeholder = stringResource(Res.string.wallet_name_hint),
                     )
-                    CdChoiceGrid(WalletType.entries.map { CdOption(it, stringResource(it.label())) }, selected = type, onSelect = {
-                        type =
-                            it
-                    })
+                    CdChoice(
+                        WalletType.entries.map {
+                            CdOption(
+                                it,
+                                stringResource(it.label()),
+                                icon = it.icon().vector,
+                            )
+                        },
+                        selected = type,
+                        onSelect = {
+                            type =
+                                it
+                        },
+                    )
                     if (state.walletCurrencies.size > 1) {
                         CdChoice(state.walletCurrencies.map { CdOption(it.code, it.code) }, selected = currency.code, onSelect = { code ->
                             state.walletCurrencies.firstOrNull { it.code == code }?.let { currency = it }
@@ -454,6 +463,16 @@ fun WalletsScreen(
         item { Spacer(Modifier.heightIn(min = 8.dp)) }
     }
 }
+
+/** Ícono de cada tipo de billetera (Inicio, onboarding y ajustes). */
+fun WalletType.icon(): CoinDenIcon =
+    when (this) {
+        WalletType.CASH -> CoinDenIcon.CASH
+        WalletType.BANK -> CoinDenIcon.BANK
+        WalletType.DIGITAL -> CoinDenIcon.QR
+        WalletType.CRYPTO -> CoinDenIcon.SPARKLE
+        WalletType.CREDIT -> CoinDenIcon.CARD
+    }
 
 /** Nombre traducido de cada tipo de billetera; un `when` exhaustivo: un tipo nuevo sin texto no compila. */
 fun WalletType.label(): StringResource =
