@@ -58,6 +58,7 @@ fun <T> CdChoice(
     open: Boolean = false,
     usage: Map<T, Int> = emptyMap(),
     moreLabel: String? = null,
+    enabled: Boolean = true,
 ) {
     if (options.isEmpty()) return
     val measurer = rememberTextMeasurer()
@@ -91,18 +92,19 @@ fun <T> CdChoice(
                         SegmentedButton(
                             selected = option.value == selected,
                             onClick = { onSelect(option.value) },
+                            enabled = enabled,
                             shape = SegmentedButtonDefaults.itemShape(index, options.size),
                             modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                             label = { Text(option.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         )
                     }
                 }
-            ChoiceArrangement.ScrollRow -> ScrollRow(options, selected, onSelect)
+            ChoiceArrangement.ScrollRow -> ScrollRow(options, selected, onSelect, enabled)
             is ChoiceArrangement.TopAndMore -> {
                 val values = options.map { it.value }
                 val top = FrequentChoices.top(values, usage, selected, arrangement.count)
                 val shown = top.mapNotNull { v -> options.firstOrNull { it.value == v } }
-                ScrollRow(shown, selected, onSelect, more = moreLabel?.let { label -> label to { showAll = true } })
+                ScrollRow(shown, selected, onSelect, enabled, more = moreLabel?.let { label -> label to { showAll = true } })
             }
         }
     }
@@ -122,6 +124,7 @@ private fun <T> ScrollRow(
     options: List<CdOption<T>>,
     selected: T?,
     onSelect: (T) -> Unit,
+    enabled: Boolean,
     more: Pair<String, () -> Unit>? = null,
 ) {
     val state = rememberLazyListState()
@@ -129,10 +132,10 @@ private fun <T> ScrollRow(
     LaunchedEffect(index) { if (index > 0) state.animateScrollToItem(index) }
     LazyRow(state = state, horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
         itemsIndexed(options, key = { i, o -> "$i-${o.value}" }) { _, option ->
-            Pill(option, option.value == selected, Modifier) { onSelect(option.value) }
+            Pill(option, option.value == selected, Modifier, enabled = enabled) { onSelect(option.value) }
         }
         more?.let { (label, open) ->
-            item(key = "more") { Pill(CdOption(Unit, label), selected = false, Modifier, emphasized = true) { open() } }
+            item(key = "more") { Pill(CdOption(Unit, label), selected = false, Modifier, emphasized = true, enabled = enabled) { open() } }
         }
     }
 }
@@ -169,11 +172,16 @@ private fun <T> Pill(
     selected: Boolean,
     modifier: Modifier,
     emphasized: Boolean = false,
+    enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
     Surface(
-        modifier = modifier.heightIn(min = 48.dp).selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
+        modifier =
+            modifier
+                .heightIn(
+                    min = 48.dp,
+                ).selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick),
         shape = MaterialTheme.shapes.small,
         color = if (selected) scheme.secondaryContainer else scheme.surface,
         contentColor =
@@ -198,7 +206,6 @@ private fun <T> Pill(
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false),
             )
             option.mark?.let { Text("  $it", style = MaterialTheme.typography.labelSmall, color = scheme.tertiary) }
         }

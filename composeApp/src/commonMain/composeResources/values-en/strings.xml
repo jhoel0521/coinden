@@ -283,4 +283,6 @@
     <string name="load_loading">Loading data…</string>
     <string name="load_error">Could not load the data. You can try again.</string>
     <string name="load_stale">Previously shown data is not up to date.</string>
+    <string name="form_more_details">More details</string>
+    <string name="form_more_categories">More…</string>
 </resources>

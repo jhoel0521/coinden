@@ -33,10 +33,12 @@ fun CdField(
     singleLine: Boolean = true,
     imeAction: ImeAction = ImeAction.Default,
     onImeAction: (() -> Unit)? = null,
+    enabled: Boolean = true,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
+        enabled = enabled,
         label = { Text(label) },
         placeholder = placeholder?.let { { Text(it) } },
         suffix = suffix?.let { { Text(it, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 4.dp)) } },

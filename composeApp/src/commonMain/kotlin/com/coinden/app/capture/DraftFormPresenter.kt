@@ -3,6 +3,7 @@ package com.coinden.app.capture
 import com.coinden.app.AppContainer
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.category.CategoryRef
+import com.coinden.core.domain.model.category.ClassificationProjection
 import com.coinden.core.domain.model.draft.CorrectionOrigin
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.DraftError
@@ -85,6 +86,8 @@ data class DraftFormState(
     val reference: String = "",
     val wallets: List<FormWallet> = emptyList(),
     val customCategories: List<FormCustomCategory> = emptyList(),
+    /** Cuántos gastos vigentes tiene cada categoría: el formulario muestra primero las más usadas. */
+    val categoryUsage: Map<CategoryRef, Int> = emptyMap(),
     val mode: FormMode = FormMode.New,
     /** Al corregir: lo que cambia respecto del movimiento confirmado, con su valor anterior. */
     val changes: List<FieldChange> = emptyList(),
@@ -101,6 +104,12 @@ data class DraftFormState(
     val largeAmount: Boolean get() = changes.any { it is FieldChange.Amount && it.large }
 
     fun customCategoryName(id: String): String? = customCategories.firstOrNull { it.id == id }?.name
+
+    /** La moneda del movimiento: la de la billetera elegida (no se elige aparte). */
+    val walletCurrency: Currency? get() = wallets.firstOrNull { it.id == walletId }?.currency ?: currency
+
+    /** Hay nota o referencia: "Más detalles" se muestra abierto. */
+    val hasDetails: Boolean get() = note.isNotBlank() || reference.isNotBlank()
 }
 
 /**
@@ -146,7 +155,8 @@ class DraftFormPresenter(
             container.storage.categorization
                 .customCategoriesOf(container.ownerId)
                 .map { FormCustomCategory(it.id, it.name, it.archived) }
-        mutableState.update { it.copy(wallets = wallets, customCategories = customCategories) }
+        val usage = categoryUsage()
+        mutableState.update { it.copy(wallets = wallets, customCategories = customCategories, categoryUsage = usage) }
         when (mode) {
             FormMode.New -> mutableState.update { it.copy(walletId = it.walletId ?: directory.defaultWalletId) }
             is FormMode.Review -> loadReview(mode.draftId)
@@ -156,6 +166,16 @@ class DraftFormPresenter(
         baseline = state.value.fields()
         loaded = true
     }
+
+    /** Cuenta las categorías vigentes de los gastos de la persona (la clasificación más reciente de cada uno). */
+    private suspend fun categoryUsage(): Map<CategoryRef, Int> =
+        container.storage.categorization
+            .classificationsOf(container.ownerId)
+            .groupBy { it.movementId }
+            .values
+            .mapNotNull { ClassificationProjection.current(it)?.category }
+            .groupingBy { it }
+            .eachCount()
 
     private fun ensureReferencedCustomCategories() {
         mutableState.update { s ->

@@ -31,7 +31,6 @@ class RawMaterialUsageTest {
             "App.kt",
             "capture/CaptureViews.kt",
             "capture/DraftCardView.kt",
-            "capture/DraftFormScreen.kt",
             "capture/EvidenceScreen.kt",
             "history/HistoryScreen.kt",
             "home/HomeScreen.kt",

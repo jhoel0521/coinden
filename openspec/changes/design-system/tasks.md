@@ -8,8 +8,8 @@
 
 ## 2. Formulario y captura
 
-- [ ] 2.1 `DraftFormPresenter`: moneda derivada de la billetera, categorías más usadas (de `classificationsOf`) y "Más detalles" abierto si hay nota o referencia. Pruebas en la JVM para los escenarios Moneda de la billetera, Más detalles con referencia y Categorías (req. Formulario Completo).
-- [ ] 2.2 Migrar `DraftFormScreen`:
+- [x] 2.1 `DraftFormPresenter`: moneda derivada de la billetera, categorías más usadas (de `classificationsOf`) y "Más detalles" abierto si hay nota o referencia. Pruebas en la JVM para los escenarios Moneda de la billetera, Más detalles con referencia y Categorías (req. Formulario Completo).
+- [x] 2.2 Migrar `DraftFormScreen`:
   - Tipo y Medio como `CdChoice` segmentado.
   - Billetera como `ScrollRow`.
   - Categoría como `TopAndMore` con `CdSheet`.
