@@ -15,12 +15,12 @@ Cada bloque funcional se entrega con pruebas, recursos es/en/pt, actualización 
 ## 3. Salida consciente y evidencia
 
 - [x] 3.1 Cubrir primero los cinco escenarios de «Salida Consciente del Formulario» en `capture-ui`; implementar baseline, diálogo y Atrás del sistema, conservar edición al volver de evidencia y bloquear salida durante escritura. Verificar lógica con pruebas de presentador y navegación/control superior/sistema en Android.
-- [ ] 3.2 Registrar resultados y comandos de 3.1, verificar lint y recursos es/en/pt, commitear y pushear el bloque; comprobar igualdad de HEAD y rama remota.
+- [x] 3.2 Registrar resultados y comandos de 3.1, verificar lint y recursos es/en/pt, commitear y pushear el bloque; comprobar igualdad de HEAD y rama remota.
 
 ## 4. Carga y recuperación de pantallas
 
-- [ ] 4.1 Cubrir primero los cuatro escenarios de «Carga Recuperable de Inicio» y los cinco de «Carga Recuperable de Bandeja e Historial», incluyendo cada pantalla, error/reintento y carreras con lecturas suspendidas. Implementar estados, señal de datos anteriores y deshabilitar acciones incompatibles; verificar pruebas dirigidas y cancelación propagada.
-- [ ] 4.2 Registrar resultados y comandos de 4.1, verificar lint, recursos es/en/pt y presentación de estados, commitear y pushear el bloque; comprobar igualdad de HEAD y rama remota.
+- [x] 4.1 Cubrir primero los cuatro escenarios de «Carga Recuperable de Inicio» y los cinco de «Carga Recuperable de Bandeja e Historial», incluyendo cada pantalla, error/reintento y carreras con lecturas suspendidas. Implementar estados, señal de datos anteriores y deshabilitar acciones incompatibles; verificar pruebas dirigidas y cancelación propagada.
+- [x] 4.2 Registrar resultados y comandos de 4.1, verificar lint, recursos es/en/pt y presentación de estados, commitear y pushear el bloque; comprobar igualdad de HEAD y rama remota.
 
 ## 5. Nombres de categorías propias
 

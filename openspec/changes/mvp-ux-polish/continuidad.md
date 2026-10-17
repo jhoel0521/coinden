@@ -4,7 +4,11 @@
 
 - Rama de trabajo: `codex/rumbo-al-mvp`, remoto `origin` (`jhoel0521/coinden`). No crear otra rama sin motivo ni sobrescribir cambios de colegas.
 - Plan completo: propuesta, tres deltas, diseño y tareas. `openspec validate mvp-ux-polish --strict` pasó.
-- La persona confirmó aplicar el cambio. Entorno, guardado único y salida consciente implementados y verificados. Continúa el bloque de cargas recuperables (4.1); no confundir artefactos completos con funcionalidad terminada.
+- La persona confirmó aplicar el cambio. Entorno (Bloque 1), guardado único (Bloque 2), salida consciente (Bloque 3: `468a056`) y cargas recuperables de Inicio, Bandeja e Historial (Bloque 4: `ad8e78f`) ya están implementados y publicados en `origin/codex/rumbo-al-mvp`.
+- Por indicación explícita de la persona en esta sesión, se procede a cerrar en código (con commit y push por cada bloque) los pendientes restantes del MVP omitiendo la ejecución de tests/validación para que otro agente (o en una sesión futura) ejecute la batería de validación (Bloque 7):
+  1. **Bloque 5:** Resolver nombres de categorías propias (activas, archivadas y fallback sin ID) en tarjetas de borrador, historial y formulario (conservar selección y mostrar nombre en `"antes: ..."`).
+  2. **Bloque 6:** Identificar explícitamente el **patrimonio parcial** y su explicación (`es`/`en`/`pt`) en Inicio cuando hay monedas sin tasa de referencia, y mover `rate-fetch-adapter` a pos-MVP en `README.md`.
+  3. **Pulido de íconos, UX/UI y compatibilidad KMP/iOS:** Completar trazos de "C", "D" y boca en `ic_launcher_monochrome.xml` (Android 13+), aplicar números tabulares (`tnum`) en montos de `SpendingInsightsScreen` e `HistoryScreen`, asegurar altura mínima de `48.dp` en botones restantes, y limpiar APIs exclusivas de JVM en `commonMain` (`Math.floorDiv`/`floorMod` en `SameMovementUseCases.kt` y `TimeFormatter.kt`, y `java.time.*` en `SpendingMonth.kt`).
 - Se mantienen las entregas incrementales con commit y push. Marcar cada tarea de publicación solo después de verificar el remoto.
 - Cotizaciones automáticas fuera del MVP por decisión explícita. El bloque 6 actualizará README; el plan ya conserva esta decisión.
 
@@ -59,4 +63,8 @@ Comando de verificación: `gradlew.bat :composeApp:ktlintFormat ktlintCheck :com
 
 Emulador: completado onboarding (USD por región US del AVD, billetera de prueba con 100 USD), salida limpia con Atrás del sistema sin diálogo, edición a 12 y Atrás del sistema con diálogo, seguir editando conservó 12, botón superior también mostró diálogo y salir sin guardar volvió con saldo 100 y cero pendientes. Luego frase «almuerzo 12» → borrador de 12 sin descontar saldo; revisión cambió a 13, abrió evidencia y volvió con 13 intacto, sin aviso ni nueva escritura. Capturas `evidencia/salida-dialogo.png` y `evidencia/edicion-tras-evidencia.png`. La revisión de 13 queda abierta y sin confirmar al final de este recorrido para continuar pruebas.
 
-La auditoría previa está en `docs/audits/2026-10-16-mvp.md`; la validación manual pendiente se sigue en https://github.com/jhoel0521/coinden/issues/2. La inspección visual de este turno se limita a las dos bienvenidas capturadas. Las pruebas previas a este cambio no demuestran que los nuevos escenarios pasen. No se afirma prueba de TalkBack, cámara, voz ni recorrido completo en el emulador.
+### Bloque 4: carga y recuperación de pantallas
+
+Publicado en `ad8e78f` (`feat(ux): distinguir carga, error y reintento en Inicio, historial y bandeja`). Se implementó `LoadNotice` (`ScreenLoad.LOADING`, `READY`, `ERROR`), señal de datos anteriores desactualizados (`load_stale`), control de generación contra respuestas fuera de orden y bloqueo de acciones incompatibles en `HomePresenter`/`HomeScreen`, `ReviewInboxPresenter`/`ReviewInboxScreen` e `HistoryPresenter`/`HistoryScreen`, junto con `ScreenLoadingTest.kt` y traducciones `es`/`en`/`pt`.
+
+La auditoría integral actualizada está en `docs/audits/2026-10-16-mvp.md`; la validación manual pendiente se sigue en https://github.com/jhoel0521/coinden/issues/2. No se afirma prueba de TalkBack, cámara, voz ni recorrido completo en el emulador.
