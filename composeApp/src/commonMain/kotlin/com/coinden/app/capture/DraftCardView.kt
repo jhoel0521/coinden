@@ -1,6 +1,5 @@
 package com.coinden.app.capture
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -59,6 +57,7 @@ import coinden.composeapp.generated.resources.wallet_missing
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.theme.CoinDenTheme
+import com.coinden.app.ui.components.CdCard
 import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.category.SuggestionReason
 import com.coinden.core.domain.model.draft.CaptureTip
@@ -76,13 +75,8 @@ fun DraftCardView(
     locale: UserLocale,
 ) {
     val scheme = MaterialTheme.colorScheme
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = scheme.surfaceContainerLowest,
-        border = BorderStroke(1.dp, scheme.outlineVariant),
-    ) {
-        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    CdCard {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Pill(stringResource(card.status.label()), scheme.secondaryContainer, scheme.onSecondaryContainer)
                 Spacer(Modifier.weight(1f))

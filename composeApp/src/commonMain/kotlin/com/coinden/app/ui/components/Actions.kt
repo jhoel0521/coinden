@@ -27,6 +27,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.coinden.app.theme.CoinDenIcon
 
 /**
  * Papel de una acción. Principal: la que avanza (una por grupo). Secundaria: tonal. Terciaria:
@@ -157,5 +158,60 @@ fun CdHeaderAction(
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).padding(end = 8.dp))
         action?.let { CdAction(it.copy(role = ActionRole.Tertiary)) }
+    }
+}
+
+/**
+ * Barra de acciones hermanas del mismo ancho, con el ícono arriba del texto (la barra de captura).
+ * Cada una mide al menos 64 dp de alto: se usan con el pulgar y a menudo con prisa.
+ */
+@Composable
+fun CdToolbar(
+    actions: List<CdActionSpec>,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        actions.forEach { spec ->
+            val content: @Composable () -> Unit = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    spec.icon?.let { Icon(it, contentDescription = null, modifier = Modifier.size(24.dp)) }
+                    Text(spec.text, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            val sized = Modifier.weight(1f).heightIn(min = 64.dp)
+            val shape = MaterialTheme.shapes.large
+            when (spec.role) {
+                ActionRole.Primary -> Button(spec.onClick, sized, spec.enabled, shape = shape) { content() }
+                else -> FilledTonalButton(spec.onClick, sized, spec.enabled, shape = shape) { content() }
+            }
+        }
+    }
+}
+
+/**
+ * Cabecera de una pantalla: cerrar o volver ([onBack], con su descripción [backLabel]), el título y,
+ * a la derecha, una acción de texto ([action]) o un dato ([trailing]).
+ */
+@Composable
+fun CdTopBar(
+    title: String,
+    backLabel: String,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    backIcon: ImageVector = CoinDenIcon.CLOSE.vector,
+    action: CdActionSpec? = null,
+    trailing: String? = null,
+) {
+    Row(modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        CdIconAction(backIcon, backLabel, onBack)
+        Text(
+            title,
+            style = MaterialTheme.typography.titleLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        action?.let { CdAction(it.copy(role = ActionRole.Tertiary)) }
+        trailing?.let { Text(it, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 12.dp)) }
     }
 }

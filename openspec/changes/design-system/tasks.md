@@ -16,7 +16,7 @@
   - Monto con la moneda en `trailing`.
   - `CdCollapsible` "Más detalles".
   - Acciones por `CdActions`.
-- [ ] 2.3 Migrar `CaptureViews` (barra de captura, aviso y hoja del resultado) y `EvidenceScreen`.
+- [x] 2.3 Migrar `CaptureViews` (barra de captura, aviso y hoja del resultado) y `EvidenceScreen`.
 
 ## 3. Bandeja, inicio y resto de pantallas
 

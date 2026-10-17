@@ -29,9 +29,6 @@ class RawMaterialUsageTest {
     private val pendingMigration =
         setOf(
             "App.kt",
-            "capture/CaptureViews.kt",
-            "capture/DraftCardView.kt",
-            "capture/EvidenceScreen.kt",
             "history/HistoryScreen.kt",
             "home/HomeScreen.kt",
             "inbox/ReviewInboxScreen.kt",
