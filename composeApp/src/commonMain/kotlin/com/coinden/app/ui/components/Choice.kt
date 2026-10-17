@@ -165,6 +165,50 @@ fun <T> CdChoiceGrid(
     }
 }
 
+/** Elección múltiple en una cuadrícula de columnas fijas (por ejemplo, las monedas que se usan). */
+@Composable
+fun <T> CdMultiChoiceGrid(
+    options: List<CdOption<T>>,
+    selected: Set<T>,
+    onToggle: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    minCell: Float = 72f,
+) {
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val columns = GridLayout.columns(maxWidth.value, minCell)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            options.chunked(columns).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    row.forEach { option -> Pill(option, option.value in selected, Modifier.weight(1f)) { onToggle(option.value) } }
+                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+        }
+    }
+}
+
+/** Una opción de una lista (por ejemplo, un resultado de búsqueda): fila de 48 dp a todo el ancho. */
+@Composable
+fun CdListOption(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(selected = false, role = Role.Button, onClick = onClick),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        )
+    }
+}
+
 /** La pastilla de una opción: elegida con relleno, si no con borde; 48 dp de alto. */
 @Composable
 private fun <T> Pill(

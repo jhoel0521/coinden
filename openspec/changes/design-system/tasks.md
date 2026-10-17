@@ -22,7 +22,7 @@
 
 - [x] 3.1 Tarjeta compacta `InboxRow` con el motivo (D6), con pruebas del motivo por borrador en el presentador, y migrar `ReviewInboxScreen` y el resumen del lote (req. Presentación de Borradores).
 - [x] 3.2 Migrar `HomeScreen` según D7, y también `HistoryScreen` y `SpendingInsightsScreen`.
-- [ ] 3.3 Migrar `OnboardingScreens`:
+- [x] 3.3 Migrar `OnboardingScreens`:
   - Monedas con `ScrollRow` y el buscador sin tapar resultados (F1).
   - Moneda propia en `CdSection`, con el error junto al formulario (F2).
   - Tipos de billetera en `CdChoiceGrid`.

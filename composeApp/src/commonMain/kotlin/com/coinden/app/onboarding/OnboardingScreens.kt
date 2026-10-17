@@ -1,34 +1,28 @@
 package com.coinden.app.onboarding
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -88,7 +82,22 @@ import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.theme.CoinDenTheme
+import com.coinden.app.ui.components.ActionRole
 import com.coinden.app.ui.components.BrandLogo
+import com.coinden.app.ui.components.CardTone
+import com.coinden.app.ui.components.CdAction
+import com.coinden.app.ui.components.CdActionSpec
+import com.coinden.app.ui.components.CdActions
+import com.coinden.app.ui.components.CdCard
+import com.coinden.app.ui.components.CdChoice
+import com.coinden.app.ui.components.CdChoiceGrid
+import com.coinden.app.ui.components.CdErrorText
+import com.coinden.app.ui.components.CdField
+import com.coinden.app.ui.components.CdIconAction
+import com.coinden.app.ui.components.CdListOption
+import com.coinden.app.ui.components.CdMultiChoiceGrid
+import com.coinden.app.ui.components.CdOption
+import com.coinden.app.ui.components.CdSection
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.wallet.WalletType
@@ -98,7 +107,11 @@ import org.jetbrains.compose.resources.stringResource
 
 private const val STEPS = 3
 
-/** Esqueleto común de los pasos: contenido desplazable y botones abajo. */
+/**
+ * Esqueleto común de los pasos: contenido desplazable y acciones abajo ([CdActions]). Mientras el
+ * teclado está abierto, las acciones se ocultan para que se vea lo que se escribe y sus resultados.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun StepScaffold(
     step: Int,
@@ -107,11 +120,13 @@ private fun StepScaffold(
     primaryText: String,
     onPrimary: () -> Unit,
     onBack: (() -> Unit)?,
-    content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit,
+    listState: LazyListState = rememberLazyListState(),
+    content: LazyListScope.() -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
-    Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
+    Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).imePadding()) {
         LazyColumn(
+            state = listState,
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -133,29 +148,19 @@ private fun StepScaffold(
             }
             content()
         }
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            onBack?.let {
-                OutlinedButton(onClick = it, modifier = Modifier.heightIn(min = 56.dp), shape = MaterialTheme.shapes.extraLarge) {
-                    Text(stringResource(Res.string.back))
-                }
-            }
-            Button(onClick = onPrimary, modifier = Modifier.weight(1f).heightIn(min = 56.dp), shape = MaterialTheme.shapes.extraLarge) {
-                Text(primaryText, style = MaterialTheme.typography.titleMedium)
-            }
+        if (!WindowInsets.isImeVisible) {
+            CdActions(
+                listOfNotNull(
+                    onBack?.let { CdActionSpec(stringResource(Res.string.back), it) },
+                    CdActionSpec(primaryText, onPrimary, ActionRole.Primary),
+                ),
+                Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            )
         }
     }
 }
 
-@Composable
-private fun ErrorText(text: String) {
-    Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
-}
-
 /** Paso 1: bienvenida en los tres idiomas y elección de idioma. */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun WelcomeScreen(
     presenter: OnboardingPresenter,
@@ -175,17 +180,13 @@ fun WelcomeScreen(
     ) {
         item { BrandLogo() }
         item { Text(stringResource(Res.string.welcome_subtitle), style = MaterialTheme.typography.bodyLarge) }
-        item { Text(stringResource(Res.string.welcome_language), style = MaterialTheme.typography.titleMedium) }
         item {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                languages.forEach { (code, label) ->
-                    FilterChip(
-                        selected = state.language == code,
-                        onClick = { scope.launch { presenter.chooseLanguage(code) } },
-                        label = { Text(stringResource(label)) },
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    )
-                }
+            CdSection(stringResource(Res.string.welcome_language)) {
+                CdChoice(
+                    languages.map { (code, label) -> CdOption(code, stringResource(label)) },
+                    selected = state.language,
+                    onSelect = { code -> scope.launch { presenter.chooseLanguage(code) } },
+                )
             }
         }
         item {
@@ -199,7 +200,6 @@ fun WelcomeScreen(
 }
 
 /** Paso 2: moneda principal, otras monedas (frecuentes, búsqueda, propias) y tasas opcionales. */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CurrenciesScreen(
     presenter: OnboardingPresenter,
@@ -212,6 +212,16 @@ fun CurrenciesScreen(
     var query by remember { mutableStateOf("") }
     var pickingMain by remember { mutableStateOf(false) }
     var showCustom by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    // Al buscar, el buscador sube arriba de todo: sus resultados quedan a la vista aunque el teclado esté abierto.
+    LaunchedEffect(query.isNotBlank()) {
+        if (query.isNotBlank()) {
+            listState.layoutInfo.visibleItemsInfo
+                .firstOrNull { it.key == SEARCH_KEY }
+                ?.index
+                ?.let { listState.animateScrollToItem(it) }
+        }
+    }
 
     fun label(c: Currency) = "${c.code} · ${names.name(c.code, state.language) ?: c.name ?: c.code}"
 
@@ -221,64 +231,59 @@ fun CurrenciesScreen(
         primaryText = stringResource(Res.string.next),
         onPrimary = { if (presenter.next()) onNext() },
         onBack = onBack,
+        listState = listState,
     ) {
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(Res.string.currencies_main), style = MaterialTheme.typography.titleMedium)
-                OutlinedButton(onClick = { pickingMain = !pickingMain }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
-                    Text(label(state.localCurrency), style = MaterialTheme.typography.titleMedium)
-                }
+            CdSection(stringResource(Res.string.currencies_main)) {
+                CdActions(listOf(CdActionSpec(label(state.localCurrency), { pickingMain = !pickingMain })))
             }
         }
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(Res.string.currencies_others), style = MaterialTheme.typography.titleMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    (state.frequent + state.others.map { it.currency }).distinctBy { it.code }.forEach { c ->
-                        FilterChip(
-                            selected = state.others.any { it.currency.code == c.code },
-                            onClick = { presenter.toggleCurrency(c) },
-                            label = { Text(c.code) },
-                            modifier = Modifier.heightIn(min = 48.dp),
-                        )
-                    }
-                }
+            CdSection(stringResource(Res.string.currencies_others)) {
+                CdMultiChoiceGrid(
+                    (state.frequent + state.others.map { it.currency }).distinctBy { it.code }.map { CdOption(it, it.code) },
+                    selected = state.others.map { it.currency }.toSet(),
+                    onToggle = presenter::toggleCurrency,
+                )
             }
         }
-        item {
-            OutlinedTextField(
-                value = query,
-                onValueChange = {
+        item(key = SEARCH_KEY) {
+            CdField(
+                query,
+                {
                     query = it
                     presenter.search(it)
                 },
-                label = { Text(stringResource(Res.string.currencies_search)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                label = stringResource(Res.string.currencies_search),
             )
         }
         if (query.isNotBlank()) {
             state.searchResults.take(8).forEach { c ->
                 item(key = "search-${c.code}") {
-                    TextButton(
-                        onClick = {
-                            if (pickingMain) presenter.setLocalCurrency(c) else presenter.toggleCurrency(c)
-                            pickingMain = false
-                            query = ""
-                            presenter.search("")
-                        },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    ) { Text(label(c), modifier = Modifier.fillMaxWidth()) }
+                    CdListOption(label(c), onClick = {
+                        if (pickingMain) presenter.setLocalCurrency(c) else presenter.toggleCurrency(c)
+                        pickingMain = false
+                        query = ""
+                        presenter.search("")
+                    })
                 }
             }
         }
         item {
-            TextButton(onClick = { showCustom = !showCustom }, modifier = Modifier.heightIn(min = 48.dp)) {
-                Icon(CoinDenIcon.PLUS.vector, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(Res.string.currencies_add_custom), modifier = Modifier.padding(start = 6.dp))
+            CdAction(
+                stringResource(Res.string.currencies_add_custom),
+                { showCustom = !showCustom },
+                role = ActionRole.Tertiary,
+                icon = CoinDenIcon.PLUS.vector,
+            )
+        }
+        if (showCustom) {
+            item {
+                val error =
+                    if (OnboardingError.InvalidCustomCurrency in state.errors) stringResource(Res.string.error_custom_currency) else null
+                CustomCurrencyForm(presenter, error) { showCustom = false }
             }
         }
-        if (showCustom) item { CustomCurrencyForm(presenter) { showCustom = false } }
         if (state.others.isNotEmpty()) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -288,91 +293,74 @@ fun CurrenciesScreen(
             }
             state.others.forEach { choice ->
                 item(key = "rate-${choice.currency.code}") {
+                    val code = choice.currency.code
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (choice.later) {
                             Text(
-                                "${choice.currency.code}: " + stringResource(Res.string.rate_later_set),
+                                "$code: " + stringResource(Res.string.rate_later_set),
                                 modifier = Modifier.weight(1f),
                                 color = scheme.onSurfaceVariant,
                             )
-                            TextButton(
-                                onClick = { presenter.setRate(choice.currency.code, "") },
-                                modifier = Modifier.heightIn(min = 48.dp),
-                            ) { Text(stringResource(Res.string.rate_set)) }
+                            CdAction(stringResource(Res.string.rate_set), { presenter.setRate(code, "") }, role = ActionRole.Tertiary)
                         } else {
-                            OutlinedTextField(
-                                value = choice.rateText,
-                                onValueChange = { presenter.setRate(choice.currency.code, it) },
-                                label = { Text(stringResource(Res.string.rate_label, choice.currency.code, state.localCurrency.code)) },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            val invalid = state.errors.any { it is OnboardingError.InvalidRate && it.code == code }
+                            CdField(
+                                choice.rateText,
+                                { presenter.setRate(code, it) },
+                                label = stringResource(Res.string.rate_label, code, state.localCurrency.code),
+                                error = if (invalid) stringResource(Res.string.error_invalid_rate, code) else null,
+                                keyboardType = KeyboardType.Decimal,
                                 modifier = Modifier.weight(1f),
                             )
-                            TextButton(
-                                onClick = { presenter.setRateLater(choice.currency.code) },
-                                modifier = Modifier.heightIn(min = 48.dp),
-                            ) {
-                                Text(stringResource(Res.string.rate_later))
-                            }
+                            CdAction(stringResource(Res.string.rate_later), { presenter.setRateLater(code) }, role = ActionRole.Tertiary)
                         }
                     }
-                }
-            }
-        }
-        state.errors.forEach { error ->
-            item {
-                when (error) {
-                    is OnboardingError.InvalidRate -> ErrorText(stringResource(Res.string.error_invalid_rate, error.code))
-                    OnboardingError.InvalidCustomCurrency -> ErrorText(stringResource(Res.string.error_custom_currency))
-                    else -> Unit
                 }
             }
         }
     }
 }
 
+private const val SEARCH_KEY = "search"
+
+/** Moneda propia o cripto: el error se muestra en el mismo formulario, a la vista. */
 @Composable
 private fun CustomCurrencyForm(
     presenter: OnboardingPresenter,
+    error: String?,
     onAdded: () -> Unit,
 ) {
     var code by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var symbol by remember { mutableStateOf("") }
     var decimals by remember { mutableStateOf("2") }
-    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(code, {
-                code = it
-            }, label = { Text(stringResource(Res.string.custom_code)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(name, {
-                name = it
-            }, label = { Text(stringResource(Res.string.custom_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+    CdCard(tone = CardTone.Raised) {
+        CdSection(title = null, error = error) {
+            CdField(code, { code = it }, label = stringResource(Res.string.custom_code))
+            CdField(name, { name = it }, label = stringResource(Res.string.custom_name))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(symbol, {
-                    symbol = it
-                }, label = { Text(stringResource(Res.string.custom_symbol)) }, singleLine = true, modifier = Modifier.weight(1f))
-                OutlinedTextField(
+                CdField(symbol, { symbol = it }, label = stringResource(Res.string.custom_symbol), modifier = Modifier.weight(1f))
+                CdField(
                     decimals,
                     { decimals = it },
-                    label = { Text(stringResource(Res.string.custom_decimals)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    label = stringResource(Res.string.custom_decimals),
+                    keyboardType = KeyboardType.Number,
                     modifier = Modifier.weight(1f),
                 )
             }
-            Button(
-                onClick = { if (presenter.addCustomCurrency(code, name, symbol, decimals)) onAdded() },
-                modifier = Modifier.heightIn(min = 48.dp),
-            ) {
-                Text(stringResource(Res.string.custom_add))
-            }
+            CdActions(
+                listOf(
+                    CdActionSpec(
+                        stringResource(Res.string.custom_add),
+                        { if (presenter.addCustomCurrency(code, name, symbol, decimals)) onAdded() },
+                    ),
+                ),
+            )
         }
     }
 }
 
 /** Paso 3: billeteras con nombre, tipo, moneda y saldo de hoy; sin apodos que configurar. */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun WalletsScreen(
     presenter: OnboardingPresenter,
@@ -398,12 +386,8 @@ fun WalletsScreen(
     ) {
         state.wallets.forEachIndexed { index, wallet ->
             item(key = "wallet-$index-${wallet.name}") {
-                Surface(
-                    shape = MaterialTheme.shapes.medium,
-                    color = scheme.surfaceContainerLowest,
-                    border = BorderStroke(1.dp, scheme.outlineVariant),
-                ) {
-                    Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                CdCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(wallet.name, style = MaterialTheme.typography.titleMedium)
                             Text(
@@ -413,77 +397,60 @@ fun WalletsScreen(
                             )
                         }
                         Text(MoneyFormatter.format(wallet.opening, locale), style = CoinDenTheme.amounts.amount)
-                        IconButton(onClick = { presenter.removeWallet(index) }) {
-                            Icon(
-                                CoinDenIcon.CLOSE.vector,
-                                contentDescription = stringResource(Res.string.wallet_remove, wallet.name),
-                                tint = scheme.onSurfaceVariant,
-                            )
-                        }
+                        CdIconAction(
+                            CoinDenIcon.CLOSE.vector,
+                            stringResource(Res.string.wallet_remove, wallet.name),
+                            { presenter.removeWallet(index) },
+                        )
                     }
                 }
             }
         }
         item {
-            Surface(shape = MaterialTheme.shapes.large, color = scheme.surfaceContainerLow) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
+            val error = if (OnboardingError.InvalidWallet in state.errors) stringResource(Res.string.error_invalid_wallet) else null
+            CdCard(tone = CardTone.Raised) {
+                CdSection(title = null, error = error) {
+                    CdField(
                         name,
                         { name = it },
-                        label = { Text(stringResource(Res.string.wallet_name)) },
-                        placeholder = { Text(stringResource(Res.string.wallet_name_hint)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
+                        label = stringResource(Res.string.wallet_name),
+                        placeholder = stringResource(Res.string.wallet_name_hint),
                     )
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        WalletType.entries.forEach { t ->
-                            FilterChip(selected = type == t, onClick = {
-                                type = t
-                            }, label = { Text(stringResource(t.label())) }, modifier = Modifier.heightIn(min = 48.dp))
-                        }
-                    }
+                    CdChoiceGrid(WalletType.entries.map { CdOption(it, stringResource(it.label())) }, selected = type, onSelect = {
+                        type =
+                            it
+                    })
                     if (state.walletCurrencies.size > 1) {
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            state.walletCurrencies.forEach { c ->
-                                FilterChip(selected = currency.code == c.code, onClick = {
-                                    currency = c
-                                }, label = { Text(c.code) }, modifier = Modifier.heightIn(min = 48.dp))
-                            }
-                        }
+                        CdChoice(state.walletCurrencies.map { CdOption(it.code, it.code) }, selected = currency.code, onSelect = { code ->
+                            state.walletCurrencies.firstOrNull { it.code == code }?.let { currency = it }
+                        })
                     }
-                    OutlinedTextField(
+                    CdField(
                         opening,
                         { opening = it },
-                        label = { Text(stringResource(Res.string.wallet_opening) + " (${currency.code})") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth(),
+                        label = stringResource(Res.string.wallet_opening) + " (${currency.code})",
+                        suffix = currency.code,
+                        keyboardType = KeyboardType.Decimal,
                     )
-                    OutlinedButton(
-                        onClick = {
-                            if (presenter.addWallet(name, type, currency, opening)) {
-                                name = ""
-                                opening = ""
-                            }
-                        },
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    ) {
-                        Icon(CoinDenIcon.PLUS.vector, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(stringResource(Res.string.wallet_add), modifier = Modifier.padding(start = 6.dp))
-                    }
+                    CdActions(
+                        listOf(
+                            CdActionSpec(
+                                stringResource(Res.string.wallet_add),
+                                {
+                                    if (presenter.addWallet(name, type, currency, opening)) {
+                                        name = ""
+                                        opening = ""
+                                    }
+                                },
+                                icon = CoinDenIcon.PLUS.vector,
+                            ),
+                        ),
+                    )
                 }
             }
         }
         item { Text(stringResource(Res.string.wallets_hint), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant) }
-        state.errors.forEach { error ->
-            item {
-                when (error) {
-                    OnboardingError.InvalidWallet -> ErrorText(stringResource(Res.string.error_invalid_wallet))
-                    OnboardingError.NoWallets -> ErrorText(stringResource(Res.string.error_no_wallets))
-                    else -> Unit
-                }
-            }
-        }
+        if (OnboardingError.NoWallets in state.errors) item { CdErrorText(stringResource(Res.string.error_no_wallets)) }
         item { Spacer(Modifier.heightIn(min = 8.dp)) }
     }
 }

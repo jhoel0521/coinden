@@ -29,7 +29,6 @@ class RawMaterialUsageTest {
     private val pendingMigration =
         setOf(
             "App.kt",
-            "onboarding/OnboardingScreens.kt",
             "perception/PerceptionScreens.kt",
             "settings/WalletSettingsScreen.kt",
             "ui/LoadNotice.kt",
