@@ -39,6 +39,8 @@
 - [x] 5.2 `CdOption.icon`, mosaicos en `CdChoice` e ícono `HELP`.
 - [x] 5.3 Medio de pago del formulario y tipo de billetera (onboarding y ajustes) con íconos.
 - [x] 5.4 Capturas en el emulador (claro, oscuro, letra 1,3) y agregarlas a la evidencia.
+- [x] 5.5 Categorías como mosaicos: 3 más usadas y "Más…", hoja con mosaicos; íconos de cada categoría base y `TAG` para las propias.
+- [x] 5.6 Capturas de categorías (fila y hoja) en claro, oscuro y letra 1,3.
 
 ## Workflow follow-up
 

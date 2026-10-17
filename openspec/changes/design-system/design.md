@@ -62,7 +62,7 @@ Los segmentados usan `SingleChoiceSegmentedButtonRow` de Material 3, envuelto: l
 
 ### D4. Cuadrícula sin sueltas (puro)
 
-`GridLayout.columns(available, minCell = 96.dp)` toma entre 2 y 4 columnas. Cada celda mide `available / columns`. La última fila conserva el ancho de celda y se alinea a la izquierda, de modo que ninguna opción se estira ni queda distinta.
+`GridLayout.columns(available, minCell = 96.dp)` toma entre 2 y 4 columnas. Cada celda mide `available / columns`. La última fila conserva el ancho de celda y se alinea a la izquierda, de modo que ninguna opción se estira ni queda distinta. `columns` prefiere la cantidad que no deja una sola al final (4 opciones: 2 x 2); si ninguna lo logra, `GridLayout.rows` reparte las filas (13 en 3 columnas: 3, 3, 3, 2, 2). En 2 columnas no hay reparto posible: con una cantidad impar, la última ocupa la fila entera (`lastSpansRow`).
 
 ### D5. Componentes que saben dónde están
 
@@ -102,7 +102,7 @@ Tocar la fila abre el formulario, como hoy. La tarjeta completa (`DraftCardView`
 - `Row` si `available / count >= minTile`: una barra de mosaicos del mismo ancho (ícono de 24 dp arriba y etiqueta de hasta 2 líneas debajo, 72 dp de alto mínimo).
 - `Grid(columns)` si no: los mismos mosaicos en columnas iguales, con `GridLayout.columns`.
 
-La elegida lleva relleno `secondaryContainer`, borde `primary` y el ícono en `primary`; las demás, borde suave. El ícono sale del catálogo `CoinDenIcon`, que suma `HELP` para "Sin indicar". Lo usan el medio de pago del formulario y el tipo de billetera (onboarding y ajustes). La cuadrícula de texto queda para opciones sin ícono, como las monedas.
+La elegida lleva relleno `secondaryContainer`, borde `primary` y el ícono en `primary`; las demás, borde suave. El ícono sale del catálogo `CoinDenIcon`, que suma `HELP` para "Sin indicar". Con más de 5 opciones (las categorías), la fila muestra `TileLayout.top = 3` más usadas, con la elegida siempre entre ellas, y un mosaico "Más…" que abre `CdChoiceGrid` en una hoja; la cuadrícula también dibuja mosaicos cuando todas sus opciones tienen ícono. Cada categoría base tiene su ícono (`BaseCategory.icon()`), las propias usan `TAG` y "Sin categoría" usa `HELP`. Lo usan el medio de pago, la categoría del formulario y el tipo de billetera (onboarding y ajustes). La cuadrícula de texto queda para opciones sin ícono, como las monedas.
 
 ## Risks / Trade-offs
 

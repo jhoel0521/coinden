@@ -25,6 +25,7 @@ import coinden.composeapp.generated.resources.status_captured
 import coinden.composeapp.generated.resources.status_incomplete
 import coinden.composeapp.generated.resources.status_ready
 import coinden.composeapp.generated.resources.status_unsupported
+import com.coinden.app.theme.CoinDenIcon
 import com.coinden.core.domain.model.category.BaseCategory
 import com.coinden.core.domain.model.draft.Confidence
 import org.jetbrains.compose.resources.StringResource
@@ -48,6 +49,23 @@ fun BaseCategory.label(): StringResource =
         BaseCategory.EDUCATION -> Res.string.category_education
         BaseCategory.PEOPLE -> Res.string.category_people
         BaseCategory.FEES -> Res.string.category_fees
+    }
+
+/** Ícono de cada categoría base; las propias usan [CoinDenIcon.TAG]. */
+fun BaseCategory.icon(): CoinDenIcon =
+    when (this) {
+        BaseCategory.FOOD -> CoinDenIcon.FOOD
+        BaseCategory.GROCERIES -> CoinDenIcon.GROCERIES
+        BaseCategory.TRANSPORT -> CoinDenIcon.BUS
+        BaseCategory.HEALTH -> CoinDenIcon.HEALTH
+        BaseCategory.SUBSCRIPTIONS -> CoinDenIcon.REPEAT
+        BaseCategory.BILLS -> CoinDenIcon.BOLT
+        BaseCategory.HOUSING -> CoinDenIcon.HOUSE
+        BaseCategory.LEISURE -> CoinDenIcon.STAR
+        BaseCategory.SHOPPING -> CoinDenIcon.BAG
+        BaseCategory.EDUCATION -> CoinDenIcon.BOOK
+        BaseCategory.PEOPLE -> CoinDenIcon.PEOPLE
+        BaseCategory.FEES -> CoinDenIcon.PERCENT
     }
 
 fun MovementKindView.label(): StringResource =

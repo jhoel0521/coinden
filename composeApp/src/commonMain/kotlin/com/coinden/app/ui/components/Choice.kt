@@ -41,6 +41,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.coinden.app.theme.CoinDenIcon
 
 /** Una opción de un grupo: su valor, su texto y, si hay, una marca ("sugerida"). */
 data class CdOption<T>(
@@ -66,43 +67,41 @@ fun <T> CdChoice(
     usage: Map<T, Int> = emptyMap(),
     moreLabel: String? = null,
     enabled: Boolean = true,
+    sheetTitle: String? = moreLabel,
 ) {
     if (options.isEmpty()) return
-    val measurer = rememberTextMeasurer()
-    val style = MaterialTheme.typography.labelLarge
-    val density = LocalDensity.current
     var showAll by remember { mutableStateOf(false) }
-    // Opciones fijas que tienen todas su ícono: mosaicos con el ícono arriba (medio de pago, tipo de billetera).
-    if (!open && options.size <= MAX_TILES && options.all { it.icon != null }) {
-        val widestWord = widestWord(options)
-        BoxWithConstraints(modifier.fillMaxWidth()) {
-            when (val tiles = TileLayout.of(options.size, maxWidth.value, widestWord)) {
-                TileArrangement.Row ->
-                    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        options.forEach { option ->
-                            Tile(option, option.value == selected, enabled, Modifier.weight(1f).fillMaxHeight()) { onSelect(option.value) }
-                        }
-                    }
-                is TileArrangement.Grid ->
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        options.chunked(tiles.columns).forEach { row ->
-                            Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                row.forEach { option ->
-                                    Tile(
-                                        option,
-                                        option.value == selected,
-                                        enabled,
-                                        Modifier.weight(1f).fillMaxHeight(),
-                                    ) { onSelect(option.value) }
-                                }
-                                repeat(tiles.columns - row.size) { Spacer(Modifier.weight(1f)) }
-                            }
-                        }
-                    }
+    // Opciones fijas que tienen todas su ícono: mosaicos con el ícono arriba (medio de pago, categoría, tipo de billetera).
+    if (!open && options.all { it.icon != null }) {
+        val shown = TileLayout.shown(options.size)
+        val visible =
+            if (shown == options.size) {
+                options
+            } else {
+                val top = FrequentChoices.top(options.map { it.value }, usage, selected, shown)
+                top.mapNotNull { v -> options.firstOrNull { it.value == v } }
+            }
+        val more =
+            if (shown < options.size) {
+                listOf(TileItem(moreLabel ?: "…", CoinDenIcon.MORE.vector, selected = false, emphasized = true) { showAll = true })
+            } else {
+                emptyList()
+            }
+        val items = visible.map { TileItem(it.label, it.icon, it.value == selected) { onSelect(it.value) } } + more
+        TileGroup(items, widestWord(items.map { it.label }), enabled, modifier)
+        if (showAll) {
+            CdSheet(onDismiss = { showAll = false }, title = sheetTitle) {
+                CdChoiceGrid(options, selected, onSelect = {
+                    onSelect(it)
+                    showAll = false
+                })
             }
         }
         return
     }
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.labelLarge
+    val density = LocalDensity.current
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val labelsWidth =
             with(density) {
@@ -147,7 +146,7 @@ fun <T> CdChoice(
         }
     }
     if (showAll) {
-        CdSheet(onDismiss = { showAll = false }, title = moreLabel) {
+        CdSheet(onDismiss = { showAll = false }, title = sheetTitle) {
             CdChoiceGrid(options, selected, onSelect = {
                 onSelect(it)
                 showAll = false
@@ -156,30 +155,74 @@ fun <T> CdChoice(
     }
 }
 
-private const val MAX_TILES = 5
+/** Reparte una lista en filas según [GridLayout.rows], sin dejar una opción sola al final. */
+private fun <T> List<T>.inRows(columns: Int): List<List<T>> {
+    var start = 0
+    return GridLayout.rows(size, columns).map { n -> subList(start, start + n).also { start += n } }
+}
+
+/** Un mosaico ya resuelto: su texto, su ícono, si está elegido y qué hace al tocarlo. */
+private class TileItem(
+    val label: String,
+    val icon: ImageVector?,
+    val selected: Boolean,
+    val emphasized: Boolean = false,
+    val onClick: () -> Unit,
+)
+
+/** Mosaicos en una fila o, si no entran, en columnas iguales ([TileLayout]). [gridCell]: siempre en cuadrícula. */
+@Composable
+private fun TileGroup(
+    items: List<TileItem>,
+    widestWord: Float,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+    gridCell: Float? = null,
+) {
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val arrangement =
+            if (gridCell != null) {
+                TileArrangement.Grid(GridLayout.columns(maxWidth.value, gridCell, widestWord, items.size))
+            } else {
+                TileLayout.of(items.size, maxWidth.value, widestWord)
+            }
+        val columns = (arrangement as? TileArrangement.Grid)?.columns ?: items.size
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items.inRows(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    row.forEach { Tile(it, enabled, Modifier.weight(1f).fillMaxHeight()) }
+                    if (!GridLayout.lastSpansRow(items.size, columns)) repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+        }
+    }
+}
 
 /**
  * Un mosaico: ícono arriba y etiqueta de hasta 2 líneas debajo. La elegida lleva relleno, borde
  * principal y el ícono en el color principal, así no se distingue solo por el color de fondo.
  */
 @Composable
-private fun <T> Tile(
-    option: CdOption<T>,
-    selected: Boolean,
+private fun Tile(
+    item: TileItem,
     enabled: Boolean,
     modifier: Modifier,
-    onClick: () -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
+    val selected = item.selected
     Surface(
         modifier =
             modifier
-                .heightIn(
-                    min = 72.dp,
-                ).selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick),
+                .heightIn(min = 72.dp)
+                .selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = item.onClick),
         shape = MaterialTheme.shapes.medium,
         color = if (selected) scheme.secondaryContainer else scheme.surface,
-        contentColor = if (selected) scheme.onSecondaryContainer else scheme.onSurface,
+        contentColor =
+            when {
+                selected -> scheme.onSecondaryContainer
+                item.emphasized -> scheme.primary
+                else -> scheme.onSurface
+            },
         border = if (selected) BorderStroke(2.dp, scheme.primary) else BorderStroke(1.dp, scheme.outlineVariant),
     ) {
         Column(
@@ -187,16 +230,12 @@ private fun <T> Tile(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
         ) {
-            option.icon?.let {
-                Icon(
-                    it,
-                    contentDescription = null,
-                    tint = if (selected) scheme.primary else scheme.onSurfaceVariant,
-                    modifier = Modifier.size(24.dp),
-                )
+            item.icon?.let {
+                val tint = if (selected || item.emphasized) scheme.primary else scheme.onSurfaceVariant
+                Icon(it, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
             }
             Text(
-                option.label,
+                item.label,
                 style = MaterialTheme.typography.labelMedium,
                 // Mismo grosor elegida o no: así la etiqueta no cambia de ancho al elegirla.
                 fontWeight = FontWeight.Medium,
@@ -242,14 +281,20 @@ fun <T> CdChoiceGrid(
     modifier: Modifier = Modifier,
     minCell: Float = 96f,
 ) {
+    // Todas con ícono (como las categorías en "Más…"): mosaicos en columnas iguales.
+    if (options.isNotEmpty() && options.all { it.icon != null }) {
+        val items = options.map { TileItem(it.label, it.icon, it.value == selected) { onSelect(it.value) } }
+        TileGroup(items, widestWord(items.map { it.label }), enabled = true, modifier = modifier, gridCell = TileLayout.GRID_CELL)
+        return
+    }
     val widest = widestLabel(options)
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val columns = GridLayout.columns(maxWidth.value, minCell, widest, options.size)
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            options.chunked(columns).forEach { row ->
+            options.inRows(columns).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     row.forEach { option -> Pill(option, option.value == selected, Modifier.weight(1f)) { onSelect(option.value) } }
-                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                    if (!GridLayout.lastSpansRow(options.size, columns)) repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }
@@ -269,10 +314,10 @@ fun <T> CdMultiChoiceGrid(
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val columns = GridLayout.columns(maxWidth.value, minCell, widest, options.size)
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            options.chunked(columns).forEach { row ->
+            options.inRows(columns).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     row.forEach { option -> Pill(option, option.value in selected, Modifier.weight(1f)) { onToggle(option.value) } }
-                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                    if (!GridLayout.lastSpansRow(options.size, columns)) repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }
@@ -298,13 +343,13 @@ private fun <T> widestLabel(options: List<CdOption<T>>): Float {
 
 /** Ancho en dp de la palabra más larga de las etiquetas de los mosaicos. */
 @Composable
-private fun <T> widestWord(options: List<CdOption<T>>): Float {
+private fun widestWord(labels: List<String>): Float {
     val measurer = rememberTextMeasurer()
     val style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium)
     val density = LocalDensity.current
     return with(density) {
-        options
-            .flatMap { it.label.split(' ') }
+        labels
+            .flatMap { it.split(' ') }
             .maxOfOrNull {
                 measurer
                     .measure(it, style)

@@ -96,4 +96,30 @@ class LayoutRulesTest {
         // 10 monedas en 4 columnas: 4 + 4 + 2.
         assertEquals(4, GridLayout.columns(available = 400f, minCell = 96f, count = 10))
     }
+
+    @Test
+    fun `con mas de 5 opciones con icono la fila muestra 3 y Mas`() {
+        assertEquals(4, TileLayout.shown(count = 4))
+        assertEquals(5, TileLayout.shown(count = 5))
+        // 13 categorías: 3 más usadas y el mosaico "Más…".
+        assertEquals(3, TileLayout.shown(count = 13))
+    }
+
+    @Test
+    fun `si la ultima fila quedaria con una sola opcion se reparten las filas`() {
+        // 13 categorías en 3 columnas: 3 + 3 + 3 + 2 + 2, no 3 + 3 + 3 + 3 + 1.
+        assertEquals(listOf(3, 3, 3, 2, 2), GridLayout.rows(count = 13, columns = 3))
+        assertEquals(listOf(4, 4, 3, 2), GridLayout.rows(count = 13, columns = 4))
+        assertEquals(listOf(4, 4, 2), GridLayout.rows(count = 10, columns = 4))
+        assertEquals(listOf(2, 2), GridLayout.rows(count = 4, columns = 2))
+    }
+
+    @Test
+    fun `en 2 columnas la ultima opcion sola ocupa la fila entera`() {
+        // Letra 1,3: 13 categorías en 2 columnas. La fila de 1 se marca para ocupar todo el ancho.
+        assertEquals(listOf(2, 2, 2, 2, 2, 2, 1), GridLayout.rows(count = 13, columns = 2))
+        assertEquals(true, GridLayout.lastSpansRow(count = 13, columns = 2))
+        assertEquals(false, GridLayout.lastSpansRow(count = 13, columns = 3))
+        assertEquals(false, GridLayout.lastSpansRow(count = 12, columns = 2))
+    }
 }

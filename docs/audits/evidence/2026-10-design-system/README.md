@@ -21,6 +21,9 @@ Datos inventados: Billetera 100 BOB, BNB Bs 500 BOB, Dolares 100 USD, Reais 50 B
 | 51, 52 | Medio de pago como 4 mosaicos con ícono en una fila (claro y oscuro); la elegida con relleno, borde e ícono de color. |
 | 53 | Medio de pago con letra 1,3: la palabra "Transferencia" no entra en 4 columnas y los mosaicos pasan a 2 x 2. |
 | 54 | Tipos de billetera como mosaicos con ícono en 3 + 2 columnas iguales. |
+| 55, 57, 58 | Categoría como mosaicos con ícono: las 3 más usadas (con la elegida siempre visible) y "Más…", en claro y oscuro. |
+| 56 | Hoja "Categoría" con las 13 opciones como mosaicos en 3, 3, 3, 2, 2: ninguna queda sola. |
+| 59, 60 | Letra 1,3: categoría en 2 x 2 y la hoja en 2 columnas; la última ocupa la fila entera. |
 
 Corregido durante esta verificación:
 
@@ -31,6 +34,6 @@ Corregido durante esta verificación:
 - En cada billetera, "Usar como predeterminada" va antes que "Archivar".
 - Los mosaicos no cambian a negrita al elegirse (partía "Transferencia") y la cuadrícula evita dejar una opción sola (3 + 1 pasa a 2 x 2).
 
-Las capturas 51 a 54 usan los datos que había en el emulador; no se guardó nada.
+Las capturas 51 a 60 usan los datos que había en el emulador; no se guardó nada.
 
 El splash (#1C140F con el ícono) dura menos que una captura por adb y no quedó registrado.

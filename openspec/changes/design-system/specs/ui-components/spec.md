@@ -40,8 +40,8 @@ Un grupo de elección única DEBE (MUST) elegir su forma según sus opciones: ha
 - **THEN** se muestran en una sola fila deslizable con la elegida visible, sin una billetera sola en otra fila
 
 #### Scenario: Categorías
-- **WHEN** Carlos abre el formulario de un gasto y suele usar comida, transporte, supermercado y salud
-- **THEN** ve esas 4 y "Más…"; al tocar "Más…" se abren todas en una cuadrícula de 3 columnas y la elegida queda marcada
+- **WHEN** Carlos abre el formulario de un gasto y suele usar comida, transporte y supermercado
+- **THEN** ve esas 3 como mosaicos con su ícono y un cuarto mosaico "Más…"; al tocar "Más…" se abre una hoja titulada "Categoría" con todas las categorías como mosaicos con ícono en columnas iguales, y la elegida queda marcada
 
 #### Scenario: Letra grande
 - **WHEN** Carlos usa letra grande y las 4 categorías más usadas ya no caben en una fila
@@ -58,12 +58,28 @@ Cuando las opciones se muestran en varias filas (como "Más…" o los tipos de b
 - **WHEN** 4 opciones solo entrarían en 3 columnas
 - **THEN** se ordenan en 2 x 2 en lugar de 3 + 1
 
+#### Scenario: Ninguna cantidad de columnas evita la sola
+- **WHEN** hay 13 opciones (las 12 categorías y "Sin categoría") en 3 columnas
+- **THEN** las filas se reparten como 3, 3, 3, 2 y 2, con celdas del mismo ancho, en lugar de dejar una sola al final
+
+#### Scenario: Solo entran 2 columnas
+- **WHEN** Carlos usa letra grande y las 13 opciones de categoría solo entran en 2 columnas
+- **THEN** la última ocupa la fila entera como cierre de la cuadrícula, en lugar de quedar sola a media fila
+
 #### Scenario: Etiqueta larga
 - **WHEN** una opción de la cuadrícula es "Tarjeta de crédito"
 - **THEN** la cuadrícula usa menos columnas para que la etiqueta se lea entera, sin cortarse con "…"
 
 ### Requirement: Opciones con Ícono como Mosaicos
-Cuando todas las opciones de una elección única fija tienen un ícono propio y son 5 o menos, el sistema DEBE (MUST) mostrarlas como una barra de mosaicos del mismo ancho, con el ícono arriba y la etiqueta debajo (hasta 2 líneas). La elegida se distingue con relleno, borde y el ícono en el color principal, no solo por el color. Si a cada mosaico no le quedan al menos 64 dp o su palabra más larga no entra sin partirse, los mosaicos pasan a una cuadrícula de columnas iguales.
+Cuando todas las opciones de una elección única fija tienen ícono, el sistema DEBE (MUST) mostrarlas como mosaicos del mismo ancho, con el ícono arriba y la etiqueta debajo (hasta 2 líneas), sin partir palabras. La elegida se distingue con relleno, borde e ícono de color, no solo por el color de fondo.
+
+#### Scenario: Muchas opciones con ícono
+- **WHEN** una elección fija con ícono tiene más de 5 opciones, como las categorías
+- **THEN** la fila muestra las 3 más usadas (con la elegida siempre entre ellas) y un mosaico "Más…" que abre todas en una hoja
+
+#### Scenario: Categoría propia
+- **WHEN** Carlos creó la categoría "Mascotas"
+- **THEN** aparece en la hoja de categorías con un ícono de etiqueta, igual que las categorías base
 
 #### Scenario: Medio de pago
 - **WHEN** Carlos abre el formulario de un gasto

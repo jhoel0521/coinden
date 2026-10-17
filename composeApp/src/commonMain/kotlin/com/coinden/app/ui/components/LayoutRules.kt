@@ -73,6 +73,30 @@ object GridLayout {
         val most = (available / maxOf(minCell, widestLabel + CELL_PADDING)).toInt().coerceIn(2, 4)
         return (most downTo 2).firstOrNull { count % it != 1 } ?: most
     }
+
+    /** En 2 columnas no hay reparto posible: la última opción sola ocupa la fila entera. */
+    fun lastSpansRow(
+        count: Int,
+        columns: Int,
+    ): Boolean = columns == 2 && count > 1 && count % 2 == 1
+
+    /**
+     * Cuántas opciones van en cada fila. Si la última quedaría con una sola y hay 3 columnas o más,
+     * la fila anterior le cede una: 13 en 3 columnas es 3, 3, 3, 2, 2. Todas las celdas conservan
+     * el ancho de una columna.
+     */
+    fun rows(
+        count: Int,
+        columns: Int,
+    ): List<Int> {
+        val sizes = MutableList(count / columns) { columns }
+        if (count % columns > 0) sizes += count % columns
+        if (columns >= 3 && sizes.size >= 2 && sizes.last() == 1) {
+            sizes[sizes.size - 2] -= 1
+            sizes[sizes.size - 1] += 1
+        }
+        return sizes
+    }
 }
 
 /** Las opciones más usadas primero (a igual uso, el orden base) y la elegida siempre visible. */
@@ -110,7 +134,14 @@ object TileLayout {
     const val MIN_TILE = 64f
 
     /** Ancho mínimo de una celda cuando los mosaicos pasan a cuadrícula. */
-    private const val GRID_CELL = 80f
+    const val GRID_CELL = 80f
+
+    /** Hasta cuántas opciones van todas en la fila; con más, las [TOP] más usadas y "Más…". */
+    private const val MAX_TILES = 5
+    private const val TOP = 3
+
+    /** Cuántas opciones se muestran como mosaicos en la fila, sin contar "Más…". */
+    fun shown(count: Int): Int = if (count <= MAX_TILES) count else TOP
 
     /** Relleno lateral de un mosaico (6 dp por lado) y su borde (2 dp por lado). */
     private const val TILE_PADDING = 16f
