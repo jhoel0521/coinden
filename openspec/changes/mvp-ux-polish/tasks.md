@@ -4,8 +4,8 @@ Cada bloque funcional se entrega con pruebas, recursos es/en/pt, actualización 
 
 ## 1. Entorno Android y línea base
 
-- [ ] 1.1 Instalar emulador e imagen oficial API 36 x86_64, comprobar aceleración y crear AVD propio `CoinDen_MVP_API36`; verificar arranque con `adb devices` y `sys.boot_completed`, sin cambiar características Windows ni borrar AVD ajenos.
-- [ ] 1.2 Instalar el APK de línea base y registrar versión de imagen, dispositivo, capturas y recorridos alcanzados en `continuidad.md`; verificar apertura y ausencia de crash en logcat.
+- [x] 1.1 Instalar emulador e imagen oficial API 36 x86_64, comprobar aceleración y crear AVD propio `CoinDen_MVP_API36`; verificar arranque con `adb devices` y `sys.boot_completed`, sin cambiar características Windows ni borrar AVD ajenos.
+- [x] 1.2 Instalar el APK de línea base y registrar versión de imagen, dispositivo, capturas y recorridos alcanzados en `continuidad.md`; verificar apertura y ausencia de crash en logcat.
 
 ## 2. Guardado único y errores del formulario
 
