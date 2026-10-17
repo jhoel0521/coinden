@@ -80,7 +80,7 @@ class DraftFormPresenterTest {
             form.onMethodChange(PaymentMethod.CARD)
             form.onCategoryChange(CategoryRef.Base(BaseCategory.GROCERIES))
             form.onDateChange(yesterday)
-            val result = form.save()
+            val result = kotlin.test.assertNotNull(form.save())
 
             val draft = assertIs<Draft.Ready>(container.onlyPending())
             assertEquals(Confidence.HIGH, draft.confidence)

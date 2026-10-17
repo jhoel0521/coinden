@@ -56,6 +56,8 @@ import com.coinden.app.capture.problemText
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.theme.CoinDenTheme
+import com.coinden.app.ui.LoadNotice
+import com.coinden.app.ui.ScreenLoad
 import com.coinden.core.domain.model.interpret.UserLocale
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -82,6 +84,7 @@ fun ReviewInboxScreen(
             IconButton(onClick = onBack) { Icon(CoinDenIcon.CLOSE.vector, stringResource(Res.string.back)) }
             Text(stringResource(Res.string.inbox_title), style = MaterialTheme.typography.titleLarge)
         }
+        LoadNotice(state.load, state.loaded, onRetry = { scope.launch { presenter.load() } })
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -151,6 +154,7 @@ fun ReviewInboxScreen(
                 item {
                     Button(
                         onClick = { scope.launch { presenter.askConfirmReady() } },
+                        enabled = state.load == ScreenLoad.READY,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                         shape = MaterialTheme.shapes.large,
                     ) { Text(stringResource(Res.string.inbox_confirm_all, state.ready.size), style = MaterialTheme.typography.titleMedium) }
@@ -220,7 +224,12 @@ private fun InboxCard(
                 )
             }
         }
-        Column(Modifier.clickable(enabled = item.opensForm || item.correctionTarget != null, onClick = onOpen)) {
+        Column(
+            Modifier.clickable(
+                enabled = state.load == ScreenLoad.READY && (item.opensForm || item.correctionTarget != null),
+                onClick = onOpen,
+            ),
+        ) {
             DraftCardView(item.card, locale)
         }
         item.card.question?.takeIf { item.correctionTarget == null }?.let { question ->
@@ -231,14 +240,20 @@ private fun InboxCard(
             if (item.opensForm || item.correctionTarget != null) {
                 Button(
                     onClick = onOpen,
+                    enabled = state.load == ScreenLoad.READY,
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                 ) { Text(stringResource(Res.string.inbox_open)) }
             } else {
-                OutlinedButton(onClick = onDiscard, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                OutlinedButton(
+                    onClick = onDiscard,
+                    enabled = state.load == ScreenLoad.READY,
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                ) {
                     Text(stringResource(Res.string.form_discard))
                 }
                 Button(
                     onClick = onConfirm,
+                    enabled = state.load == ScreenLoad.READY,
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                 ) { Text(stringResource(Res.string.form_confirm)) }
             }

@@ -31,7 +31,6 @@ import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.amount_missing
 import coinden.composeapp.generated.resources.category_by_rule
 import coinden.composeapp.generated.resources.category_by_word
-import coinden.composeapp.generated.resources.category_custom
 import coinden.composeapp.generated.resources.category_none
 import coinden.composeapp.generated.resources.coach_example
 import coinden.composeapp.generated.resources.coach_say_amount
@@ -51,6 +50,7 @@ import coinden.composeapp.generated.resources.kind_unknown
 import coinden.composeapp.generated.resources.method_card
 import coinden.composeapp.generated.resources.method_cash
 import coinden.composeapp.generated.resources.method_transfer
+import coinden.composeapp.generated.resources.spending_category_missing
 import coinden.composeapp.generated.resources.suggested_tag
 import coinden.composeapp.generated.resources.suggestion_default
 import coinden.composeapp.generated.resources.suggestion_only
@@ -282,7 +282,7 @@ private fun categoryText(category: CategoryView?): String {
     val name =
         when (val ref = category.ref) {
             is CategoryRef.Base -> stringResource(ref.category.label())
-            is CategoryRef.Custom -> stringResource(Res.string.category_custom)
+            is CategoryRef.Custom -> category.customName ?: stringResource(Res.string.spending_category_missing)
         }
     return when (val reason = category.reason) {
         is SuggestionReason.PackWord -> stringResource(Res.string.category_by_word, name, reason.word)

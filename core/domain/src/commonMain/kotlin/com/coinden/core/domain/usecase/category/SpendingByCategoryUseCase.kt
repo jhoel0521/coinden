@@ -68,9 +68,11 @@ class SpendingByCategoryUseCase(
                     var consolidated = Money.zero(local)
                     var unconverted = false
                     byCurrency.forEach { amount ->
-                        runCatching { rates.converter.convert(amount, local) }
-                            .onSuccess { consolidated += it }
-                            .onFailure { unconverted = true }
+                        if (rates.converter.canConvert(amount.currency, local)) {
+                            consolidated += rates.converter.convert(amount, local)
+                        } else {
+                            unconverted = true
+                        }
                     }
                     CategoryTotal(category, byCurrency, consolidated, unconverted)
                 }.sortedByDescending { it.consolidated }

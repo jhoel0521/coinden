@@ -6,15 +6,19 @@ Lleva a la persona, la primera vez que abre CoinDen, de la bienvenida a su Inici
 ## Requirements
 
 ### Requirement: Bienvenida Multilingüe con Elección de Idioma
-La primera vez que se abre la app DEBE (MUST) mostrarse una bienvenida con el saludo en español, inglés y portugués, que permita elegir el idioma de la app y proponga el del teléfono si es uno de esos tres (si no, inglés). Debe indicar que no hace falta cuenta ni registro.
+La primera vez que se abre la app DEBE (MUST) mostrarse una bienvenida con el saludo en el idioma elegido, que permita elegir español, inglés o portugués y proponga el del teléfono si es uno de esos tres (si no, inglés). Los nombres de los idiomas se muestran en su propia lengua. Debe indicar que no hace falta cuenta ni registro.
 
 #### Scenario: Teléfono en portugués
 - **WHEN** Ana abre la app por primera vez con el teléfono en portugués
-- **THEN** la bienvenida propone portugués y muestra el saludo en los tres idiomas
+- **THEN** la bienvenida propone portugués y muestra su saludo en portugués
 
 #### Scenario: Teléfono en un idioma no soportado
 - **WHEN** Wei abre la app por primera vez con el teléfono en chino
 - **THEN** la bienvenida propone inglés
+
+#### Scenario: Cambiar el saludo sin perder la pantalla
+- **WHEN** John elige inglés o portugués desde una pantalla de la app
+- **THEN** los textos siguen su selección sin reiniciar la navegación y la bienvenida no conserva un título fijo en español
 
 ### Requirement: Idioma de la App
 Todos los textos de la interfaz DEBEN (MUST) existir en español, inglés y portugués y mostrarse en el idioma elegido, que se guarda en el dispositivo y se mantiene al reabrir. El idioma elegido activa su paquete de idioma en el intérprete, junto con el inglés base.
@@ -116,3 +120,37 @@ Después de la bienvenida, la app DEBE (MUST) mostrar una pantalla de privacidad
 #### Scenario: Revisar desde Inicio
 - **WHEN** Carlos toca "Privacidad" en Inicio
 - **THEN** ve la misma pantalla y puede cambiar su elección del lector de Google
+
+### Requirement: Patrimonio Parcial Explícito
+Cuando Inicio no pueda convertir todos los saldos por faltar referencias, DEBE (MUST) identificar la cifra unificada como patrimonio parcial, mostrar aparte los importes no convertidos y explicar que no están incluidos. Con todas las referencias necesarias, DEBE mostrar patrimonio total. Esto no modifica los saldos ni exige consultar internet.
+
+#### Scenario: Moneda sin referencia
+- **WHEN** Carlos tiene 600 BOB y 50 BRL sin referencia
+- **THEN** Inicio muestra 600 BOB como patrimonio parcial y 50 BRL aparte como no incluidos
+
+#### Scenario: Referencia completa
+- **WHEN** Carlos agrega la referencia manual de BRL y vuelve a Inicio
+- **THEN** ve el patrimonio total con la equivalencia incluida sin modificar los movimientos
+
+#### Scenario: Traducción del total parcial
+- **WHEN** John o Facundo elige inglés, portugués o español con un saldo sin referencia
+- **THEN** la etiqueta parcial y su explicación aparecen en el idioma elegido
+
+### Requirement: Carga Recuperable de Inicio
+Inicio DEBE (MUST) mostrar un estado de carga antes de obtener sus datos y un error con reintento si la lectura falla. No DEBE presentar valores iniciales como saldos reales. Si conserva valores de una carga anterior tras un fallo, DEBE aclarar que no están actualizados. Una respuesta anterior no DEBE reemplazar una carga más reciente.
+
+#### Scenario: Primer inicio cargando
+- **WHEN** Carlos abre Inicio y aún no se obtuvieron los saldos
+- **THEN** ve que los datos están cargando y no un patrimonio vacío presentado como definitivo
+
+#### Scenario: Fallo de lectura y recuperación
+- **WHEN** falla la lectura de Inicio y Carlos toca Reintentar
+- **THEN** permanece en Inicio, ve la carga y después sus datos cuando la lectura se recupera
+
+#### Scenario: Datos anteriores durante un fallo
+- **WHEN** falla una actualización después de haber mostrado saldos
+- **THEN** los datos conservados se identifican como no actualizados y se ofrece reintento
+
+#### Scenario: Cargas fuera de orden
+- **WHEN** una carga vieja de Inicio termina después de una actualización más reciente
+- **THEN** se conserva la información de la actualización más reciente

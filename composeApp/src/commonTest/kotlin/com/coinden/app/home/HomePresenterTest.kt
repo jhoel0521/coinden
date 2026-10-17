@@ -49,6 +49,7 @@ class HomePresenterTest {
 
             // 100 + 500 + 289 x 10.20 = 3547.80 Bs
             assertEquals(bs("3547.80"), home.total)
+            assertFalse(home.partial)
             assertEquals(listOf("Billetera", "BNB Bs", "Dólares colchón"), home.wallets.map { it.name })
             assertEquals(Money.parseCanonical("289", Currency.USD), home.wallets.last().balance)
             assertEquals(2, home.pendingDrafts)
@@ -56,11 +57,26 @@ class HomePresenterTest {
         }
 
     @Test
-    fun `los reales sin tasa se muestran aparte, sin sumarlos`() =
+    fun `los reales sin tasa dejan el patrimonio parcial y al agregar referencia pasa a total`() =
         runTest {
-            val home = HomePresenter(carlos(withBrl = true)).also { it.load() }.state.value
-            assertEquals(bs("3547.80"), home.total)
-            assertEquals(listOf(Money.parseCanonical("50", Currency.BRL)), home.unconverted)
+            val container = carlos(withBrl = true)
+            val presenter = HomePresenter(container).also { it.load() }
+            val partial = presenter.state.value
+            assertEquals(bs("3547.80"), partial.total)
+            assertTrue(partial.partial)
+            assertEquals(listOf(Money.parseCanonical("50", Currency.BRL)), partial.unconverted)
+
+            val profile = container.storage.profiles.getProfile(container.ownerId)!!
+            val brl = ExchangeRateStrategy.ManualDaily(ExchangeRate.parse(Currency.BRL, Currency.BOB, "2.00"), 2)
+            container.storage.profiles.saveProfile(
+                profile.copy(referenceRates = profile.referenceRates + ("BRL" to brl)),
+            )
+            presenter.load()
+            val full = presenter.state.value
+            assertFalse(full.partial)
+            assertEquals(emptyList(), full.unconverted)
+            assertEquals(bs("3647.80"), full.total)
+            assertEquals(Money.parseCanonical("50", Currency.BRL), full.wallets.single { it.name == "Reais" }.balance)
         }
 
     @Test

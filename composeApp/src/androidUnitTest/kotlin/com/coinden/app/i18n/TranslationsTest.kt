@@ -7,6 +7,25 @@ import kotlin.test.assertTrue
 
 /** Ningún texto queda sin traducir: los tres idiomas tienen exactamente las mismas claves. */
 class TranslationsTest {
+    private fun placeholders(folder: String): Map<String, List<String>> =
+        Regex("""<string name="([^"]+)">([^<]*)</string>""")
+            .findAll(File("src/commonMain/composeResources/$folder/strings.xml").readText())
+            .associate { item ->
+                item.groupValues[1] to
+                    Regex("""%\d+\$[sd]""")
+                        .findAll(item.groupValues[2])
+                        .map { it.value }
+                        .sorted()
+                        .toList()
+            }
+
+    @Test
+    fun `traducir no cambia los argumentos ni los tipos de los textos`() {
+        val es = placeholders("values")
+        assertEquals(es, placeholders("values-en"))
+        assertEquals(es, placeholders("values-pt"))
+    }
+
     private fun keys(folder: String): Set<String> {
         val file = File("src/commonMain/composeResources/$folder/strings.xml")
         assertTrue(file.exists(), "no existe ${file.path}")

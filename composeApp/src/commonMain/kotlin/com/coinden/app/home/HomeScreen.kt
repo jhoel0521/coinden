@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +40,7 @@ import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.home_default
 import coinden.composeapp.generated.resources.home_history
 import coinden.composeapp.generated.resources.home_language
+import coinden.composeapp.generated.resources.home_partial
 import coinden.composeapp.generated.resources.home_pending
 import coinden.composeapp.generated.resources.home_pending_note
 import coinden.composeapp.generated.resources.home_privacy
@@ -50,6 +53,8 @@ import coinden.composeapp.generated.resources.language_es
 import coinden.composeapp.generated.resources.language_pt
 import coinden.composeapp.generated.resources.logo_description
 import coinden.composeapp.generated.resources.privacy_note
+import coinden.composeapp.generated.resources.settings_title
+import coinden.composeapp.generated.resources.spending_title
 import com.coinden.app.capture.CaptureBar
 import com.coinden.app.capture.CaptureNoticeCard
 import com.coinden.app.capture.CapturePresenter
@@ -59,12 +64,14 @@ import com.coinden.app.onboarding.label
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.theme.CoinDenTheme
 import com.coinden.app.theme.CoinDenWordmark
+import com.coinden.app.ui.LoadNotice
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.wallet.WalletType
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 /** Inicio según el tablero "Inicio": patrimonio, borradores por revisar, billeteras y la barra de captura. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HomeScreen(
     presenter: HomePresenter,
@@ -80,6 +87,8 @@ fun HomeScreen(
     onVoiceModels: () -> Unit = {},
     onReview: () -> Unit = {},
     onHistory: () -> Unit = {},
+    onSpending: () -> Unit = {},
+    onSettings: () -> Unit = {},
 ) {
     val state by presenter.state.collectAsState()
     val captureState by capture.state.collectAsState()
@@ -105,46 +114,62 @@ fun HomeScreen(
                     }
                 }
             }
-            item {
-                Surface(shape = MaterialTheme.shapes.large, color = scheme.primaryContainer, contentColor = scheme.onPrimaryContainer) {
-                    Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(stringResource(Res.string.home_total), style = MaterialTheme.typography.labelLarge)
-                        Text(state.total?.let { MoneyFormatter.format(it, locale) }.orEmpty(), style = CoinDenTheme.amounts.amountLarge)
-                        if (state.unconverted.isNotEmpty()) {
-                            val apart = state.unconverted.joinToString(" · ") { MoneyFormatter.format(it, locale) }
-                            Text(stringResource(Res.string.home_unconverted, apart), style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                }
-            }
-            item {
-                Surface(shape = MaterialTheme.shapes.medium, color = scheme.surfaceContainerHigh) {
-                    Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(stringResource(Res.string.home_pending, state.pendingDrafts), style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            stringResource(Res.string.home_pending_note),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = scheme.onSurfaceVariant,
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = onReview, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                                Text(stringResource(Res.string.home_review, state.pendingDrafts))
-                            }
-                            OutlinedButton(onClick = onHistory, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                                Text(stringResource(Res.string.home_history))
+            item { LoadNotice(state.load, state.loaded, onRetry = { scope.launch { presenter.load() } }) }
+            if (state.loaded) {
+                item {
+                    Surface(shape = MaterialTheme.shapes.large, color = scheme.primaryContainer, contentColor = scheme.onPrimaryContainer) {
+                        Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                stringResource(if (state.partial) Res.string.home_partial else Res.string.home_total),
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                            Text(state.total?.let { MoneyFormatter.format(it, locale) }.orEmpty(), style = CoinDenTheme.amounts.amountLarge)
+                            if (state.partial) {
+                                val apart = state.unconverted.joinToString(" · ") { MoneyFormatter.format(it, locale) }
+                                Text(stringResource(Res.string.home_unconverted, apart), style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
                 }
+                item {
+                    Surface(shape = MaterialTheme.shapes.medium, color = scheme.surfaceContainerHigh) {
+                        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(stringResource(Res.string.home_pending, state.pendingDrafts), style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                stringResource(Res.string.home_pending_note),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = scheme.onSurfaceVariant,
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(onClick = onReview, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                                    Text(stringResource(Res.string.home_review, state.pendingDrafts))
+                                }
+                                OutlinedButton(onClick = onHistory, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                                    Text(stringResource(Res.string.home_history))
+                                }
+                            }
+                        }
+                    }
+                }
+                item {
+                    OutlinedButton(onClick = onSpending, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                        Text(stringResource(Res.string.spending_title))
+                    }
+                }
+                item {
+                    Text(
+                        stringResource(Res.string.home_wallets),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+                item {
+                    TextButton(onClick = onSettings, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                        Text(stringResource(Res.string.settings_title))
+                    }
+                }
+                items(state.wallets, key = { it.id }) { wallet -> WalletRow(wallet, locale) }
             }
-            item {
-                Text(
-                    stringResource(Res.string.home_wallets),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-            }
-            items(state.wallets, key = { it.id }) { wallet -> WalletRow(wallet, locale) }
             item {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(
@@ -167,7 +192,7 @@ fun HomeScreen(
                         style = MaterialTheme.typography.labelLarge,
                         color = scheme.onSurfaceVariant,
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         LANGUAGES.forEach { (code, name) ->
                             FilterChip(
                                 selected = language == code,

@@ -24,12 +24,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.back
-import coinden.composeapp.generated.resources.category_custom
 import coinden.composeapp.generated.resources.category_none
 import coinden.composeapp.generated.resources.field_reference
 import coinden.composeapp.generated.resources.form_see_evidence
@@ -38,14 +38,19 @@ import coinden.composeapp.generated.resources.history_corrected
 import coinden.composeapp.generated.resources.history_empty
 import coinden.composeapp.generated.resources.history_evidence
 import coinden.composeapp.generated.resources.history_title
+import coinden.composeapp.generated.resources.spending_category_missing
 import com.coinden.app.capture.FormMode
 import com.coinden.app.capture.MovementKindView
 import com.coinden.app.capture.label
 import com.coinden.app.format.MoneyFormatter
 import com.coinden.app.format.TimeFormatter
 import com.coinden.app.theme.CoinDenIcon
+import com.coinden.app.theme.CoinDenTheme
+import com.coinden.app.ui.LoadNotice
+import com.coinden.app.ui.ScreenLoad
 import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.interpret.UserLocale
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 /** Lo confirmado, del más reciente al más antiguo, con su evidencia y Corregir. */
@@ -59,6 +64,7 @@ fun HistoryScreen(
     onBack: () -> Unit,
 ) {
     val state by presenter.state.collectAsState()
+    val scope = rememberCoroutineScope()
     val scheme = MaterialTheme.colorScheme
     LaunchedEffect(presenter) { presenter.load() }
 
@@ -67,12 +73,13 @@ fun HistoryScreen(
             IconButton(onClick = onBack) { Icon(CoinDenIcon.CLOSE.vector, stringResource(Res.string.back)) }
             Text(stringResource(Res.string.history_title), style = MaterialTheme.typography.titleLarge)
         }
+        LoadNotice(state.load, state.loaded, onRetry = { scope.launch { presenter.load() } })
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            if (state.loaded && state.items.isEmpty()) {
+            if (state.load == ScreenLoad.READY && state.items.isEmpty()) {
                 item {
                     Text(
                         stringResource(Res.string.history_empty),
@@ -95,13 +102,13 @@ fun HistoryScreen(
                                 modifier = Modifier.weight(1f),
                             )
                             val sign = if (item.kind == MovementKindView.EXPENSE) "-" else ""
-                            Text(sign + MoneyFormatter.format(item.amount, locale), style = MaterialTheme.typography.titleMedium)
+                            Text(sign + MoneyFormatter.format(item.amount, locale), style = CoinDenTheme.amounts.amount)
                         }
                         val details =
                             listOfNotNull(
                                 TimeFormatter.dayMonthTime(item.occurredAtEpochMs, utcOffsetMinutes, locale),
                                 item.walletName,
-                                if (item.kind == MovementKindView.EXPENSE) categoryLabel(item.category) else null,
+                                if (item.kind == MovementKindView.EXPENSE) categoryLabel(item.category, item.customCategoryName) else null,
                                 item.reference?.let { "${stringResource(Res.string.field_reference)} $it" },
                             )
                         Text(details.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
@@ -136,9 +143,12 @@ fun HistoryScreen(
 }
 
 @Composable
-private fun categoryLabel(category: CategoryRef?): String =
+private fun categoryLabel(
+    category: CategoryRef?,
+    customName: String?,
+): String =
     when (category) {
         null -> stringResource(Res.string.category_none)
         is CategoryRef.Base -> stringResource(category.category.label())
-        is CategoryRef.Custom -> stringResource(Res.string.category_custom)
+        is CategoryRef.Custom -> customName ?: stringResource(Res.string.spending_category_missing)
     }

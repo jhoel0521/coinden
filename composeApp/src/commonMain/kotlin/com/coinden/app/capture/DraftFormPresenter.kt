@@ -24,6 +24,7 @@ import com.coinden.core.domain.model.draft.asProposal
 import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.WalletError
 import com.coinden.core.domain.model.wallet.WalletType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +32,8 @@ import kotlinx.coroutines.flow.update
 
 /** Tipos de movimiento del formulario. */
 enum class FormKind { EXPENSE, INCOME }
+
+enum class FormExit { LEAVE, ASK, BLOCKED }
 
 /**
  * Para qué se abre el formulario: escribir uno nuevo, revisar un borrador pendiente o corregir un
@@ -57,6 +60,13 @@ data class FormWallet(
     val type: WalletType,
 )
 
+/** Una categoría propia disponible o asociada al movimiento en el formulario. */
+data class FormCustomCategory(
+    val id: String,
+    val name: String?,
+    val archived: Boolean = false,
+)
+
 data class DraftFormState(
     /** "Escríbelo como te salga": llena los campos con el intérprete. */
     val phrase: String = "",
@@ -74,6 +84,7 @@ data class DraftFormState(
     /** Número de transacción (opcional). */
     val reference: String = "",
     val wallets: List<FormWallet> = emptyList(),
+    val customCategories: List<FormCustomCategory> = emptyList(),
     val mode: FormMode = FormMode.New,
     /** Al corregir: lo que cambia respecto del movimiento confirmado, con su valor anterior. */
     val changes: List<FieldChange> = emptyList(),
@@ -81,9 +92,15 @@ data class DraftFormState(
     val evidenceDraftId: String? = null,
     /** Por qué no se pudo confirmar (el formulario sigue abierto). */
     val problem: ConfirmProblem? = null,
+    val busy: Boolean = false,
+    val storageError: Boolean = false,
+    val completed: Boolean = false,
+    val dirty: Boolean = false,
 ) {
     /** El monto nuevo es el doble o más, o la mitad o menos, del anterior. */
     val largeAmount: Boolean get() = changes.any { it is FieldChange.Amount && it.large }
+
+    fun customCategoryName(id: String): String? = customCategories.firstOrNull { it.id == id }?.name
 }
 
 /**
@@ -100,6 +117,19 @@ class DraftFormPresenter(
     val state: StateFlow<DraftFormState> = mutableState.asStateFlow()
 
     private var directory = WalletDirectory(emptyList())
+    private var capturedId: String? = null
+    private var loaded = false
+    private var baseline: List<Any?> = emptyList()
+
+    private fun DraftFormState.fields(): List<Any?> =
+        listOf(phrase, kind, amount, currency, walletId, method, category, occurredAtEpochMs, note, reference)
+
+    fun requestExit(): FormExit =
+        when {
+            state.value.busy -> FormExit.BLOCKED
+            state.value.dirty && !state.value.completed -> FormExit.ASK
+            else -> FormExit.LEAVE
+        }
 
     /** Al corregir: el movimiento confirmado y su categoría, contra los que se comparan los cambios. */
     private var before: Pair<ReadyMovement, CategoryRef?>? = null
@@ -109,13 +139,35 @@ class DraftFormPresenter(
 
     /** Las billeteras activas; la por defecto queda elegida. Al revisar o corregir, precarga los datos. */
     suspend fun load() {
+        if (loaded) return
         directory = container.drafts.directory(container.ownerId)
         val wallets = directory.wallets.filter { it.isActive }.map { FormWallet(it.id, it.name, it.currency, it.type) }
-        mutableState.update { it.copy(wallets = wallets) }
+        val customCategories =
+            container.storage.categorization
+                .customCategoriesOf(container.ownerId)
+                .map { FormCustomCategory(it.id, it.name, it.archived) }
+        mutableState.update { it.copy(wallets = wallets, customCategories = customCategories) }
         when (mode) {
             FormMode.New -> mutableState.update { it.copy(walletId = it.walletId ?: directory.defaultWalletId) }
             is FormMode.Review -> loadReview(mode.draftId)
             is FormMode.Correct -> loadCorrection(mode)
+        }
+        ensureReferencedCustomCategories()
+        baseline = state.value.fields()
+        loaded = true
+    }
+
+    private fun ensureReferencedCustomCategories() {
+        mutableState.update { s ->
+            val known = s.customCategories.map { it.id }.toSet()
+            val refs =
+                listOfNotNull(
+                    s.category as? CategoryRef.Custom,
+                    before?.second as? CategoryRef.Custom,
+                ).map { it.id }
+                    .distinct()
+                    .filterNot { it in known }
+            if (refs.isEmpty()) s else s.copy(customCategories = s.customCategories + refs.map { FormCustomCategory(it, null) })
         }
     }
 
@@ -184,10 +236,11 @@ class DraftFormPresenter(
         )
     }
 
-    fun onPhraseChange(text: String) = mutableState.update { it.copy(phrase = text) }
+    fun onPhraseChange(text: String) = edit { it.copy(phrase = text) }
 
     /** Pasa la frase por el intérprete y precarga los campos; la persona puede cambiarlos. */
     suspend fun fillFromPhrase() {
+        if (state.value.busy || state.value.completed) return
         val phrase = state.value.phrase.trim()
         if (phrase.isEmpty()) return
         directory = container.drafts.directory(container.ownerId)
@@ -219,7 +272,12 @@ class DraftFormPresenter(
     fun onReferenceChange(reference: String) = edit { it.copy(reference = reference) }
 
     private fun edit(change: (DraftFormState) -> DraftFormState) {
-        mutableState.update { change(it).copy(problem = null) }
+        if (state.value.busy || state.value.completed) return
+        mutableState.update {
+            change(it).let { next ->
+                next.copy(problem = null, storageError = false, dirty = next.fields() != baseline)
+            }
+        }
         refreshChanges()
     }
 
@@ -238,71 +296,107 @@ class DraftFormPresenter(
      * Nuevo: guarda un borrador con la frase como evidencia y lo indicado como propuesta. La
      * categoría elegida viaja en la tarjeta del resultado para confirmarlo en el acto.
      */
-    suspend fun save(): CaptureResult {
-        val s = state.value
-        val evidence = Evidence(EvidenceSource.MANUAL, s.phrase.trim().ifEmpty { null })
-        val captured = container.captureManual(container.ownerId, evidence).single()
-        val draft =
-            when (val revised = container.reviseDraft(captured.id, proposalOf(s))) {
-                is DraftResult.Ok -> revised.draft
-                is DraftResult.Rejected -> captured
-            }
-        val card = cards.of(listOf(draft)).single()
-        val chosen = s.category?.let { CategoryView(it, reason = null) } ?: card.category
-        return CaptureResult(listOf(card.copy(category = chosen)))
-    }
+    suspend fun save(): CaptureResult? =
+        write {
+            val s = state.value
+            val evidence = Evidence(EvidenceSource.MANUAL, s.phrase.trim().ifEmpty { null })
+            val id =
+                capturedId ?: container
+                    .captureManual(container.ownerId, evidence)
+                    .single()
+                    .id
+                    .also { capturedId = it }
+            val draft =
+                when (val revised = container.reviseDraft(id, proposalOf(s))) {
+                    is DraftResult.Ok -> revised.draft
+                    is DraftResult.Rejected -> {
+                        mutableState.update { it.copy(problem = problemOf(revised.error)) }
+                        return@write null
+                    }
+                }
+            val card = cards.of(listOf(draft)).single()
+            val chosen =
+                s.category?.let { ref ->
+                    CategoryView(ref, reason = null, customName = (ref as? CategoryRef.Custom)?.let { s.customCategoryName(it.id) })
+                } ?: card.category
+            CaptureResult(listOf(card.copy(category = chosen)))
+        }
 
     /** Revisar: guarda lo del formulario sin confirmar (el saldo no cambia). */
-    suspend fun keep(): Boolean {
-        val draftId = (mode as? FormMode.Review)?.draftId ?: return false
-        return container.reviseDraft(draftId, proposalOf(state.value)) is DraftResult.Ok
-    }
+    suspend fun keep(): Boolean =
+        write {
+            val draftId = (mode as? FormMode.Review)?.draftId ?: return@write null
+            accepted(container.reviseDraft(draftId, proposalOf(state.value)))
+        } ?: false
 
     /**
      * Revisar: guarda y confirma. Corregir: aplica todo lo del formulario de una vez. Devuelve true
      * si se aplicó; si el libro lo rechaza, el formulario sigue abierto con el motivo.
      */
-    suspend fun confirm(): Boolean {
-        val s = state.value
-        val result =
-            when (mode) {
-                FormMode.New -> return false
-                is FormMode.Review -> {
-                    val revised = container.reviseDraft(mode.draftId, proposalOf(s))
-                    if (revised is DraftResult.Rejected) revised else container.confirmDraft(mode.draftId, s.category)
+    suspend fun confirm(): Boolean =
+        write {
+            val s = state.value
+            val result =
+                when (mode) {
+                    FormMode.New -> return@write null
+                    is FormMode.Review -> {
+                        val revised = container.reviseDraft(mode.draftId, proposalOf(s))
+                        if (revised is DraftResult.Rejected) revised else container.confirmDraft(mode.draftId, s.category)
+                    }
+                    is FormMode.Correct ->
+                        container.correctMovement(
+                            mode.draftId,
+                            proposalOf(s),
+                            s.category,
+                            if (mode.sourceDraftId != null) CorrectionOrigin.EVIDENCE else CorrectionOrigin.MANUAL,
+                            mode.sourceDraftId,
+                            correctionId,
+                        )
                 }
-                is FormMode.Correct ->
-                    container.correctMovement(
-                        mode.draftId,
-                        proposalOf(s),
-                        s.category,
-                        if (mode.sourceDraftId != null) CorrectionOrigin.EVIDENCE else CorrectionOrigin.MANUAL,
-                        mode.sourceDraftId,
-                        correctionId,
-                    )
-            }
-        return when (result) {
-            is DraftResult.Ok -> true
-            is DraftResult.Rejected -> {
-                mutableState.update { it.copy(problem = problemOf(result.error)) }
-                false
-            }
-        }
-    }
+            accepted(result)
+        } ?: false
 
     /** Revisar: descarta el borrador. Cambio pendiente: todo queda como estaba y el comprobante, como evidencia. */
     suspend fun discard(): Boolean =
-        when (mode) {
-            is FormMode.Review -> container.discardDraft(mode.draftId) is DraftResult.Ok
-            is FormMode.Correct -> mode.sourceDraftId?.let { container.dismissCorrection(it) is DraftResult.Ok } ?: false
-            FormMode.New -> false
-        }
+        write {
+            when (mode) {
+                is FormMode.Review -> accepted(container.discardDraft(mode.draftId))
+                is FormMode.Correct -> mode.sourceDraftId?.let { accepted(container.dismissCorrection(it)) }
+                FormMode.New -> null
+            }
+        } ?: false
 
     /** Cambio pendiente: el comprobante es otro gasto; sigue como borrador propio. */
-    suspend fun distinct(): Boolean {
-        val correct = mode as? FormMode.Correct ?: return false
-        val source = correct.sourceDraftId ?: return false
-        return container.resolveSameMovement(source, correct.draftId, false) is DraftResult.Ok
+    suspend fun distinct(): Boolean =
+        write {
+            val correct = mode as? FormMode.Correct ?: return@write null
+            val source = correct.sourceDraftId ?: return@write null
+            accepted(container.resolveSameMovement(source, correct.draftId, false))
+        } ?: false
+
+    private fun accepted(result: DraftResult): Boolean? =
+        when (result) {
+            is DraftResult.Ok -> true
+            is DraftResult.Rejected -> {
+                mutableState.update { it.copy(problem = problemOf(result.error)) }
+                null
+            }
+        }
+
+    /** El resultado se entrega una vez: la vista solo navega cuando no es null. */
+    private suspend fun <T : Any> write(action: suspend () -> T?): T? {
+        if (state.value.busy || state.value.completed) return null
+        mutableState.update { it.copy(busy = true, storageError = false, problem = null) }
+        return try {
+            action().also { result -> if (result != null) mutableState.update { it.copy(completed = true) } }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            mutableState.update { it.copy(storageError = true) }
+            null
+        } finally {
+            mutableState.update { it.copy(busy = false) }
+        }
     }
 
     private fun problemOf(error: DraftError): ConfirmProblem =

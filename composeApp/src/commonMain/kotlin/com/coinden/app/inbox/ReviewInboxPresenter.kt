@@ -6,6 +6,7 @@ import com.coinden.app.capture.DraftCard
 import com.coinden.app.capture.DraftCards
 import com.coinden.app.capture.FormMode
 import com.coinden.app.capture.MovementKindView
+import com.coinden.app.ui.ScreenLoad
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.draft.CaptureStats
 import com.coinden.core.domain.model.draft.Draft
@@ -13,6 +14,7 @@ import com.coinden.core.domain.model.draft.DraftError
 import com.coinden.core.domain.model.draft.DraftResult
 import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.wallet.WalletError
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -54,9 +56,15 @@ data class InboxState(
     val problems: Map<String, ConfirmProblem> = emptyMap(),
     /** Capturas de los últimos 7 días y cuántas quedaron listas sin revisar (null si no hubo). */
     val week: CaptureStats? = null,
+    val load: ScreenLoad = ScreenLoad.LOADING,
 ) {
-    val isEmpty: Boolean get() = loaded && review.isEmpty() && ready.isEmpty()
+    val isEmpty: Boolean get() = loaded && load == ScreenLoad.READY && review.isEmpty() && ready.isEmpty()
 }
+
+data class InboxSnapshot(
+    val state: InboxState,
+    val readyDrafts: List<Draft> = emptyList(),
+)
 
 /**
  * La bandeja de la noche, sin Compose: saldos proyectados, "Revisar" (lo dudoso, las preguntas y
@@ -64,14 +72,32 @@ data class InboxState(
  */
 class ReviewInboxPresenter(
     private val container: AppContainer,
+    private val query: (suspend () -> InboxSnapshot)? = null,
 ) {
     private val cards = DraftCards(container)
     private val mutableState = MutableStateFlow(InboxState())
     val state: StateFlow<InboxState> = mutableState.asStateFlow()
 
     private var readyDrafts: List<Draft> = emptyList()
+    private var generation = 0L
 
     suspend fun load() {
+        val request = ++generation
+        mutableState.update { it.copy(load = ScreenLoad.LOADING, summary = null) }
+        try {
+            val snapshot = query?.invoke() ?: readSnapshot()
+            if (request == generation) {
+                readyDrafts = snapshot.readyDrafts
+                mutableState.value = snapshot.state.copy(load = ScreenLoad.READY, loaded = true)
+            }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            if (request == generation) mutableState.update { it.copy(load = ScreenLoad.ERROR) }
+        }
+    }
+
+    private suspend fun readSnapshot(): InboxSnapshot {
         val owner = container.ownerId
         val inbox = container.draftInbox(owner, container.utcOffsetMinutes)
         val directory = container.drafts.directory(owner)
@@ -86,23 +112,25 @@ class ReviewInboxPresenter(
                 val targetNote = target?.let { (container.drafts.load(it) as? Draft.Confirmed)?.movement?.note }
                 InboxItem(card, opensForm = opensForm(card, draft), correctionTarget = target, targetNote = targetNote)
             }
-        readyDrafts = inbox.pending.filter { it.id in batch }
+        val drafts = inbox.pending.filter { it.id in batch }
         val week = container.captureStats(owner, container.clock.nowEpochMs() - WEEK_MS).takeIf { it.total > 0 }
-        mutableState.update { s ->
-            s.copy(
+        return InboxSnapshot(
+            state.value.copy(
                 loaded = true,
                 balances = balances,
                 review = items.filterNot { it.card.draftId in batch },
                 ready = items.filter { it.card.draftId in batch },
-                problems = s.problems.filterKeys { id -> inbox.pending.any { it.id == id } },
+                problems = state.value.problems.filterKeys { id -> inbox.pending.any { it.id == id } },
                 week = week,
-            )
-        }
+            ),
+            drafts,
+        )
     }
 
     /** Dónde se revisa un pendiente: el formulario de revisión o el de corrección (cambio pendiente). */
     fun formFor(item: InboxItem): FormMode? =
         when {
+            state.value.load != ScreenLoad.READY -> null
             item.correctionTarget != null -> FormMode.Correct(item.correctionTarget, item.card.draftId)
             item.opensForm -> FormMode.Review(item.card.draftId)
             else -> null
@@ -110,6 +138,7 @@ class ReviewInboxPresenter(
 
     /** Muestra el resumen antes de "Confirmar los N listos". */
     suspend fun askConfirmReady() {
+        if (state.value.load != ScreenLoad.READY) return
         val directory = container.drafts.directory(container.ownerId)
         val totals = linkedMapOf<String, Money>()
 
@@ -138,6 +167,7 @@ class ReviewInboxPresenter(
 
     /** Confirma los listos del resumen; los que el libro rechace quedan con su motivo. */
     suspend fun confirmReady() {
+        if (state.value.load != ScreenLoad.READY) return
         val ids = readyDrafts.map { it.id }
         val results = container.confirmReadyDrafts(ids)
         val problems = results.mapNotNull { (id, r) -> (r as? DraftResult.Rejected)?.let { id to problemOf(it.error) } }.toMap()
@@ -147,6 +177,7 @@ class ReviewInboxPresenter(
 
     /** Confirma desde la tarjeta (transferencias y ajustes). */
     suspend fun confirm(draftId: String) {
+        if (state.value.load != ScreenLoad.READY) return
         when (val r = container.confirmDraft(draftId)) {
             is DraftResult.Ok -> mutableState.update { it.copy(problems = it.problems - draftId) }
             is DraftResult.Rejected -> mutableState.update { it.copy(problems = it.problems + (draftId to problemOf(r.error))) }
@@ -155,6 +186,7 @@ class ReviewInboxPresenter(
     }
 
     suspend fun discard(draftId: String) {
+        if (state.value.load != ScreenLoad.READY) return
         container.discardDraft(draftId)
         load()
     }
@@ -168,6 +200,7 @@ class ReviewInboxPresenter(
         otherDraftId: String,
         same: Boolean,
     ): FormMode? {
+        if (state.value.load != ScreenLoad.READY) return null
         val outcome = container.resolveSameMovement(draftId, otherDraftId, same)
         load()
         val draft = (outcome as? DraftResult.Ok)?.draft ?: return null
