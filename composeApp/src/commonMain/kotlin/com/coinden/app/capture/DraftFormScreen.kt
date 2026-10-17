@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -40,6 +41,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -78,7 +80,9 @@ import coinden.composeapp.generated.resources.form_reference
 import coinden.composeapp.generated.resources.form_review_note
 import coinden.composeapp.generated.resources.form_save
 import coinden.composeapp.generated.resources.form_saved_note
+import coinden.composeapp.generated.resources.form_saving
 import coinden.composeapp.generated.resources.form_see_evidence
+import coinden.composeapp.generated.resources.form_storage_error
 import coinden.composeapp.generated.resources.form_title
 import coinden.composeapp.generated.resources.form_title_correct
 import coinden.composeapp.generated.resources.form_title_review
@@ -104,6 +108,7 @@ import org.jetbrains.compose.resources.stringResource
 private enum class DateChoice { TODAY, YESTERDAY, OTHER }
 
 private const val DAY_MS = 86_400_000L
+private val LocalFormEnabled = staticCompositionLocalOf { true }
 
 /**
  * El formulario completo del movimiento. Escribir: arriba, una frase libre que llena los campos
@@ -137,143 +142,151 @@ fun DraftFormScreen(
     @Composable
     fun before(field: CorrectionField): String? = changes[field]?.let { beforeText(it, state.wallets, locale, utcOffsetMinutes) }
 
-    Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).imePadding()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(CoinDenIcon.CLOSE.vector, stringResource(Res.string.back)) }
-            val title =
-                when (mode) {
-                    FormMode.New -> Res.string.form_title
-                    is FormMode.Review -> Res.string.form_title_review
-                    is FormMode.Correct -> Res.string.form_title_correct
-                }
-            Text(stringResource(title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-            state.evidenceDraftId?.let { id ->
-                TextButton(onClick = { onEvidence(id) }, modifier = Modifier.heightIn(min = 48.dp)) {
-                    Text(stringResource(Res.string.form_see_evidence))
-                }
-            }
-        }
-        Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            if (mode is FormMode.Correct) {
-                if (state.largeAmount) Warning(stringResource(Res.string.form_large_change))
-                if (state.changes.isEmpty()) {
-                    Text(
-                        stringResource(Res.string.form_no_changes),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = scheme.onSurfaceVariant,
-                    )
-                }
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = state.phrase,
-                        onValueChange = presenter::onPhraseChange,
-                        label = { Text(stringResource(Res.string.form_phrase)) },
-                        placeholder = { Text(stringResource(Res.string.capture_hint)) },
-                        modifier = Modifier.weight(1f),
-                    )
-                    FilledTonalButton(
-                        onClick = { scope.launch { presenter.fillFromPhrase() } },
-                        enabled = state.phrase.isNotBlank(),
-                        modifier = Modifier.heightIn(min = 56.dp),
-                    ) { Text(stringResource(Res.string.form_fill)) }
-                }
-            }
-
-            Section(Res.string.form_kind, before(CorrectionField.KIND)) {
-                Choice(state.kind == FormKind.EXPENSE, Res.string.kind_expense) { presenter.onKindChange(FormKind.EXPENSE) }
-                Choice(state.kind == FormKind.INCOME, Res.string.kind_income) { presenter.onKindChange(FormKind.INCOME) }
-            }
-
-            OutlinedTextField(
-                value = state.amount,
-                onValueChange = presenter::onAmountChange,
-                label = { Text(stringResource(Res.string.form_amount)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true,
-                isError = state.largeAmount,
-                supportingText = before(CorrectionField.AMOUNT)?.let { { Changed(it) } },
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Section(Res.string.field_wallet, before(CorrectionField.WALLET)) {
-                state.wallets.forEach { wallet ->
-                    ChoiceText(state.walletId == wallet.id, wallet.name) { presenter.onWalletChange(wallet.id) }
-                }
-            }
-
-            val currencies = state.wallets.map { it.currency }.distinctBy { it.code }
-            if (currencies.size > 1 || state.currency != null) {
-                Section(Res.string.form_currency) {
-                    Choice(state.currency == null, Res.string.form_currency_wallet) { presenter.onCurrencyChange(null) }
-                    currencies.forEach { currency ->
-                        ChoiceText(state.currency?.code == currency.code, currency.code) { presenter.onCurrencyChange(currency) }
+    CompositionLocalProvider(LocalFormEnabled provides (!state.busy && !state.completed)) {
+        Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).imePadding()) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack, enabled = !state.busy) { Icon(CoinDenIcon.CLOSE.vector, stringResource(Res.string.back)) }
+                val title =
+                    when (mode) {
+                        FormMode.New -> Res.string.form_title
+                        is FormMode.Review -> Res.string.form_title_review
+                        is FormMode.Correct -> Res.string.form_title_correct
+                    }
+                Text(stringResource(title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                state.evidenceDraftId?.let { id ->
+                    TextButton(onClick = { onEvidence(id) }, enabled = !state.busy, modifier = Modifier.heightIn(min = 48.dp)) {
+                        Text(stringResource(Res.string.form_see_evidence))
                     }
                 }
             }
-
-            Section(Res.string.field_method) {
-                Choice(state.method == null, Res.string.form_none) { presenter.onMethodChange(null) }
-                PaymentMethod.entries.forEach { method ->
-                    Choice(state.method == method, method.label()) { presenter.onMethodChange(method) }
-                }
-            }
-
-            if (state.kind == FormKind.EXPENSE) {
-                Section(Res.string.field_category, before(CorrectionField.CATEGORY)) {
-                    Choice(state.category == null, Res.string.category_none) { presenter.onCategoryChange(null) }
-                    BaseCategory.entries.forEach { category ->
-                        val ref = CategoryRef.Base(category)
-                        Choice(state.category == ref, category.label()) { presenter.onCategoryChange(ref) }
+            Column(
+                Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                if (mode is FormMode.Correct) {
+                    if (state.largeAmount) Warning(stringResource(Res.string.form_large_change))
+                    if (state.changes.isEmpty()) {
+                        Text(
+                            stringResource(Res.string.form_no_changes),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = scheme.onSurfaceVariant,
+                        )
+                    }
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            enabled = LocalFormEnabled.current,
+                            value = state.phrase,
+                            onValueChange = presenter::onPhraseChange,
+                            label = { Text(stringResource(Res.string.form_phrase)) },
+                            placeholder = { Text(stringResource(Res.string.capture_hint)) },
+                            modifier = Modifier.weight(1f),
+                        )
+                        FilledTonalButton(
+                            onClick = { scope.launch { presenter.fillFromPhrase() } },
+                            enabled = state.phrase.isNotBlank() && LocalFormEnabled.current,
+                            modifier = Modifier.heightIn(min = 56.dp),
+                        ) { Text(stringResource(Res.string.form_fill)) }
                     }
                 }
-            }
 
-            Section(Res.string.form_date, before(CorrectionField.OCCURRED_AT)) {
-                Choice(dateChoice == DateChoice.TODAY, Res.string.form_today) {
-                    dateChoice = DateChoice.TODAY
-                    presenter.onDateChange(null)
+                Section(Res.string.form_kind, before(CorrectionField.KIND)) {
+                    Choice(state.kind == FormKind.EXPENSE, Res.string.kind_expense) { presenter.onKindChange(FormKind.EXPENSE) }
+                    Choice(state.kind == FormKind.INCOME, Res.string.kind_income) { presenter.onKindChange(FormKind.INCOME) }
                 }
-                Choice(dateChoice == DateChoice.YESTERDAY, Res.string.form_yesterday) {
-                    dateChoice = DateChoice.YESTERDAY
-                    presenter.onDateChange(nowEpochMs() - DAY_MS)
-                }
-                val other = stringResource(Res.string.form_other_date)
-                val label =
-                    state.occurredAtEpochMs
-                        ?.takeIf { dateChoice == DateChoice.OTHER }
-                        ?.let { "$other · ${TimeFormatter.dayMonthTime(it, utcOffsetMinutes, locale)}" } ?: other
-                ChoiceText(dateChoice == DateChoice.OTHER, label) { picking = true }
-            }
 
-            OutlinedTextField(
-                value = state.note,
-                onValueChange = presenter::onNoteChange,
-                label = { Text(stringResource(Res.string.form_note)) },
-                supportingText = before(CorrectionField.NOTE)?.let { { Changed(it) } },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            OutlinedTextField(
-                value = state.reference,
-                onValueChange = presenter::onReferenceChange,
-                label = { Text(stringResource(Res.string.form_reference)) },
-                singleLine = true,
-                supportingText = before(CorrectionField.REFERENCE)?.let { { Changed(it) } },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            val note =
-                when (mode) {
-                    FormMode.New -> Res.string.form_saved_note
-                    is FormMode.Review -> Res.string.form_review_note
-                    is FormMode.Correct -> Res.string.form_correct_note
+                OutlinedTextField(
+                    enabled = LocalFormEnabled.current,
+                    value = state.amount,
+                    onValueChange = presenter::onAmountChange,
+                    label = { Text(stringResource(Res.string.form_amount)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    isError = state.largeAmount,
+                    supportingText = before(CorrectionField.AMOUNT)?.let { { Changed(it) } },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Section(Res.string.field_wallet, before(CorrectionField.WALLET)) {
+                    state.wallets.forEach { wallet ->
+                        ChoiceText(state.walletId == wallet.id, wallet.name) { presenter.onWalletChange(wallet.id) }
+                    }
                 }
-            Text(stringResource(note), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
+
+                val currencies = state.wallets.map { it.currency }.distinctBy { it.code }
+                if (currencies.size > 1 || state.currency != null) {
+                    Section(Res.string.form_currency) {
+                        Choice(state.currency == null, Res.string.form_currency_wallet) { presenter.onCurrencyChange(null) }
+                        currencies.forEach { currency ->
+                            ChoiceText(state.currency?.code == currency.code, currency.code) { presenter.onCurrencyChange(currency) }
+                        }
+                    }
+                }
+
+                Section(Res.string.field_method) {
+                    Choice(state.method == null, Res.string.form_none) { presenter.onMethodChange(null) }
+                    PaymentMethod.entries.forEach { method ->
+                        Choice(state.method == method, method.label()) { presenter.onMethodChange(method) }
+                    }
+                }
+
+                if (state.kind == FormKind.EXPENSE) {
+                    Section(Res.string.field_category, before(CorrectionField.CATEGORY)) {
+                        Choice(state.category == null, Res.string.category_none) { presenter.onCategoryChange(null) }
+                        BaseCategory.entries.forEach { category ->
+                            val ref = CategoryRef.Base(category)
+                            Choice(state.category == ref, category.label()) { presenter.onCategoryChange(ref) }
+                        }
+                    }
+                }
+
+                Section(Res.string.form_date, before(CorrectionField.OCCURRED_AT)) {
+                    Choice(dateChoice == DateChoice.TODAY, Res.string.form_today) {
+                        dateChoice = DateChoice.TODAY
+                        presenter.onDateChange(null)
+                    }
+                    Choice(dateChoice == DateChoice.YESTERDAY, Res.string.form_yesterday) {
+                        dateChoice = DateChoice.YESTERDAY
+                        presenter.onDateChange(nowEpochMs() - DAY_MS)
+                    }
+                    val other = stringResource(Res.string.form_other_date)
+                    val label =
+                        state.occurredAtEpochMs
+                            ?.takeIf { dateChoice == DateChoice.OTHER }
+                            ?.let { "$other · ${TimeFormatter.dayMonthTime(it, utcOffsetMinutes, locale)}" } ?: other
+                    ChoiceText(dateChoice == DateChoice.OTHER, label) { picking = true }
+                }
+
+                OutlinedTextField(
+                    enabled = LocalFormEnabled.current,
+                    value = state.note,
+                    onValueChange = presenter::onNoteChange,
+                    label = { Text(stringResource(Res.string.form_note)) },
+                    supportingText = before(CorrectionField.NOTE)?.let { { Changed(it) } },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    enabled = LocalFormEnabled.current,
+                    value = state.reference,
+                    onValueChange = presenter::onReferenceChange,
+                    label = { Text(stringResource(Res.string.form_reference)) },
+                    singleLine = true,
+                    supportingText = before(CorrectionField.REFERENCE)?.let { { Changed(it) } },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                val note =
+                    when (mode) {
+                        FormMode.New -> Res.string.form_saved_note
+                        is FormMode.Review -> Res.string.form_review_note
+                        is FormMode.Correct -> Res.string.form_correct_note
+                    }
+                Text(stringResource(note), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
+            }
+            if (state.busy) Text(stringResource(Res.string.form_saving), modifier = Modifier.padding(horizontal = 16.dp))
+            if (state.storageError) Warning(stringResource(Res.string.form_storage_error))
             state.problem?.let { Warning(problemText(it, locale)) }
+            Actions(presenter, mode, onSaved, onDone)
         }
-        Actions(presenter, mode, onSaved, onDone)
     }
 
     if (picking) {
@@ -328,16 +341,28 @@ private fun Actions(
         if (secondary.isNotEmpty()) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 secondary.forEach { (label, action) ->
-                    OutlinedButton(onClick = action, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(stringResource(label)) }
+                    OutlinedButton(
+                        onClick = action,
+                        enabled = LocalFormEnabled.current,
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                    ) {
+                        Text(stringResource(label))
+                    }
                 }
             }
         }
         if (mode == FormMode.New) {
-            Button(onClick = { scope.launch { onSaved(presenter.save()) } }, modifier = primary, shape = MaterialTheme.shapes.extraLarge) {
+            Button(onClick = {
+                scope.launch {
+                    presenter.save()?.let(onSaved)
+                }
+            }, enabled = LocalFormEnabled.current, modifier = primary, shape = MaterialTheme.shapes.extraLarge) {
                 Text(stringResource(Res.string.form_save), style = MaterialTheme.typography.titleMedium)
             }
         } else {
-            Button(onClick = { run(presenter::confirm) }, modifier = primary, shape = MaterialTheme.shapes.extraLarge) {
+            Button(onClick = {
+                run(presenter::confirm)
+            }, enabled = LocalFormEnabled.current, modifier = primary, shape = MaterialTheme.shapes.extraLarge) {
                 Text(stringResource(Res.string.form_confirm), style = MaterialTheme.typography.titleMedium)
             }
         }
@@ -419,5 +444,7 @@ private fun ChoiceText(
     label: String,
     onClick: () -> Unit,
 ) {
-    FilterChip(selected = selected, onClick = onClick, label = { Text(label) }, modifier = Modifier.heightIn(min = 48.dp))
+    FilterChip(selected = selected, onClick = onClick, enabled = LocalFormEnabled.current, label = {
+        Text(label)
+    }, modifier = Modifier.heightIn(min = 48.dp))
 }

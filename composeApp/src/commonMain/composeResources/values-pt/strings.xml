@@ -273,4 +273,6 @@
     <string name="settings_archive_action">Arquivar</string>
     <string name="settings_rate_error">Informe uma taxa positiva válida.</string>
     <string name="settings_quote_overflow">Confira esta taxa: o valor equivalente é grande demais para exibir.</string>
+    <string name="form_saving">Salvando…</string>
+    <string name="form_storage_error">Não foi possível salvar. Seus campos continuam aqui; tente novamente.</string>
 </resources>

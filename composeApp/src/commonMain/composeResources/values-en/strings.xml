@@ -273,4 +273,6 @@
     <string name="settings_archive_action">Archive</string>
     <string name="settings_rate_error">Enter a valid positive rate.</string>
     <string name="settings_quote_overflow">Check this rate: its equivalent amount is too large to display.</string>
+    <string name="form_saving">Saving…</string>
+    <string name="form_storage_error">Could not save. Your fields are still here; please try again.</string>
 </resources>

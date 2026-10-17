@@ -4,8 +4,8 @@
 
 - Rama de trabajo: `codex/rumbo-al-mvp`, remoto `origin` (`jhoel0521/coinden`). No crear otra rama sin motivo ni sobrescribir cambios de colegas.
 - Plan completo: propuesta, tres deltas, diseño y tareas. `openspec validate mvp-ux-polish --strict` pasó.
-- No se implementaron aún las correcciones. Entorno y línea base completados (1.1 y 1.2); el primer bloque funcional pendiente es 2.1. No confundir artefactos completos con funcionalidad terminada.
-- La persona autorizó correcciones y entregas incrementales con commit y push. La skill de propuesta exige presentar estos artefactos y recibir una nueva petición de aplicación antes de editar código. Próximo paso: aplicar `mvp-ux-polish` cuando la persona lo confirme.
+- La persona confirmó aplicar el cambio. Entorno y línea base completos; guardado único implementado y verificado (2.1). Continúa el bloque de salida consciente (3.1); no confundir artefactos completos con funcionalidad terminada.
+- Se mantienen las entregas incrementales con commit y push. Marcar cada tarea de publicación solo después de verificar el remoto.
 - Cotizaciones automáticas fuera del MVP por decisión explícita. El bloque 6 actualizará README; el plan ya conserva esta decisión.
 
 ## Entorno local
@@ -42,5 +42,11 @@
 6. No cerrar issue #2 ni archivar hasta ejecutar los recorridos o acordar explícitamente las excepciones.
 
 ## Evidencia y límites
+
+### Bloque 2: guardado único
+
+`DraftFormWriteTest`: cuatro pruebas primero fallaron con el código anterior (doble toque, fallo previo a captura, fallo en revisión, confirmar frente a descartar). Ahora pasan; verifican también progreso, campos intactos y saldo sin cambios. La escritura guarda el ID devuelto para retomar revisión y entrega resultado/navegación una sola vez. `save()` devuelve null si está ocupado, terminado o falla; UI deshabilitada durante escritura y avisos es/en/pt fuera del scroll.
+
+Comando de verificación: `gradlew.bat :composeApp:ktlintFormat ktlintCheck :composeApp:testDebugUnitTest --console=plain` → `BUILD SUCCESSFUL`. Log local: `coinden-write-verified.log` en Temp. La firma nullable actualiza los consumidores existentes. Sigue fuera de alcance una caída del proceso o fallo que ocurra tras persistir pero antes de devolver el ID; no se afirma transaccionalidad nueva.
 
 La auditoría previa está en `docs/audits/2026-10-16-mvp.md`; la validación manual pendiente se sigue en https://github.com/jhoel0521/coinden/issues/2. La inspección visual de este turno se limita a las dos bienvenidas capturadas. Las pruebas previas a este cambio no demuestran que los nuevos escenarios pasen. No se afirma prueba de TalkBack, cámara, voz ni recorrido completo en el emulador.

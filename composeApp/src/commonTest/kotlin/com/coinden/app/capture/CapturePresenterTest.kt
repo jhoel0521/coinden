@@ -205,7 +205,7 @@ class CapturePresenterTest {
             )
             form.onCategoryChange(CategoryRef.Base(BaseCategory.GROCERIES))
 
-            presenter.showResult(form.save())
+            presenter.showResult(kotlin.test.assertNotNull(form.save()))
             val draftId = presenter.card().draftId
             presenter.confirm(draftId)
 
