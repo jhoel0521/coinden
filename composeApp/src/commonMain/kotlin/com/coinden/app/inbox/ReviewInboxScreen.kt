@@ -82,7 +82,7 @@ fun ReviewInboxScreen(
     locale: UserLocale,
     utcOffsetMinutes: Int,
     onOpen: (FormMode) -> Unit,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)? = null,
 ) {
     val state by presenter.state.collectAsState()
     val scope = rememberCoroutineScope()

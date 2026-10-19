@@ -48,6 +48,8 @@ import coinden.composeapp.generated.resources.privacy_models
 import coinden.composeapp.generated.resources.privacy_public
 import coinden.composeapp.generated.resources.privacy_stays
 import coinden.composeapp.generated.resources.privacy_title
+import com.coinden.app.lock.AppLockController
+import com.coinden.app.lock.LockSwitch
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.ui.components.ActionRole
 import com.coinden.app.ui.components.BadgeTone
@@ -75,6 +77,7 @@ fun PrivacyScreen(
     presenter: PrivacyPresenter,
     onContinue: () -> Unit,
     onVoiceModels: () -> Unit,
+    lock: AppLockController? = null,
 ) {
     val state by presenter.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -93,6 +96,13 @@ fun PrivacyScreen(
                 CdSwitchRow(stringResource(Res.string.privacy_google), state.googleReader, presenter::onGoogleReaderChange)
                 Text(stringResource(Res.string.privacy_google_receives), style = MaterialTheme.typography.bodyMedium)
                 Text(stringResource(Res.string.privacy_google_never), style = MaterialTheme.typography.bodyMedium)
+            }
+            lock?.let {
+                val lockState by it.state.collectAsState()
+                val availability by it.availability.collectAsState()
+                CdCard(tone = CardTone.Raised) {
+                    LockSwitch(lockState, availability, { enabled -> scope.launch { it.setEnabled(enabled) } }, it::openScreenLockSettings)
+                }
             }
             CdActions(listOf(CdActionSpec(stringResource(Res.string.privacy_models), onVoiceModels)))
         }

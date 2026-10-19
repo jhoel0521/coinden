@@ -293,4 +293,27 @@
     <string name="inbox_reason_missing_wallet">Falta a carteira</string>
     <string name="inbox_reason_suggested_wallet">Carteira sugerida</string>
     <string name="inbox_reason_check_data">Revise os dados</string>
+    <string name="tab_home">Início</string>
+    <string name="tab_review">Revisar</string>
+    <string name="tab_capture">Registrar</string>
+    <string name="tab_movements">Movimentos</string>
+    <string name="tab_profile">Perfil</string>
+    <string name="capture_sheet_title">Como você quer anotar?</string>
+    <string name="home_pending_open">Revisar</string>
+    <string name="profile_title">Meu perfil</string>
+    <string name="profile_security">Segurança</string>
+    <string name="profile_settings">Configurações</string>
+    <string name="profile_about">Sobre</string>
+    <string name="profile_about_text">CoinDen %1$s. Sem conta nem servidores: seus dados ficam criptografados neste telefone.</string>
+    <string name="lock_switch">Bloquear com digital ou PIN</string>
+    <string name="lock_switch_note">Seus saldos só aparecem depois de desbloquear com o bloqueio do telefone. Anotar gastos nunca pede isso.</string>
+    <string name="lock_no_screen_lock">Ative um bloqueio de tela no telefone (digital, rosto, PIN ou padrão) para usar esta opção.</string>
+    <string name="lock_unsupported">Este telefone não permite autenticação para o CoinDen.</string>
+    <string name="lock_lost">Seu telefone não tem mais bloqueio de tela, então o CoinDen desligou o dele.</string>
+    <string name="locked_title">Desbloqueie para ver seus saldos</string>
+    <string name="locked_note">Você pode anotar gastos com Registrar sem desbloquear.</string>
+    <string name="locked_unlock">Desbloquear</string>
+    <string name="lock_prompt_title">Desbloquear CoinDen</string>
+    <string name="lock_prompt_subtitle">Use sua digital ou o bloqueio do telefone</string>
+    <string name="lock_open_settings">Configurar bloqueio de tela</string>
 </resources>

@@ -70,13 +70,14 @@ import org.jetbrains.compose.resources.stringResource
 fun SpendingInsightsScreen(
     presenter: SpendingInsightsPresenter,
     locale: UserLocale,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)? = null,
+    showHeader: Boolean = true,
 ) {
     val state by presenter.state.collectAsState()
     val scope = rememberCoroutineScope()
     LaunchedEffect(presenter) { presenter.load() }
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
-        CdTopBar(stringResource(Res.string.spending_title), backLabel = stringResource(Res.string.back), onBack = onBack)
+        if (showHeader) CdTopBar(stringResource(Res.string.spending_title), backLabel = stringResource(Res.string.back), onBack = onBack)
         LazyColumn(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),

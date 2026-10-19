@@ -252,6 +252,13 @@ class LocalPreferencesRepository(
             db.coinDenQueries.upsertSetting(GOOGLE_READER, enabled.toString())
         }
 
+    override suspend fun appLockEnabled(): Boolean = flag(APP_LOCK)
+
+    override suspend fun setAppLockEnabled(enabled: Boolean) =
+        write(dispatcher) {
+            db.coinDenQueries.upsertSetting(APP_LOCK, enabled.toString())
+        }
+
     override suspend fun privacyNoticeSeen(): Boolean = flag(PRIVACY_SEEN)
 
     override suspend fun setPrivacyNoticeSeen() = write(dispatcher) { db.coinDenQueries.upsertSetting(PRIVACY_SEEN, "true") }
@@ -264,6 +271,7 @@ class LocalPreferencesRepository(
         const val LANGUAGE = "language"
         const val GOOGLE_READER = "google_reader"
         const val PRIVACY_SEEN = "privacy_seen"
+        const val APP_LOCK = "app_lock"
     }
 }
 

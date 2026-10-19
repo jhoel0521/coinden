@@ -59,7 +59,8 @@ fun HistoryScreen(
     utcOffsetMinutes: Int,
     onCorrect: (FormMode) -> Unit,
     onEvidence: (String) -> Unit,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)? = null,
+    showHeader: Boolean = true,
 ) {
     val state by presenter.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -67,7 +68,7 @@ fun HistoryScreen(
     LaunchedEffect(presenter) { presenter.load() }
 
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
-        CdTopBar(stringResource(Res.string.history_title), backLabel = stringResource(Res.string.back), onBack = onBack)
+        if (showHeader) CdTopBar(stringResource(Res.string.history_title), backLabel = stringResource(Res.string.back), onBack = onBack)
         LoadNotice(state.load, state.loaded, onRetry = { scope.launch { presenter.load() } })
         LazyColumn(
             modifier = Modifier.weight(1f),

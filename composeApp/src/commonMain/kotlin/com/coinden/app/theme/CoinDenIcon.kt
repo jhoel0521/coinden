@@ -48,6 +48,10 @@ enum class CoinDenIcon(
     PERCENT("M5 19L19 5M7 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM17 15a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"),
     TAG("M3 12V4h8l10 10-8 8zM7.5 8v.01"),
     MORE("M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"),
+    HOME_TAB("M3 11l9-7 9 7v9h-6v-6h-6v6H3z"),
+    INBOX("M4 4h16v16H4zM4 13h4.5l1.5 2.5h4l1.5-2.5H20"),
+    LIST("M8 6h12M8 12h12M8 18h12M4 6v.01M4 12v.01M4 18v.01"),
+    USER("M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM4 21a8 8 0 0 1 16 0"),
     HASH("M10 4L8 20M16 4l-2 16M5 9h15M4 15h15"),
     ;
 

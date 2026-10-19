@@ -332,6 +332,17 @@ abstract class PreferencesRepositoryContract {
         }
 
     @Test
+    fun `el bloqueo empieza apagado y la eleccion se guarda`() =
+        runTest {
+            val repo = repo()
+            assertEquals(false, repo.appLockEnabled())
+            repo.setAppLockEnabled(true)
+            assertEquals(true, repo.appLockEnabled())
+            repo.setAppLockEnabled(false)
+            assertEquals(false, repo.appLockEnabled())
+        }
+
+    @Test
     fun `la pantalla de privacidad se recuerda como vista`() =
         runTest {
             val repo = repo()

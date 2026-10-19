@@ -2,10 +2,11 @@ package com.coinden.app
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.coinden.app.capture.AndroidCapturePlatform
 import com.coinden.app.capture.SharedContent
@@ -16,7 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** Entrada Android: arma la UI compartida y recibe lo que otras apps comparten con CoinDen. */
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     private val shared = MutableStateFlow<SharedContent?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,10 +28,31 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val app = application as CoinDenApplication
         val platform = AndroidCapturePlatform(this, app.perception)
+        app.deviceAuth.attach(this)
+        // Con el bloqueo activo, ni la vista de apps recientes ni una captura de pantalla muestran saldos.
+        lifecycleScope.launch {
+            app.lock.state.collect { state ->
+                if (state.enabled) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                }
+            }
+        }
+        val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
         // Un "compartir" se procesa una vez: no se repite al rotar la pantalla.
         if (savedInstanceState == null) receive(intent)
         setContent {
-            App(app.container, app.deviceLanguage, app.deviceCountry, platform, shared, onSharedTaken = { shared.value = null })
+            App(
+                app.container,
+                app.deviceLanguage,
+                app.deviceCountry,
+                platform,
+                shared,
+                onSharedTaken = { shared.value = null },
+                lock = app.lock,
+                appVersion = version,
+            )
         }
     }
 
