@@ -140,10 +140,15 @@ class InMemoryPreferencesRepository : PreferencesRepositoryPort {
 
     private var googleReader = false
     private var privacySeen = false
+    private var appLock = false
 
     override suspend fun googleReaderEnabled(): Boolean = mutex.withLock { googleReader }
 
     override suspend fun setGoogleReaderEnabled(enabled: Boolean) = mutex.withLock { googleReader = enabled }
+
+    override suspend fun appLockEnabled(): Boolean = mutex.withLock { appLock }
+
+    override suspend fun setAppLockEnabled(enabled: Boolean) = mutex.withLock { appLock = enabled }
 
     override suspend fun privacyNoticeSeen(): Boolean = mutex.withLock { privacySeen }
 

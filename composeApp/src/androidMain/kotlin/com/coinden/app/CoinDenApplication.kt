@@ -1,9 +1,14 @@
 package com.coinden.app
 
 import android.app.Application
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.coinden.app.capture.EncryptedAttachmentStore
 import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.i18n.AppLanguage
+import com.coinden.app.lock.AndroidDeviceAuth
+import com.coinden.app.lock.AppLockController
 import com.coinden.app.perception.AndroidPdfReader
 import com.coinden.app.perception.AppPerception
 import com.coinden.core.data.local.AndroidDatabase
@@ -41,6 +46,12 @@ class CoinDenApplication : Application() {
     var deviceLanguage: String = "en"
         private set
     var deviceCountry: String = ""
+        private set
+
+    /** Autenticación del teléfono y bloqueo de la app; viven con el proceso (girar no vuelve a bloquear). */
+    lateinit var deviceAuth: AndroidDeviceAuth
+        private set
+    lateinit var lock: AppLockController
         private set
 
     override fun onCreate() {
@@ -87,6 +98,16 @@ class CoinDenApplication : Application() {
         // Una versión anterior podía dejar un PDF descifrado en la caché si se cortaba la lectura.
         AndroidPdfReader.clearLeftovers(this)
         perception = AppPerception(this, container)
+        deviceAuth = AndroidDeviceAuth(this)
+        lock = AppLockController(storage.preferences, container.clock, deviceAuth)
+        // Toda la app en segundo plano (no solo una pantalla): de ahí cuenta el minuto para volver a bloquear.
+        ProcessLifecycleOwner.get().lifecycle.addObserver(
+            object : DefaultLifecycleObserver {
+                override fun onStop(owner: LifecycleOwner) = lock.onBackground()
+
+                override fun onStart(owner: LifecycleOwner) = lock.onForeground()
+            },
+        )
         // Lo que quedó pendiente (capturas viejas, cortes, reinicios) se procesa solo.
         runBlocking { perception.queue.kick() }
     }

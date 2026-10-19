@@ -4,8 +4,9 @@ Uso (desde la raíz del repo):  python scripts/brand/export_brand.py
 Requiere PyMuPDF (fitz) para dibujar los SVG y Pillow para PNG/WebP.
 
 Los SVG no son transparentes: los contornos oscuros son el fondo #1C140F que se ve entre
-las formas. Por eso el arte siempre se usa con ese fondo y el ícono adaptable lleva una capa
-de fondo del mismo color, así no se ve ninguna costura.
+las formas. El ícono del lanzador y el splash usan ese fondo. Para la app, [transparent] quita
+solo el fondo que rodea al dibujo (el conectado al borde), conserva las líneas oscuras de
+adentro y vuelve a trazar un contorno fino alrededor de la silueta.
 """
 
 import io
@@ -13,7 +14,7 @@ import os
 import re
 
 import fitz
-from PIL import Image
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 BRAND = os.path.join(ROOT, "design", "brand")
@@ -73,6 +74,31 @@ def silhouette(art: Image.Image) -> Image.Image:
     return out
 
 
+def transparent(svg: str, size: int) -> Image.Image:
+    """El arte sin el cuadro de fondo, a size x size píxeles con transparencia."""
+    work = max(size * 3, 600)
+    art = render(svg, work)
+    # Fondo: píxeles casi iguales a #1C140F.
+    diff = ImageChops.difference(art.convert("RGB"), Image.new("RGB", art.size, BACKGROUND_RGB)).convert("L")
+    background = diff.point(lambda v: 255 if v < 14 else 0)
+    # Se cierran las rendijas finas para que el fondo de adentro (los contornos) no se escape.
+    gap = (work // 60) | 1
+    closed = background.filter(ImageFilter.MinFilter(gap)).filter(ImageFilter.MaxFilter(gap))
+    outside = closed.copy()
+    for seed in [(0, 0), (work - 1, 0), (0, work - 1), (work - 1, work - 1)]:
+        if outside.getpixel(seed) == 255:
+            ImageDraw.floodfill(outside, seed, 128)
+    outside = outside.point(lambda v: 255 if v == 128 else 0)
+    # Silueta con bordes suaves (sin dientes de escalera).
+    shape = ImageChops.invert(outside).filter(ImageFilter.GaussianBlur(work / 400)).point(lambda v: 255 if v > 127 else 0)
+    # Contorno oscuro y parejo alrededor de la silueta (el que daba el fondo).
+    stroke = shape.filter(ImageFilter.GaussianBlur(work / 140)).point(lambda v: 255 if v > 24 else 0)
+    out = Image.new("RGBA", art.size, (0, 0, 0, 0))
+    out.paste(Image.new("RGBA", art.size, BACKGROUND_RGB + (255,)), (0, 0), stroke)
+    out.paste(art, (0, 0), shape)
+    return out.resize((size, size), Image.LANCZOS)
+
+
 def save(image: Image.Image, path: str, fmt: str = "PNG", **options) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     image.save(path, fmt, **options)
@@ -92,11 +118,11 @@ def main() -> None:
         splash = render(icon_svg, round(SPLASH_ART_DP * factor))
         save(centered(splash, round(SPLASH_DP * factor)), os.path.join(RES, f"drawable-{qualifier}", "splash_icon.png"))
 
-    print("Logo e ícono para la app (WebP @2x y @3x):")
+    print("Logo e ícono transparentes para la app (WebP @2x y @3x):")
     for qualifier, factor in {"xhdpi": 2, "xxhdpi": 3}.items():
         folder = os.path.join(COMPOSE, f"drawable-{qualifier}")
-        save(render(logo_svg, 200 * factor).convert("RGB"), os.path.join(folder, "coinden_logo.webp"), "WEBP", quality=90, method=6)
-        save(render(icon_svg, 48 * factor).convert("RGB"), os.path.join(folder, "coinden_icon.webp"), "WEBP", quality=92, method=6)
+        save(transparent(logo_svg, 200 * factor), os.path.join(folder, "coinden_logo.webp"), "WEBP", lossless=True, method=6)
+        save(transparent(icon_svg, 48 * factor), os.path.join(folder, "coinden_icon.webp"), "WEBP", lossless=True, method=6)
 
 
 if __name__ == "__main__":

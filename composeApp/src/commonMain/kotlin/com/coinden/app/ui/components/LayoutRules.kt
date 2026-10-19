@@ -183,3 +183,13 @@ object ImeRule {
             else -> ImeKey.Next
         }
 }
+
+/** Destinos de la barra de abajo. */
+enum class NavTab { HOME, REVIEW, CAPTURE, MOVEMENTS, PROFILE }
+
+/** La barra de pestañas: cinco destinos con Capturar al centro, que abre la captura sin quedar elegida. */
+object NavTabs {
+    val order: List<NavTab> = listOf(NavTab.HOME, NavTab.REVIEW, NavTab.CAPTURE, NavTab.MOVEMENTS, NavTab.PROFILE)
+
+    fun selectable(tab: NavTab): Boolean = tab != NavTab.CAPTURE
+}

@@ -2,7 +2,10 @@ package com.coinden.app
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -26,15 +29,10 @@ import com.coinden.app.capture.EvidencePresenter
 import com.coinden.app.capture.EvidenceScreen
 import com.coinden.app.capture.FormMode
 import com.coinden.app.capture.SharedContent
-import com.coinden.app.history.HistoryPresenter
-import com.coinden.app.history.HistoryScreen
-import com.coinden.app.home.HomePresenter
-import com.coinden.app.home.HomeScreen
 import com.coinden.app.i18n.ProvideAppLocale
-import com.coinden.app.inbox.ReviewInboxPresenter
-import com.coinden.app.inbox.ReviewInboxScreen
-import com.coinden.app.insights.SpendingInsightsPresenter
-import com.coinden.app.insights.SpendingInsightsScreen
+import com.coinden.app.lock.AppLockController
+import com.coinden.app.lock.LockedPanel
+import com.coinden.app.lock.NoDeviceAuth
 import com.coinden.app.onboarding.CurrenciesScreen
 import com.coinden.app.onboarding.OnboardingPresenter
 import com.coinden.app.onboarding.OnboardingStep
@@ -62,9 +60,6 @@ private object Routes {
     const val CAMERA = "camera"
     const val PRIVACY = "privacy"
     const val VOICE_MODELS = "voice-models"
-    const val INBOX = "inbox"
-    const val HISTORY = "history"
-    const val SPENDING = "spending"
     const val SETTINGS = "settings"
     const val REVIEW = "review/{draftId}"
     const val CORRECT = "correct/{draftId}/{source}"
@@ -100,6 +95,8 @@ fun App(
     platform: CapturePlatform,
     shared: StateFlow<SharedContent?>,
     onSharedTaken: () -> Unit,
+    lock: AppLockController = remember { AppLockController(container.storage.preferences, container.clock, NoDeviceAuth) },
+    appVersion: String = "",
 ) {
     val language by container.language.collectAsState()
     CoinDenTheme {
@@ -109,6 +106,7 @@ fun App(
                 Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
                     // Quien ya terminó el onboarding ve una vez la pantalla de privacidad antes de Inicio.
                     val start by produceState<String?>(null) {
+                        lock.loadOnce()
                         value =
                             when {
                                 !container.isOnboarded() -> Routes.WELCOME
@@ -116,7 +114,20 @@ fun App(
                                 else -> Routes.HOME
                             }
                     }
-                    start?.let { AppNavHost(container, it, deviceLanguage, deviceCountry, language, platform, shared, onSharedTaken) }
+                    start?.let {
+                        AppNavHost(
+                            container,
+                            it,
+                            deviceLanguage,
+                            deviceCountry,
+                            language,
+                            platform,
+                            shared,
+                            onSharedTaken,
+                            lock,
+                            appVersion,
+                        )
+                    }
                 }
             }
         }
@@ -133,6 +144,8 @@ private fun AppNavHost(
     platform: CapturePlatform,
     shared: StateFlow<SharedContent?>,
     onSharedTaken: () -> Unit,
+    lock: AppLockController,
+    appVersion: String,
 ) {
     val nav = rememberNavController()
     val onboarding = remember { OnboardingPresenter(container, deviceLanguage, deviceCountry) }
@@ -157,6 +170,7 @@ private fun AppNavHost(
             val privacy = remember { PrivacyPresenter(container) }
             PrivacyScreen(
                 privacy,
+                lock = lock,
                 onContinue = {
                     scope.launch {
                         when {
@@ -192,7 +206,6 @@ private fun AppNavHost(
             )
         }
         composable(Routes.HOME) {
-            val home = remember { HomePresenter(container) }
             val askMicrophone =
                 platform.rememberMicrophoneRequest { granted ->
                     if (granted) scope.launch { capture.dictate() } else capture.permissionDenied(CaptureNotice.MICROPHONE_DENIED)
@@ -213,74 +226,57 @@ private fun AppNavHost(
                     nav.navigate(Routes.form(it))
                 }
             }
-            HomeScreen(
-                home,
+            MainScreen(
+                container,
+                lock,
+                capture,
                 locale,
+                settings.utcOffsetMinutes,
                 language,
-                onChooseLanguage = container::chooseLanguage,
-                capture = capture,
+                appVersion,
                 onDictate = { if (capture.state.value.listening) capture.cancelDictation() else askMicrophone() },
                 onPhoto = { nav.navigate(Routes.CAMERA) },
                 onWrite = { nav.navigate(Routes.FORM) },
-                utcOffsetMinutes = settings.utcOffsetMinutes,
+                openForm = { nav.navigate(Routes.form(it)) },
+                openEvidence = { nav.navigate(Routes.evidence(it)) },
+                onSettings = { nav.navigate(Routes.SETTINGS) },
                 onPrivacy = { nav.navigate(Routes.PRIVACY) },
                 onVoiceModels = { nav.navigate(Routes.VOICE_MODELS) },
-                onReview = { nav.navigate(Routes.INBOX) },
-                onHistory = { nav.navigate(Routes.HISTORY) },
-                onSpending = { nav.navigate(Routes.SPENDING) },
-                onSettings = { nav.navigate(Routes.SETTINGS) },
             )
-        }
-        composable(Routes.SPENDING) {
-            val spending = remember { SpendingInsightsPresenter(container) }
-            SpendingInsightsScreen(spending, locale, onBack = { nav.popBackStack() })
         }
         composable(Routes.SETTINGS) {
-            val settingsPresenter = remember { WalletSettingsPresenter(container) }
-            WalletSettingsScreen(settingsPresenter, container, locale, onBack = { nav.popBackStack() })
-        }
-        composable(Routes.INBOX) {
-            val inbox = remember { ReviewInboxPresenter(container) }
-            ReviewInboxScreen(
-                inbox,
-                locale,
-                settings.utcOffsetMinutes,
-                onOpen = { nav.navigate(Routes.form(it)) },
-                onBack = { nav.popBackStack() },
-            )
-        }
-        composable(Routes.HISTORY) {
-            val history = remember { HistoryPresenter(container) }
-            HistoryScreen(
-                history,
-                locale,
-                settings.utcOffsetMinutes,
-                onCorrect = { nav.navigate(Routes.form(it)) },
-                onEvidence = { nav.navigate(Routes.evidence(it)) },
-                onBack = { nav.popBackStack() },
-            )
+            Guarded(lock) {
+                val settingsPresenter = remember { WalletSettingsPresenter(container) }
+                WalletSettingsScreen(settingsPresenter, container, locale, onBack = { nav.popBackStack() })
+            }
         }
         composable(Routes.REVIEW) { entry ->
             val draftId = entry.savedStateHandle.get<String>("draftId").orEmpty()
-            val form = forms.getOrPut(entry.id) { DraftFormPresenter(container, FormMode.Review(draftId)) }
-            FormRoute(container, form, locale, settings.utcOffsetMinutes, nav::navigate) {
-                forms.remove(entry.id)
-                nav.popBackStack()
+            Guarded(lock) {
+                val form = forms.getOrPut(entry.id) { DraftFormPresenter(container, FormMode.Review(draftId)) }
+                FormRoute(container, form, locale, settings.utcOffsetMinutes, nav::navigate) {
+                    forms.remove(entry.id)
+                    nav.popBackStack()
+                }
             }
         }
         composable(Routes.CORRECT) { entry ->
             val draftId = entry.savedStateHandle.get<String>("draftId").orEmpty()
             val source = Routes.sourceOf(entry.savedStateHandle.get<String>("source"))
-            val form = forms.getOrPut(entry.id) { DraftFormPresenter(container, FormMode.Correct(draftId, source)) }
-            FormRoute(container, form, locale, settings.utcOffsetMinutes, nav::navigate) {
-                forms.remove(entry.id)
-                nav.popBackStack()
+            Guarded(lock) {
+                val form = forms.getOrPut(entry.id) { DraftFormPresenter(container, FormMode.Correct(draftId, source)) }
+                FormRoute(container, form, locale, settings.utcOffsetMinutes, nav::navigate) {
+                    forms.remove(entry.id)
+                    nav.popBackStack()
+                }
             }
         }
         composable(Routes.EVIDENCE) { entry ->
             val draftId = entry.savedStateHandle.get<String>("draftId").orEmpty()
-            val evidence = remember(draftId) { EvidencePresenter(container, draftId) }
-            EvidenceScreen(evidence, platform.evidenceViewer, onBack = { nav.popBackStack() })
+            Guarded(lock) {
+                val evidence = remember(draftId) { EvidencePresenter(container, draftId) }
+                EvidenceScreen(evidence, platform.evidenceViewer, onBack = { nav.popBackStack() })
+            }
         }
         composable(Routes.CAMERA) {
             platform.Camera(
@@ -341,4 +337,19 @@ private fun FormRoute(
         onEvidence = { navigate(Routes.evidence(it)) },
         onBack = onDone,
     )
+}
+
+/** Una pantalla a pantalla completa que muestra saldos: bloqueada, muestra el panel en su lugar. */
+@Composable
+private fun Guarded(
+    lock: AppLockController,
+    content: @Composable () -> Unit,
+) {
+    val state by lock.state.collectAsState()
+    val scope = rememberCoroutineScope()
+    if (state.locked) {
+        LockedPanel(onUnlock = { scope.launch { lock.ensureUnlocked() } }, Modifier.windowInsetsPadding(WindowInsets.safeDrawing))
+    } else {
+        content()
+    }
 }

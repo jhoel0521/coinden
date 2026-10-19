@@ -6,12 +6,14 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
@@ -205,14 +207,15 @@ fun CdToolbar(
 fun CdTopBar(
     title: String,
     backLabel: String,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     modifier: Modifier = Modifier,
     backIcon: ImageVector = CoinDenIcon.CLOSE.vector,
     action: CdActionSpec? = null,
     trailing: String? = null,
 ) {
     Row(modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        CdIconAction(backIcon, backLabel, onBack)
+        // En una pestaña no hay a dónde volver: el título va solo, alineado con el contenido.
+        if (onBack != null) CdIconAction(backIcon, backLabel, onBack) else Spacer(Modifier.width(12.dp))
         Text(
             title,
             style = MaterialTheme.typography.titleLarge,

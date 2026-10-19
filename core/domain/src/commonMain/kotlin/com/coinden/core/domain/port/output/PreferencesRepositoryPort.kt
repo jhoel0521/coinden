@@ -15,6 +15,11 @@ interface PreferencesRepositoryPort {
 
     suspend fun setGoogleReaderEnabled(enabled: Boolean)
 
+    /** Si la persona activó el bloqueo con la autenticación del teléfono; apagado por defecto. */
+    suspend fun appLockEnabled(): Boolean
+
+    suspend fun setAppLockEnabled(enabled: Boolean)
+
     /** Si la persona ya vio la pantalla de privacidad. */
     suspend fun privacyNoticeSeen(): Boolean
 

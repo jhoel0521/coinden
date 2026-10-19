@@ -1,22 +1,16 @@
 package com.coinden.app.ui.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -34,14 +28,8 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Fondo de la marca. El arte de design/brand/ no es transparente: sus contornos son este color,
- * así que el logo y el ícono siempre van sobre él (la placa), en los temas claro y oscuro.
- */
-val BrandBackground = Color(0xFF1C140F)
-
-/**
- * Logo completo de la bienvenida: la ilustración (búho, cofre y monedas) en una placa oscura
- * redondeada y, debajo, "CoinDen" y el lema como texto real y traducido.
+ * Logo completo de la bienvenida: la ilustración transparente (búho, cofre y monedas, con sus
+ * contornos oscuros) y, debajo, "CoinDen" y el lema como texto real y traducido.
  */
 @Composable
 fun BrandLogo(
@@ -53,16 +41,11 @@ fun BrandLogo(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(
-            Modifier.size(size).clip(RoundedCornerShape(size / 6)).background(BrandBackground),
-            contentAlignment = Alignment.Center,
-        ) {
-            Image(
-                painterResource(Res.drawable.coinden_logo),
-                contentDescription = stringResource(Res.string.logo_description),
-                modifier = Modifier.size(size).padding(size / 22),
-            )
-        }
+        Image(
+            painterResource(Res.drawable.coinden_logo),
+            contentDescription = stringResource(Res.string.logo_description),
+            modifier = Modifier.size(size),
+        )
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Wordmark(MaterialTheme.typography.headlineMedium)
             Text(
@@ -82,7 +65,7 @@ fun BrandMark(modifier: Modifier = Modifier) {
         Image(
             painterResource(Res.drawable.coinden_icon),
             contentDescription = stringResource(Res.string.logo_description),
-            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)),
+            modifier = Modifier.size(40.dp),
         )
         Wordmark(MaterialTheme.typography.headlineSmall)
     }

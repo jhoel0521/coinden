@@ -129,4 +129,16 @@ class LayoutRulesTest {
         assertEquals(ImeKey.Search, ImeRule.of(hasAction = false, search = true))
         assertEquals(ImeKey.Next, ImeRule.of(hasAction = false, search = false))
     }
+
+    @Test
+    fun `la barra tiene cinco pestanas con Capturar al centro`() {
+        assertEquals(
+            listOf(NavTab.HOME, NavTab.REVIEW, NavTab.CAPTURE, NavTab.MOVEMENTS, NavTab.PROFILE),
+            NavTabs.order,
+        )
+        assertEquals(NavTab.CAPTURE, NavTabs.order[NavTabs.order.size / 2])
+        // Capturar abre la captura sin quedar elegida: las pestañas elegibles son las otras cuatro.
+        assertEquals(false, NavTabs.selectable(NavTab.CAPTURE))
+        assertEquals(true, NavTabs.selectable(NavTab.PROFILE))
+    }
 }
