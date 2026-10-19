@@ -122,7 +122,7 @@ Desde Inicio, **Gastos del mes** permite consultar el mes actual y los anteriore
 CoinDen quiere vivir de sus usuarios, no de sus datos:
 
 - **El núcleo es gratis para siempre.** Registrar, revisar, categorizar, metas y sincronizar entre tus dispositivos no se cobran.
-- **Donaciones:** si CoinDen te ayuda, puedes invitar un café. *(Los enlaces se agregarán cuando estén listos.)*
+- **Donaciones:** si CoinDen te ayuda, puedes apoyarlo con [GitHub Sponsors](https://github.com/sponsors/jhoel0521) u otras formas que están en [la página de apoyo](https://jhoel0521.github.io/coinden/apoyar/).
 - **Premium (futuro):** solo comodidades, como el respaldo cifrado en tu propia nube. Nunca encierra tus datos.
 - **Sin publicidad y sin venta de datos.**
 
@@ -165,3 +165,13 @@ o teléfono conectado con `./gradlew :core:data-local:connectedDebugAndroidTest`
 `composeApp/build/outputs/apk/debug/`; el CI lo publica como artefacto en cada push.
 
 Si trabajas con agentes de IA, lee [AGENTS.md](AGENTS.md).
+
+## Privacidad
+
+CoinDen no tiene cuentas ni servidores: tus datos viven cifrados en tu teléfono. Lee la
+[política de privacidad](https://jhoel0521.github.io/coinden/privacidad/).
+
+## Licencia
+
+El código está bajo la [Mozilla Public License 2.0](LICENSE): puedes usarlo, cambiarlo y redistribuirlo, y los
+cambios a sus archivos siguen abiertos. El nombre "CoinDen" y el logo están reservados; mira [TRADEMARKS.md](TRADEMARKS.md).

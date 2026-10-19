@@ -5,13 +5,6 @@ Hace que registrar un gasto tome segundos desde Inicio: dictar con la voz proces
 
 ## Requirements
 
-### Requirement: Barra de Captura en Inicio
-Inicio DEBE (MUST) mostrar siempre tres botones de captura: Dictar, Foto y Escribir, cada uno con su ícono y su texto, con un área táctil de al menos 48 dp. Dictar y Foto empiezan a capturar con un solo toque; Escribir abre el formulario completo.
-
-#### Scenario: Botones visibles
-- **WHEN** Carlos abre Inicio
-- **THEN** ve los botones Dictar, Foto y Escribir sin tocar nada más
-
 ### Requirement: Dictado con Reconocimiento de Voz Local
 Dictar DEBE (MUST) transcribir con el reconocimiento de voz del propio teléfono en el idioma de la app, sin enviar el audio fuera del dispositivo, y guardar lo dicho como un borrador de voz que pasa por el intérprete. Si el teléfono no ofrece reconocimiento local, DEBE informarlo y no usar un servicio en la nube.
 
@@ -101,7 +94,7 @@ La app DEBE (MUST) aparecer como destino al compartir texto, imágenes, PDF o au
 - **THEN** el formulario se llena con lo que el intérprete entiende de ese texto
 
 ### Requirement: Resultado de la Captura
-Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador, mostrar su tarjeta (con la referencia, si la hay) y ofrecer confirmarlo en ese momento, con la categoría sugerida si la hay, o dejarlo para la revisión. Confirmar aplica las reglas del libro; si el libro lo rechaza, el borrador sigue pendiente y se muestra el motivo.
+Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador, mostrar su tarjeta (con la referencia, si la hay) y ofrecer confirmarlo en ese momento, con la categoría sugerida si la hay, o dejarlo para la revisión. Confirmar aplica las reglas del libro; si el libro lo rechaza, el borrador sigue pendiente y se muestra el motivo. Si la app está bloqueada, confirmar pide desbloquear antes.
 
 #### Scenario: Confirmar ahora
 - **WHEN** Carlos captura "almuerzo 45 bnb" y toca Confirmar
@@ -114,6 +107,10 @@ Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador
 #### Scenario: Confirmación rechazada
 - **WHEN** Carlos confirma un gasto de 45 Bs en "Billetera", que solo tiene 10 Bs
 - **THEN** el borrador sigue pendiente y la tarjeta muestra que faltan 35 Bs
+
+#### Scenario: Confirmar con la app bloqueada
+- **WHEN** la app está bloqueada y Carlos toca Confirmar después de capturar
+- **THEN** la app pide autenticarse antes de registrar el gasto
 
 ### Requirement: Pregunta de Mismo Gasto en el Resultado
 Si la captura puede ser el mismo movimiento que otra, la tarjeta del resultado DEBE (MUST) preguntar "¿Es el mismo gasto?" mostrando la otra captura (nota, monto, hora y billetera) con los botones "Son el mismo" y "Son distintos". Si la otra captura ya está confirmada y la nueva es un comprobante real, "Son el mismo" abre el formulario de corrección con los cambios resaltados.

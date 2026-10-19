@@ -202,7 +202,11 @@
     <string name="inbox_empty">Não há nada para revisar.</string>
     <string name="inbox_balances">Saldo se você confirmar o pendente</string>
     <string name="inbox_shortfall">Ficaria negativo</string>
-    <string name="inbox_confirm_all">Confirmar os %1$d prontos</string>
+    <plurals name="inbox_confirm_all">
+        <item quantity="one">Confirmar o pronto</item>
+        <item quantity="many">Confirmar os %1$d prontos</item>
+        <item quantity="other">Confirmar os %1$d prontos</item>
+    </plurals>
     <string name="inbox_summary_title">Confirmar %1$d movimentos?</string>
     <string name="inbox_summary_wallet">%1$s: %2$s</string>
     <string name="inbox_change_pending">Alteração pendente: o comprovante traz dados novos para “%1$s”.</string>
@@ -316,4 +320,14 @@
     <string name="lock_prompt_title">Desbloquear CoinDen</string>
     <string name="lock_prompt_subtitle">Use sua digital ou o bloqueio do telefone</string>
     <string name="lock_open_settings">Configurar bloqueio de tela</string>
+    <string name="profile_site">Site e política de privacidade</string>
+    <string name="categories_title">Categorias próprias</string>
+    <string name="categories_new">Nome da categoria</string>
+    <string name="categories_add">Adicionar categoria</string>
+    <string name="categories_rename">Renomear</string>
+    <string name="categories_rename_title">Renomear categoria</string>
+    <string name="categories_empty">Você ainda não tem categorias próprias. As 12 categorias base estão sempre disponíveis.</string>
+    <string name="categories_error_empty">Escreva um nome para a categoria.</string>
+    <string name="categories_hint">Arquivar não apaga: os gastos que já a têm a mantêm. Ao renomear, todos os seus gastos mostram o novo nome.</string>
+    <string name="categories_not_found">Esta categoria não está disponível.</string>
 </resources>

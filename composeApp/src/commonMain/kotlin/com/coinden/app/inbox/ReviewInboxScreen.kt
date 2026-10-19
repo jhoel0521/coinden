@@ -70,6 +70,7 @@ import com.coinden.app.ui.components.CdTopBar
 import com.coinden.core.domain.model.interpret.UserLocale
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -156,7 +157,7 @@ fun ReviewInboxScreen(
                     CdActions(
                         listOf(
                             CdActionSpec(
-                                stringResource(Res.string.inbox_confirm_all, state.ready.size),
+                                pluralStringResource(Res.plurals.inbox_confirm_all, state.ready.size, state.ready.size),
                                 { scope.launch { presenter.askConfirmReady() } },
                                 ActionRole.Primary,
                                 enabled = ready,

@@ -43,6 +43,8 @@ import com.coinden.app.perception.PrivacyPresenter
 import com.coinden.app.perception.PrivacyScreen
 import com.coinden.app.perception.VoiceModelsPresenter
 import com.coinden.app.perception.VoiceModelsScreen
+import com.coinden.app.profile.CustomCategoriesPresenter
+import com.coinden.app.profile.CustomCategoriesScreen
 import com.coinden.app.settings.WalletSettingsPresenter
 import com.coinden.app.settings.WalletSettingsScreen
 import com.coinden.app.theme.CoinDenTheme
@@ -61,6 +63,7 @@ private object Routes {
     const val PRIVACY = "privacy"
     const val VOICE_MODELS = "voice-models"
     const val SETTINGS = "settings"
+    const val CATEGORIES = "categories"
     const val REVIEW = "review/{draftId}"
     const val CORRECT = "correct/{draftId}/{source}"
     const val EVIDENCE = "evidence/{draftId}"
@@ -97,6 +100,8 @@ fun App(
     onSharedTaken: () -> Unit,
     lock: AppLockController = remember { AppLockController(container.storage.preferences, container.clock, NoDeviceAuth) },
     appVersion: String = "",
+    foreground: ForegroundSignal = remember { ForegroundSignal() },
+    forms: FormPresenters = remember { FormPresenters() },
 ) {
     val language by container.language.collectAsState()
     CoinDenTheme {
@@ -126,6 +131,8 @@ fun App(
                             onSharedTaken,
                             lock,
                             appVersion,
+                            foreground,
+                            forms,
                         )
                     }
                 }
@@ -146,6 +153,8 @@ private fun AppNavHost(
     onSharedTaken: () -> Unit,
     lock: AppLockController,
     appVersion: String,
+    foreground: ForegroundSignal,
+    forms: FormPresenters,
 ) {
     val nav = rememberNavController()
     val onboarding = remember { OnboardingPresenter(container, deviceLanguage, deviceCountry) }
@@ -158,8 +167,6 @@ private fun AppNavHost(
             CapturePresenter(container, platform.dictation, platform.processingQueue, service)
         }
     val scope = rememberCoroutineScope()
-    // La evidencia sale del formulario sin destruir su edición; cada entrada conserva su presentador.
-    val forms = remember { mutableMapOf<String, DraftFormPresenter>() }
     val pendingShare by shared.collectAsState()
     NavHost(navController = nav, startDestination = start) {
         composable(Routes.WELCOME) {
@@ -234,15 +241,23 @@ private fun AppNavHost(
                 settings.utcOffsetMinutes,
                 language,
                 appVersion,
+                foreground,
                 onDictate = { if (capture.state.value.listening) capture.cancelDictation() else askMicrophone() },
                 onPhoto = { nav.navigate(Routes.CAMERA) },
                 onWrite = { nav.navigate(Routes.FORM) },
                 openForm = { nav.navigate(Routes.form(it)) },
                 openEvidence = { nav.navigate(Routes.evidence(it)) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
+                onCategories = { nav.navigate(Routes.CATEGORIES) },
                 onPrivacy = { nav.navigate(Routes.PRIVACY) },
                 onVoiceModels = { nav.navigate(Routes.VOICE_MODELS) },
             )
+        }
+        composable(Routes.CATEGORIES) {
+            Guarded(lock) {
+                val categories = remember { CustomCategoriesPresenter(container) }
+                CustomCategoriesScreen(categories, onBack = { nav.popBackStack() })
+            }
         }
         composable(Routes.SETTINGS) {
             Guarded(lock) {

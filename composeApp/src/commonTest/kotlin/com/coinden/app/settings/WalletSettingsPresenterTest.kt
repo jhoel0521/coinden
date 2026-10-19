@@ -66,6 +66,24 @@ class WalletSettingsPresenterTest {
         }
 
     @Test
+    fun `con la ultima activa Carlos ve el aviso al instante sin el dialogo de confirmar`() =
+        runTest {
+            val c = testContainer().also { seedCarlos(it) }
+            val p = WalletSettingsPresenter(c)
+            p.load()
+            val wallets =
+                p.state.value.wallets
+                    .map { it.wallet.id }
+            // Con dos activas, archivar pide confirmación.
+            assertTrue(p.requestArchive(wallets.first()))
+            assertTrue(p.archive(wallets.first()))
+
+            // Con la última activa no hay diálogo: el aviso sale de inmediato.
+            assertFalse(p.requestArchive(wallets.last()))
+            assertEquals(SettingsError.LAST_WALLET, p.state.value.error)
+        }
+
+    @Test
     fun `Facundo permite deuda inicial solo en credito y Carlos rechaza datos invalidos`() =
         runTest {
             val c = testContainer().also { seedCarlos(it) }
