@@ -31,7 +31,7 @@ La app DEBE (MUST) mostrar los títulos con Bricolage Grotesque y el resto del t
 - **THEN** los textos se muestran con las tipografías de CoinDen
 
 ### Requirement: Presentación de Borradores
-La tarjeta de un borrador DEBE (MUST) mostrar su estado, el monto, la billetera y el medio de pago por separado, la categoría con su motivo y la confianza. Un campo sugerido DEBE distinguirse sin depender solo del color (borde punteado y la palabra "sugerida"), y la confianza DEBE mostrarse con color, ícono y texto (alta, media o baja).
+La tarjeta de un borrador DEBE (MUST) mostrar su estado, el monto, la billetera y el medio de pago por separado, la categoría con su motivo y la confianza. Un campo sugerido DEBE distinguirse sin depender solo del color (borde punteado y la palabra "sugerida"), y la confianza DEBE mostrarse con color, ícono y texto (alta, media o baja). En la bandeja la tarjeta es compacta: nota, monto, billetera y, en "Para revisar", el motivo por el que hay que revisarla en lugar del estado; el detalle completo se ve en el formulario.
 
 #### Scenario: Borrador por QR sugerido
 - **WHEN** se muestra el borrador de "almuerzo 45 qr" con la billetera "BNB Bs" sugerida y confianza baja
@@ -44,3 +44,18 @@ La tarjeta de un borrador DEBE (MUST) mostrar su estado, el monto, la billetera 
 #### Scenario: Borrador capturado sin propuesta
 - **WHEN** se muestra el borrador de "hola"
 - **THEN** la tarjeta indica que quedó capturado sin propuesta y muestra la evidencia original, sin campos vacíos
+
+#### Scenario: Tarjeta compacta en Para revisar
+- **WHEN** la bandeja muestra "page 3 bs para trasmporte" con la billetera sugerida
+- **THEN** la tarjeta ocupa dos líneas con la nota, 3,00 Bs, "Billetera" sugerida y el motivo "Billetera sugerida", y no dice "Listo para confirmar"
+
+### Requirement: Logo de CoinDen en la App
+La app DEBE (MUST) mostrar el logo de CoinDen (el búho con el cofre y las monedas) como imagen dentro de una placa oscura #1C140F de esquinas redondeadas, igual en los temas claro y oscuro. Debajo van "CoinDen" y "Tu guarida de monedas" como texto real con la tipografía de la app y traducido, nunca dentro de la imagen. No queda ningún rastro del logo anterior.
+
+#### Scenario: Bienvenida en tema claro
+- **WHEN** Carlos abre la bienvenida con el teléfono en modo claro
+- **THEN** ve el logo sobre la placa oscura y debajo "CoinDen" y "Tu guarida de monedas" como texto
+
+#### Scenario: Bienvenida en inglés
+- **WHEN** Carlos elige English en la bienvenida
+- **THEN** el texto debajo del logo dice "Your coin den" y el logo no cambia
