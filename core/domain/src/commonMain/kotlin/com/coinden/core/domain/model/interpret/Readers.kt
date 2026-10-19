@@ -84,8 +84,10 @@ object PhraseReader {
         val used = mutableSetOf<Int>()
 
         // Tipo: la primera palabra que coincide con un verbo; exacta = dicho, aproximada = inferido.
+        // Sin verbo es gasto inferido, salvo la forma corta con billetera (más abajo).
         var kind = Kind.EXPENSE
         var kindOrigin = FieldOrigin.INFERRED
+        var verbFound = false
         run search@{
             listOf(false, true).forEach { fuzzy ->
                 words.forEachIndexed { i, w ->
@@ -100,6 +102,7 @@ object PhraseReader {
                     if (found != null) {
                         kind = found
                         kindOrigin = if (fuzzy) FieldOrigin.INFERRED else FieldOrigin.STATED
+                        verbFound = true
                         used += i
                         return@search
                     }
@@ -191,6 +194,9 @@ object PhraseReader {
             wallet = null
             walletOrigin = null
         }
+        // "almuerzo 45 bnb": nota, monto y billetera sin verbo es la forma corta que enseña la app;
+        // el gasto lo dijo la persona. Sin billetera nombrada no se sabe (puede ser un verbo de otro idioma).
+        if (!verbFound && walletOrigin == FieldOrigin.STATED) kindOrigin = FieldOrigin.STATED
 
         // Medio de pago ("qr", "pix", "efectivo"): no nombra billetera, filtra las candidatas.
         val methodIndex = words.indices.firstOrNull { it !in used && words[it].normalized in pack.paymentMethodWords }
