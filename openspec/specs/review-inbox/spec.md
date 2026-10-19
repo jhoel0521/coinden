@@ -6,10 +6,10 @@ Da a la persona un lugar tranquilo para revisar en la noche lo que capturó en e
 ## Requirements
 
 ### Requirement: Bandeja de Revisión
-La app DEBE (MUST) ofrecer desde Inicio una bandeja con los saldos proyectados de las billeteras afectadas, avisando cuándo una quedaría por debajo de cero. Debajo muestra dos secciones: "Revisar" y "Listos". Cada borrador muestra su nota, monto, billetera, hora, categoría sugerida, confianza y si tiene evidencia. Sin pendientes, la bandeja lo dice.
+La app DEBE (MUST) ofrecer en la pestaña Revisar una bandeja con los saldos proyectados de las billeteras afectadas, avisando cuándo una quedaría por debajo de cero. Debajo muestra dos secciones: "Revisar" y "Listos". Cada borrador muestra su nota, monto, billetera, hora, categoría sugerida, confianza y si tiene evidencia. Sin pendientes, la bandeja lo dice.
 
 #### Scenario: Abrir la bandeja
-- **WHEN** Carlos tiene 3 borradores pendientes y toca "Revisar" en Inicio
+- **WHEN** Carlos tiene 3 borradores pendientes y toca la pestaña Revisar
 - **THEN** ve la bandeja con los 3 borradores repartidos entre "Revisar" y "Listos"
 
 #### Scenario: Faltante proyectado
@@ -100,7 +100,7 @@ Tocar un cambio pendiente DEBE (MUST) abrir el mismo formulario editable con los
 - **THEN** el almuerzo queda en 32.00 Bs con la referencia "400000001" y el cambio sale de la bandeja
 
 ### Requirement: Historial de Movimientos con Corrección
-La app DEBE (MUST) ofrecer desde Inicio un historial de los movimientos confirmados, del más reciente al más antiguo, con su nota, monto, billetera, fecha, categoría, referencia y evidencia. Desde cada uno, Corregir abre el formulario con sus datos y los cambios se resaltan antes de confirmar. Los movimientos anulados no aparecen como vigentes.
+La app DEBE (MUST) ofrecer en la pestaña Movimientos un historial de los movimientos confirmados, del más reciente al más antiguo, con su nota, monto, billetera, fecha, categoría, referencia y evidencia. Desde cada uno, Corregir abre el formulario con sus datos y los cambios se resaltan antes de confirmar. Los movimientos anulados no aparecen como vigentes.
 
 #### Scenario: Corregir a mano
 - **WHEN** Carlos abre el almuerzo de 35.00 Bs en el historial, toca Corregir, cambia el monto a 32.00 Bs y confirma
