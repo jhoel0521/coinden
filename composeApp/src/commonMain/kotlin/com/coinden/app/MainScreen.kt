@@ -79,6 +79,7 @@ fun MainScreen(
     openForm: (FormMode) -> Unit,
     openEvidence: (String) -> Unit,
     onSettings: () -> Unit,
+    onCategories: () -> Unit,
     onPrivacy: () -> Unit,
     onVoiceModels: () -> Unit,
 ) {
@@ -124,6 +125,7 @@ fun MainScreen(
                             appVersion,
                             onChooseLanguage = container::chooseLanguage,
                             onWallets = onSettings,
+                            onCategories = onCategories,
                             onPrivacy = onPrivacy,
                             onVoiceModels = onVoiceModels,
                         )

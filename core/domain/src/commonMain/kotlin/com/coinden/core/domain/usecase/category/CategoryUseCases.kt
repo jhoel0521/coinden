@@ -119,6 +119,46 @@ class ArchiveCustomCategoryUseCase(
 }
 
 /**
+ * Caso de Uso: renombrar una categoría propia. Conserva su id, así que todos los gastos que ya la
+ * tenían muestran el nombre nuevo. El nombre se guarda tal como lo escribió el usuario (sin los
+ * espacios de los bordes).
+ */
+class RenameCustomCategoryUseCase(
+    private val ctx: CategorizationContext,
+) {
+    suspend operator fun invoke(
+        ownerId: String,
+        categoryId: String,
+        name: String,
+    ): CategorizationResult<CustomCategory> {
+        if (name.isBlank()) return CategorizationResult.Rejected(CategorizationError.InvalidName)
+        val category =
+            ctx.repository.customCategoriesOf(ownerId).firstOrNull { it.id == categoryId }
+                ?: return CategorizationResult.Rejected(CategorizationError.NotFound)
+        val renamed = category.copy(name = name.trim())
+        ctx.repository.saveCustomCategory(renamed)
+        return CategorizationResult.Ok(renamed)
+    }
+}
+
+/** Caso de Uso: reactivar una categoría propia archivada; vuelve a sugerirse y a ofrecerse. */
+class ReactivateCustomCategoryUseCase(
+    private val ctx: CategorizationContext,
+) {
+    suspend operator fun invoke(
+        ownerId: String,
+        categoryId: String,
+    ): CategorizationResult<CustomCategory> {
+        val category =
+            ctx.repository.customCategoriesOf(ownerId).firstOrNull { it.id == categoryId }
+                ?: return CategorizationResult.Rejected(CategorizationError.NotFound)
+        val active = category.copy(archived = false)
+        ctx.repository.saveCustomCategory(active)
+        return CategorizationResult.Ok(active)
+    }
+}
+
+/**
  * Caso de Uso: clasificar o reclasificar un gasto ya registrado (con descripción opcional para los
  * gastos registrados sin borrador). Nunca toca el libro de dinero; aprende la regla.
  */

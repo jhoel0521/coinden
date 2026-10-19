@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import coinden.composeapp.generated.resources.Res
+import coinden.composeapp.generated.resources.categories_title
 import coinden.composeapp.generated.resources.home_language
 import coinden.composeapp.generated.resources.home_privacy
 import coinden.composeapp.generated.resources.language_en
@@ -47,6 +48,7 @@ fun ProfileScreen(
     appVersion: String,
     onChooseLanguage: suspend (String) -> Unit,
     onWallets: () -> Unit,
+    onCategories: () -> Unit,
     onPrivacy: () -> Unit,
     onVoiceModels: () -> Unit,
 ) {
@@ -84,6 +86,7 @@ fun ProfileScreen(
         item {
             CdSection(stringResource(Res.string.profile_settings)) {
                 CdListOption(stringResource(Res.string.settings_title), onWallets)
+                CdListOption(stringResource(Res.string.categories_title), onCategories)
                 CdListOption(stringResource(Res.string.home_privacy), onPrivacy)
                 CdListOption(stringResource(Res.string.models_title), onVoiceModels)
             }

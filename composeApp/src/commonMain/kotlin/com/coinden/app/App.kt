@@ -43,6 +43,8 @@ import com.coinden.app.perception.PrivacyPresenter
 import com.coinden.app.perception.PrivacyScreen
 import com.coinden.app.perception.VoiceModelsPresenter
 import com.coinden.app.perception.VoiceModelsScreen
+import com.coinden.app.profile.CustomCategoriesPresenter
+import com.coinden.app.profile.CustomCategoriesScreen
 import com.coinden.app.settings.WalletSettingsPresenter
 import com.coinden.app.settings.WalletSettingsScreen
 import com.coinden.app.theme.CoinDenTheme
@@ -61,6 +63,7 @@ private object Routes {
     const val PRIVACY = "privacy"
     const val VOICE_MODELS = "voice-models"
     const val SETTINGS = "settings"
+    const val CATEGORIES = "categories"
     const val REVIEW = "review/{draftId}"
     const val CORRECT = "correct/{draftId}/{source}"
     const val EVIDENCE = "evidence/{draftId}"
@@ -240,9 +243,16 @@ private fun AppNavHost(
                 openForm = { nav.navigate(Routes.form(it)) },
                 openEvidence = { nav.navigate(Routes.evidence(it)) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
+                onCategories = { nav.navigate(Routes.CATEGORIES) },
                 onPrivacy = { nav.navigate(Routes.PRIVACY) },
                 onVoiceModels = { nav.navigate(Routes.VOICE_MODELS) },
             )
+        }
+        composable(Routes.CATEGORIES) {
+            Guarded(lock) {
+                val categories = remember { CustomCategoriesPresenter(container) }
+                CustomCategoriesScreen(categories, onBack = { nav.popBackStack() })
+            }
         }
         composable(Routes.SETTINGS) {
             Guarded(lock) {

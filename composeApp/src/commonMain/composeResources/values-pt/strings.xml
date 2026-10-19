@@ -317,4 +317,13 @@
     <string name="lock_prompt_subtitle">Use sua digital ou o bloqueio do telefone</string>
     <string name="lock_open_settings">Configurar bloqueio de tela</string>
     <string name="profile_site">Site e política de privacidade</string>
+    <string name="categories_title">Categorias próprias</string>
+    <string name="categories_new">Nome da categoria</string>
+    <string name="categories_add">Adicionar categoria</string>
+    <string name="categories_rename">Renomear</string>
+    <string name="categories_rename_title">Renomear categoria</string>
+    <string name="categories_empty">Você ainda não tem categorias próprias. As 12 categorias base estão sempre disponíveis.</string>
+    <string name="categories_error_empty">Escreva um nome para a categoria.</string>
+    <string name="categories_hint">Arquivar não apaga: os gastos que já a têm a mantêm. Ao renomear, todos os seus gastos mostram o novo nome.</string>
+    <string name="categories_not_found">Esta categoria não está disponível.</string>
 </resources>

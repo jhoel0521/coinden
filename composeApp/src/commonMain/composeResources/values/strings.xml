@@ -317,4 +317,13 @@
     <string name="lock_prompt_subtitle">Usa tu huella o el bloqueo de tu teléfono</string>
     <string name="lock_open_settings">Configurar bloqueo de pantalla</string>
     <string name="profile_site">Sitio y política de privacidad</string>
+    <string name="categories_title">Categorías propias</string>
+    <string name="categories_new">Nombre de la categoría</string>
+    <string name="categories_add">Agregar categoría</string>
+    <string name="categories_rename">Renombrar</string>
+    <string name="categories_rename_title">Renombrar categoría</string>
+    <string name="categories_empty">Todavía no tienes categorías propias. Las 12 categorías base siempre están disponibles.</string>
+    <string name="categories_error_empty">Escribe un nombre para la categoría.</string>
+    <string name="categories_hint">Archivar no borra: los gastos que ya la tienen la conservan. Al renombrar, todos sus gastos muestran el nombre nuevo.</string>
+    <string name="categories_not_found">Esta categoría no está disponible.</string>
 </resources>
