@@ -202,7 +202,11 @@
     <string name="inbox_empty">No hay nada para revisar.</string>
     <string name="inbox_balances">Saldo si confirmas lo pendiente</string>
     <string name="inbox_shortfall">Quedaría en negativo</string>
-    <string name="inbox_confirm_all">Confirmar los %1$d listos</string>
+    <plurals name="inbox_confirm_all">
+        <item quantity="one">Confirmar el listo</item>
+        <item quantity="many">Confirmar los %1$d listos</item>
+        <item quantity="other">Confirmar los %1$d listos</item>
+    </plurals>
     <string name="inbox_summary_title">¿Confirmar %1$d movimientos?</string>
     <string name="inbox_summary_wallet">%1$s: %2$s</string>
     <string name="inbox_change_pending">Cambio pendiente: el comprobante trae datos nuevos para «%1$s».</string>

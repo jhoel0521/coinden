@@ -202,7 +202,11 @@
     <string name="inbox_empty">Nothing to review.</string>
     <string name="inbox_balances">Balance if you confirm what is pending</string>
     <string name="inbox_shortfall">Would go negative</string>
-    <string name="inbox_confirm_all">Confirm the %1$d ready</string>
+    <plurals name="inbox_confirm_all">
+        <item quantity="one">Confirm the ready one</item>
+        <item quantity="many">Confirm the %1$d ready</item>
+        <item quantity="other">Confirm the %1$d ready</item>
+    </plurals>
     <string name="inbox_summary_title">Confirm %1$d movements?</string>
     <string name="inbox_summary_wallet">%1$s: %2$s</string>
     <string name="inbox_change_pending">Pending change: the receipt brings new data for “%1$s”.</string>

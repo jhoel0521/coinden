@@ -50,6 +50,19 @@ class CaptureCoachTest {
     }
 
     @Test
+    fun `un comprobante en foto o PDF no da consejo aunque la billetera quede sugerida`() {
+        val photo = DraftHeader("d2", "carlos", Evidence(EvidenceSource.PHOTO, "Nota: StreamingPremium", attachmentRef = "a1"), 1_000L)
+        assertEquals(emptySet(), CaptureCoach.tipsFor(DraftEvaluator.evaluate(photo, power, directory)))
+    }
+
+    @Test
+    fun `un texto de comprobante de varias lineas no da consejo`() {
+        val text = listOf("Banco ECONOMICO", "Pago QR otros bancos", "Importe", "Bs10.00").joinToString("\n")
+        val receipt = DraftHeader("d3", "carlos", Evidence(EvidenceSource.TEXT, text), 1_000L)
+        assertEquals(emptySet(), CaptureCoach.tipsFor(DraftEvaluator.evaluate(receipt, power, directory)))
+    }
+
+    @Test
     fun `sin monto pide decir el monto`() {
         val lunch = MovementProposal.Expense(wallet = WalletRef.ById(bnb.id), note = "almuerzo")
         assertEquals(setOf(CaptureTip.SAY_AMOUNT), CaptureCoach.tipsFor(draft(lunch)))

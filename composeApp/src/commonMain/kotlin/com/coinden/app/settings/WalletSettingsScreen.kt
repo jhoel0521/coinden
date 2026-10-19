@@ -158,7 +158,7 @@ fun WalletSettingsScreen(
                                     },
                                     CdActionSpec(
                                         stringResource(Res.string.settings_archive, row.wallet.name),
-                                        { archiveId = row.wallet.id },
+                                        { if (presenter.requestArchive(row.wallet.id)) archiveId = row.wallet.id },
                                         ActionRole.Danger,
                                         enabled = !state.busy,
                                     ),

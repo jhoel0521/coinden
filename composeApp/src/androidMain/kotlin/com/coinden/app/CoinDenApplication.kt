@@ -54,6 +54,12 @@ class CoinDenApplication : Application() {
     lateinit var lock: AppLockController
         private set
 
+    /** Cada vuelta al frente: las pantallas recargan lo compartido mientras la app estaba atrás. */
+    val foreground = ForegroundSignal()
+
+    /** Formularios abiertos: sobreviven a que Android recree la pantalla. */
+    val forms = FormPresenters()
+
     override fun onCreate() {
         super.onCreate()
         val db = AndroidDatabase.open(this).database
@@ -105,7 +111,10 @@ class CoinDenApplication : Application() {
             object : DefaultLifecycleObserver {
                 override fun onStop(owner: LifecycleOwner) = lock.onBackground()
 
-                override fun onStart(owner: LifecycleOwner) = lock.onForeground()
+                override fun onStart(owner: LifecycleOwner) {
+                    lock.onForeground()
+                    foreground.onForeground()
+                }
             },
         )
         // Lo que quedó pendiente (capturas viejas, cortes, reinicios) se procesa solo.

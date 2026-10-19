@@ -100,6 +100,8 @@ fun App(
     onSharedTaken: () -> Unit,
     lock: AppLockController = remember { AppLockController(container.storage.preferences, container.clock, NoDeviceAuth) },
     appVersion: String = "",
+    foreground: ForegroundSignal = remember { ForegroundSignal() },
+    forms: FormPresenters = remember { FormPresenters() },
 ) {
     val language by container.language.collectAsState()
     CoinDenTheme {
@@ -129,6 +131,8 @@ fun App(
                             onSharedTaken,
                             lock,
                             appVersion,
+                            foreground,
+                            forms,
                         )
                     }
                 }
@@ -149,6 +153,8 @@ private fun AppNavHost(
     onSharedTaken: () -> Unit,
     lock: AppLockController,
     appVersion: String,
+    foreground: ForegroundSignal,
+    forms: FormPresenters,
 ) {
     val nav = rememberNavController()
     val onboarding = remember { OnboardingPresenter(container, deviceLanguage, deviceCountry) }
@@ -161,8 +167,6 @@ private fun AppNavHost(
             CapturePresenter(container, platform.dictation, platform.processingQueue, service)
         }
     val scope = rememberCoroutineScope()
-    // La evidencia sale del formulario sin destruir su edición; cada entrada conserva su presentador.
-    val forms = remember { mutableMapOf<String, DraftFormPresenter>() }
     val pendingShare by shared.collectAsState()
     NavHost(navController = nav, startDestination = start) {
         composable(Routes.WELCOME) {
@@ -237,6 +241,7 @@ private fun AppNavHost(
                 settings.utcOffsetMinutes,
                 language,
                 appVersion,
+                foreground,
                 onDictate = { if (capture.state.value.listening) capture.cancelDictation() else askMicrophone() },
                 onPhoto = { nav.navigate(Routes.CAMERA) },
                 onWrite = { nav.navigate(Routes.FORM) },

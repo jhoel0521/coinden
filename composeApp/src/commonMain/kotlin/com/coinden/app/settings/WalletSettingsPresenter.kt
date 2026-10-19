@@ -120,6 +120,20 @@ class WalletSettingsPresenter(
             if (result !is WalletOperationResult.WalletCreated) invalid(SettingsError.INVALID_WALLET)
         }
 
+    /**
+     * Antes del diálogo de archivar: con la última billetera activa avisa de inmediato que hace falta
+     * conservar una y no pide confirmar (devuelve false). Con otras activas, hay que confirmar.
+     */
+    fun requestArchive(id: String): Boolean {
+        val others = state.value.wallets.count { it.wallet.isActive && it.wallet.id != id }
+        if (others == 0) {
+            mutableState.update { it.copy(error = SettingsError.LAST_WALLET, saved = false) }
+            return false
+        }
+        mutableState.update { it.copy(error = null) }
+        return true
+    }
+
     suspend fun archive(id: String): Boolean =
         change {
             val wallet = owned(id)
