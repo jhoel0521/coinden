@@ -97,6 +97,18 @@ class CarlosReviewInboxFeatureTest {
         }
 
     @Test
+    fun `sin verbo, con monto y billetera dicha, el gasto va en listos como enseña la app`() =
+        runTest {
+            carlos()
+            val lunch = say("almuerzo 25 bnb", bolivia(16, 12))
+            val taxi = say("taxi 10 bnb", bolivia(16, 18))
+
+            assertIs<Draft.Ready>(lunch)
+            assertIs<Draft.Ready>(taxi)
+            assertEquals(listOf(lunch.id, taxi.id), batch())
+        }
+
+    @Test
     fun `confirmar los listos registra cada uno con su categoria sugerida y deja el rechazado con su motivo`() =
         runTest {
             carlos()

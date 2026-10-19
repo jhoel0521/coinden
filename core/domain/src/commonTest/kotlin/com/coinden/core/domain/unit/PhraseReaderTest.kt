@@ -82,7 +82,7 @@ class PhraseReaderTest {
     }
 
     @Test
-    fun `almuerzo 45 bnb usa el alias y la nota son las palabras sueltas`() {
+    fun `almuerzo 45 bnb usa el alias, la nota son las palabras sueltas y el gasto sin verbo es dicho`() {
         val expected =
             MovementProposal.Expense(
                 ProposedAmount("45"),
@@ -90,7 +90,8 @@ class PhraseReaderTest {
                 note = "almuerzo",
                 origins =
                     mapOf(
-                        DraftField.KIND to FieldOrigin.INFERRED,
+                        // Sin verbo es la forma corta que enseña la app: el gasto lo dijo la persona.
+                        DraftField.KIND to FieldOrigin.STATED,
                         DraftField.AMOUNT to FieldOrigin.STATED,
                         DraftField.WALLET to FieldOrigin.STATED,
                     ),
