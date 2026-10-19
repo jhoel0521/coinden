@@ -60,6 +60,7 @@ import coinden.composeapp.generated.resources.wallet_name
 import coinden.composeapp.generated.resources.wallet_opening
 import com.coinden.app.AppContainer
 import com.coinden.app.format.MoneyFormatter
+import com.coinden.app.onboarding.icon
 import com.coinden.app.onboarding.label
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.ui.components.ActionRole
@@ -71,7 +72,6 @@ import com.coinden.app.ui.components.CdActions
 import com.coinden.app.ui.components.CdBadge
 import com.coinden.app.ui.components.CdCard
 import com.coinden.app.ui.components.CdChoice
-import com.coinden.app.ui.components.CdChoiceGrid
 import com.coinden.app.ui.components.CdDialog
 import com.coinden.app.ui.components.CdField
 import com.coinden.app.ui.components.CdNotice
@@ -187,12 +187,19 @@ fun WalletSettingsScreen(
                 }
                 item {
                     CdCard(tone = CardTone.Raised) {
-                        CdField(code, { code = it }, label = stringResource(Res.string.settings_currency), enabled = !state.busy)
+                        val addCurrency: () -> Unit = { if (code.isNotBlank()) scope.launch { if (presenter.addCurrency(code)) code = "" } }
+                        CdField(
+                            code,
+                            { code = it },
+                            label = stringResource(Res.string.settings_currency),
+                            onImeAction = addCurrency,
+                            enabled = !state.busy,
+                        )
                         CdActions(
                             listOf(
                                 CdActionSpec(
                                     stringResource(Res.string.settings_currency_add),
-                                    { scope.launch { if (presenter.addCurrency(code)) code = "" } },
+                                    addCurrency,
                                     enabled = !state.busy && code.isNotBlank(),
                                     icon = CoinDenIcon.PLUS.vector,
                                 ),
@@ -237,9 +244,13 @@ private fun NewWalletForm(
     var currency by remember { mutableStateOf(state.profile!!.localCurrency.code) }
     var opening by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
+    val add: () -> Unit = { scope.launch { if (presenter.addWallet(name, type, currency, opening)) onAdded() } }
     CdCard(tone = CardTone.Raised) {
         CdField(name, { name = it }, label = stringResource(Res.string.wallet_name), enabled = !state.busy)
-        CdChoiceGrid(WalletType.entries.map { CdOption(it, stringResource(it.label())) }, selected = type, onSelect = { type = it })
+        CdChoice(WalletType.entries.map { CdOption(it, stringResource(it.label()), icon = it.icon().vector) }, selected = type, onSelect = {
+            type =
+                it
+        })
         if (state.currencies.size > 1) {
             CdChoice(
                 state.currencies.map { CdOption(it.code, it.code) },
@@ -254,13 +265,14 @@ private fun NewWalletForm(
             label = stringResource(Res.string.wallet_opening) + " (" + currency + ")",
             suffix = currency,
             keyboardType = KeyboardType.Decimal,
+            onImeAction = add,
             enabled = !state.busy,
         )
         CdActions(
             listOf(
                 CdActionSpec(
                     stringResource(Res.string.wallet_add),
-                    { scope.launch { if (presenter.addWallet(name, type, currency, opening)) onAdded() } },
+                    add,
                     enabled = !state.busy,
                     icon = CoinDenIcon.PLUS.vector,
                 ),
@@ -281,6 +293,7 @@ private fun ReferenceRateForm(
     val reference = profile.referenceRateFor(currency)
     var text by remember(currency.code, reference) { mutableStateOf("") }
     val scope = rememberCoroutineScope()
+    val save: () -> Unit = { if (text.isNotBlank()) scope.launch { presenter.saveRate(currency.code, text) } }
     CdCard {
         Text(
             currency.name ?: container.currencyNames.name(currency.code, container.languageCode) ?: currency.code,
@@ -303,6 +316,7 @@ private fun ReferenceRateForm(
             { text = it },
             label = stringResource(Res.string.rate_label, currency.code, profile.localCurrency.code),
             keyboardType = KeyboardType.Decimal,
+            onImeAction = save,
             enabled = !state.busy,
         )
         CdActions(
@@ -315,7 +329,7 @@ private fun ReferenceRateForm(
                 ),
                 CdActionSpec(
                     stringResource(Res.string.settings_save),
-                    { scope.launch { presenter.saveRate(currency.code, text) } },
+                    save,
                     ActionRole.Primary,
                     enabled = !state.busy && text.isNotBlank(),
                 ),

@@ -59,12 +59,44 @@ object GridLayout {
     /** Relleno de una celda alrededor de su etiqueta (16 dp por lado y un margen). */
     private const val CELL_PADDING = 40f
 
-    /** Columnas iguales en las que entra la etiqueta más larga entera ([widestLabel], en dp). */
+    /**
+     * Columnas iguales en las que entra la etiqueta más larga entera ([widestLabel], en dp). Si se
+     * conoce la cantidad de opciones ([count]), usa menos columnas cuando así la última fila no
+     * queda con una opción sola (4 opciones: 2 x 2, no 3 + 1).
+     */
     fun columns(
         available: Float,
         minCell: Float,
         widestLabel: Float = 0f,
-    ): Int = (available / maxOf(minCell, widestLabel + CELL_PADDING)).toInt().coerceIn(2, 4)
+        count: Int = 0,
+    ): Int {
+        val most = (available / maxOf(minCell, widestLabel + CELL_PADDING)).toInt().coerceIn(2, 4)
+        return (most downTo 2).firstOrNull { count % it != 1 } ?: most
+    }
+
+    /** En 2 columnas no hay reparto posible: la última opción sola ocupa la fila entera. */
+    fun lastSpansRow(
+        count: Int,
+        columns: Int,
+    ): Boolean = columns == 2 && count > 1 && count % 2 == 1
+
+    /**
+     * Cuántas opciones van en cada fila. Si la última quedaría con una sola y hay 3 columnas o más,
+     * la fila anterior le cede una: 13 en 3 columnas es 3, 3, 3, 2, 2. Todas las celdas conservan
+     * el ancho de una columna.
+     */
+    fun rows(
+        count: Int,
+        columns: Int,
+    ): List<Int> {
+        val sizes = MutableList(count / columns) { columns }
+        if (count % columns > 0) sizes += count % columns
+        if (columns >= 3 && sizes.size >= 2 && sizes.last() == 1) {
+            sizes[sizes.size - 2] -= 1
+            sizes[sizes.size - 1] += 1
+        }
+        return sizes
+    }
 }
 
 /** Las opciones más usadas primero (a igual uso, el orden base) y la elegida siempre visible. */
@@ -84,4 +116,70 @@ object FrequentChoices {
         val top = ranked.take(count)
         return if (selected == null || selected in top) top else listOf(selected) + top.take(count - 1)
     }
+}
+
+/** Cómo se acomodan los mosaicos con ícono. */
+sealed interface TileArrangement {
+    /** Todos en una fila, del mismo ancho. */
+    data object Row : TileArrangement
+
+    /** En columnas iguales, cuando en una fila no le quedan [TileLayout.MIN_TILE] dp a cada uno. */
+    data class Grid(
+        val columns: Int,
+    ) : TileArrangement
+}
+
+object TileLayout {
+    /** Ancho mínimo de un mosaico: ícono, etiqueta de 2 líneas y relleno. */
+    const val MIN_TILE = 64f
+
+    /** Ancho mínimo de una celda cuando los mosaicos pasan a cuadrícula. */
+    const val GRID_CELL = 80f
+
+    /** Hasta cuántas opciones van todas en la fila; con más, las [TOP] más usadas y "Más…". */
+    private const val MAX_TILES = 5
+    private const val TOP = 3
+
+    /** Cuántas opciones se muestran como mosaicos en la fila, sin contar "Más…". */
+    fun shown(count: Int): Int = if (count <= MAX_TILES) count else TOP
+
+    /** Relleno lateral de un mosaico (6 dp por lado) y su borde (2 dp por lado). */
+    private const val TILE_PADDING = 16f
+
+    /** Separación entre mosaicos. */
+    private const val GAP = 8f
+
+    /**
+     * Fila si a cada mosaico le quedan [MIN_TILE] dp y su palabra más larga ([widestWord], en dp)
+     * entra sin partirse; si no, cuadrícula de columnas iguales.
+     */
+    fun of(
+        count: Int,
+        available: Float,
+        widestWord: Float = 0f,
+    ): TileArrangement {
+        val tile = maxOf(MIN_TILE, widestWord + TILE_PADDING)
+        return if ((available - GAP * (count - 1)) / count >= tile) {
+            TileArrangement.Row
+        } else {
+            TileArrangement.Grid(GridLayout.columns(available, maxOf(GRID_CELL, tile), count = count))
+        }
+    }
+}
+
+/** La tecla de acción que muestra el teclado en un campo. */
+enum class ImeKey { Next, Done, Search }
+
+/** Cada campo le da al teclado una tecla que hace algo. */
+object ImeRule {
+    /** [hasAction]: el campo tiene la acción de su formulario. [search]: es un buscador. */
+    fun of(
+        hasAction: Boolean,
+        search: Boolean,
+    ): ImeKey =
+        when {
+            hasAction -> ImeKey.Done
+            search -> ImeKey.Search
+            else -> ImeKey.Next
+        }
 }

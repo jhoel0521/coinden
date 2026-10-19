@@ -90,7 +90,6 @@ import com.coinden.app.ui.components.CdActionSpec
 import com.coinden.app.ui.components.CdActions
 import com.coinden.app.ui.components.CdCard
 import com.coinden.app.ui.components.CdChoice
-import com.coinden.app.ui.components.CdChoiceGrid
 import com.coinden.app.ui.components.CdErrorText
 import com.coinden.app.ui.components.CdField
 import com.coinden.app.ui.components.CdIconAction
@@ -255,6 +254,7 @@ fun CurrenciesScreen(
                     presenter.search(it)
                 },
                 label = stringResource(Res.string.currencies_search),
+                search = true,
             )
         }
         if (query.isNotBlank()) {
@@ -334,6 +334,7 @@ private fun CustomCurrencyForm(
     var name by remember { mutableStateOf("") }
     var symbol by remember { mutableStateOf("") }
     var decimals by remember { mutableStateOf("2") }
+    val add = { if (presenter.addCustomCurrency(code, name, symbol, decimals)) onAdded() }
     CdCard(tone = CardTone.Raised) {
         CdSection(title = null, error = error) {
             CdField(code, { code = it }, label = stringResource(Res.string.custom_code))
@@ -345,6 +346,7 @@ private fun CustomCurrencyForm(
                     { decimals = it },
                     label = stringResource(Res.string.custom_decimals),
                     keyboardType = KeyboardType.Number,
+                    onImeAction = add,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -352,7 +354,7 @@ private fun CustomCurrencyForm(
                 listOf(
                     CdActionSpec(
                         stringResource(Res.string.custom_add),
-                        { if (presenter.addCustomCurrency(code, name, symbol, decimals)) onAdded() },
+                        add,
                     ),
                 ),
             )
@@ -375,6 +377,12 @@ fun WalletsScreen(
     var type by remember { mutableStateOf(WalletType.CASH) }
     var currency by remember(state.localCurrency) { mutableStateOf(state.localCurrency) }
     var opening by remember { mutableStateOf("") }
+    val addWallet = {
+        if (presenter.addWallet(name, type, currency, opening)) {
+            name = ""
+            opening = ""
+        }
+    }
 
     StepScaffold(
         step = 3,
@@ -416,10 +424,20 @@ fun WalletsScreen(
                         label = stringResource(Res.string.wallet_name),
                         placeholder = stringResource(Res.string.wallet_name_hint),
                     )
-                    CdChoiceGrid(WalletType.entries.map { CdOption(it, stringResource(it.label())) }, selected = type, onSelect = {
-                        type =
-                            it
-                    })
+                    CdChoice(
+                        WalletType.entries.map {
+                            CdOption(
+                                it,
+                                stringResource(it.label()),
+                                icon = it.icon().vector,
+                            )
+                        },
+                        selected = type,
+                        onSelect = {
+                            type =
+                                it
+                        },
+                    )
                     if (state.walletCurrencies.size > 1) {
                         CdChoice(state.walletCurrencies.map { CdOption(it.code, it.code) }, selected = currency.code, onSelect = { code ->
                             state.walletCurrencies.firstOrNull { it.code == code }?.let { currency = it }
@@ -431,17 +449,13 @@ fun WalletsScreen(
                         label = stringResource(Res.string.wallet_opening) + " (${currency.code})",
                         suffix = currency.code,
                         keyboardType = KeyboardType.Decimal,
+                        onImeAction = addWallet,
                     )
                     CdActions(
                         listOf(
                             CdActionSpec(
                                 stringResource(Res.string.wallet_add),
-                                {
-                                    if (presenter.addWallet(name, type, currency, opening)) {
-                                        name = ""
-                                        opening = ""
-                                    }
-                                },
+                                addWallet,
                                 icon = CoinDenIcon.PLUS.vector,
                             ),
                         ),
@@ -454,6 +468,16 @@ fun WalletsScreen(
         item { Spacer(Modifier.heightIn(min = 8.dp)) }
     }
 }
+
+/** Ícono de cada tipo de billetera (Inicio, onboarding y ajustes). */
+fun WalletType.icon(): CoinDenIcon =
+    when (this) {
+        WalletType.CASH -> CoinDenIcon.CASH
+        WalletType.BANK -> CoinDenIcon.BANK
+        WalletType.DIGITAL -> CoinDenIcon.QR
+        WalletType.CRYPTO -> CoinDenIcon.SPARKLE
+        WalletType.CREDIT -> CoinDenIcon.CARD
+    }
 
 /** Nombre traducido de cada tipo de billetera; un `when` exhaustivo: un tipo nuevo sin texto no compila. */
 fun WalletType.label(): StringResource =

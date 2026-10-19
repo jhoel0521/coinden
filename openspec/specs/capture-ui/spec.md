@@ -43,7 +43,7 @@ Foto DEBE (MUST) abrir la cámara dentro de la app, con un botón para elegir un
 - **THEN** el archivo no se puede abrir como imagen sin la llave de la app
 
 ### Requirement: Formulario Completo
-Escribir DEBE (MUST) abrir una página con todos los campos del movimiento: tipo, monto, moneda, billetera, medio de pago, categoría, fecha, nota y referencia (número de transacción, opcional), y un campo de frase libre que, al escribirla, llena los campos con el intérprete. Guardar crea un borrador con lo indicado en el formulario como dicho por el usuario.
+Escribir DEBE (MUST) abrir una página con todos los campos del movimiento: tipo, monto, billetera, medio de pago, categoría, fecha, nota y referencia (número de transacción, opcional), y un campo de frase libre que, al escribirla, llena los campos con el intérprete. La moneda no se elige: es la de la billetera y se muestra junto al monto. La nota y la referencia van en "Más detalles", que se abre solo si se toca o si ya traen un valor. Guardar crea un borrador con lo indicado en el formulario como dicho por el usuario.
 
 #### Scenario: Llenar con una frase
 - **WHEN** Carlos escribe "almuerzo 45 bnb" en la frase del formulario
@@ -64,6 +64,14 @@ Escribir DEBE (MUST) abrir una página con todos los campos del movimiento: tipo
 #### Scenario: Pegar un comprobante en la frase
 - **WHEN** Carlos pega en la frase el texto de un pago QR con "Nro. de transacción: 400000001" y toca Llenar
 - **THEN** el campo referencia queda con "400000001"
+
+#### Scenario: Moneda de la billetera
+- **WHEN** Carlos elige "Dolares" en el formulario
+- **THEN** junto al monto se muestra USD y no hay un campo para elegir otra moneda
+
+#### Scenario: Más detalles con referencia
+- **WHEN** Carlos llena el formulario con un comprobante que trae referencia
+- **THEN** "Más detalles" aparece abierto y muestra la referencia
 
 ### Requirement: Compartir a CoinDen
 La app DEBE (MUST) aparecer como destino al compartir texto, imágenes, PDF o audios desde otras apps. Al compartir, CoinDen guarda la captura, muestra un aviso corto y devuelve a la otra app, sin abrir su pantalla; el texto pasa por el intérprete y la imagen, el PDF o el audio se guardan cifrados y se procesan en la cola. Si el onboarding no terminó, abre la app para terminarlo.

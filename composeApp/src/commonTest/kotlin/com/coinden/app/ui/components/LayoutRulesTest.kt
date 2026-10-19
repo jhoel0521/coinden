@@ -65,4 +65,68 @@ class LayoutRulesTest {
         assertEquals(listOf("transporte", "comida", "salud", "super"), FrequentChoices.top(all, usage, selected = null, count = 4))
         assertEquals(listOf("personas", "transporte", "comida", "salud"), FrequentChoices.top(all, usage, selected = "personas", count = 4))
     }
+
+    @Test
+    fun `los mosaicos con icono van en una fila si a cada uno le quedan 64 dp`() {
+        // Medio de pago: 4 mosaicos en 328 dp.
+        assertEquals(TileArrangement.Row, TileLayout.of(count = 4, available = 328f))
+        // Cinco en una pantalla ancha (tableta o apaisado).
+        assertEquals(TileArrangement.Row, TileLayout.of(count = 5, available = 400f))
+    }
+
+    @Test
+    fun `si no caben los mosaicos pasan a una cuadricula de columnas iguales`() {
+        // Tipos de billetera: 5 mosaicos en 288 dp (dentro de una tarjeta) dejan menos de 64 dp a cada uno.
+        assertEquals(TileArrangement.Grid(columns = 3), TileLayout.of(count = 5, available = 288f))
+    }
+
+    @Test
+    fun `si la palabra mas larga no entra en el mosaico pasan a cuadricula sin partir palabras`() {
+        // Letra 1,3: "Transferencia" mide ~104 dp y no entra en 4 mosaicos de 328 dp.
+        assertEquals(TileArrangement.Grid(columns = 2), TileLayout.of(count = 4, available = 328f, widestWord = 96f))
+        assertEquals(TileArrangement.Row, TileLayout.of(count = 4, available = 328f, widestWord = 58f))
+    }
+
+    @Test
+    fun `la cuadricula no deja una opcion sola en la ultima fila`() {
+        // 4 opciones donde entrarían 3 columnas: 2 x 2, no 3 + 1.
+        assertEquals(2, GridLayout.columns(available = 328f, minCell = 96f, count = 4))
+        // 5 en 3 columnas: 3 + 2 está bien.
+        assertEquals(3, GridLayout.columns(available = 328f, minCell = 96f, count = 5))
+        // 10 monedas en 4 columnas: 4 + 4 + 2.
+        assertEquals(4, GridLayout.columns(available = 400f, minCell = 96f, count = 10))
+    }
+
+    @Test
+    fun `con mas de 5 opciones con icono la fila muestra 3 y Mas`() {
+        assertEquals(4, TileLayout.shown(count = 4))
+        assertEquals(5, TileLayout.shown(count = 5))
+        // 13 categorías: 3 más usadas y el mosaico "Más…".
+        assertEquals(3, TileLayout.shown(count = 13))
+    }
+
+    @Test
+    fun `si la ultima fila quedaria con una sola opcion se reparten las filas`() {
+        // 13 categorías en 3 columnas: 3 + 3 + 3 + 2 + 2, no 3 + 3 + 3 + 3 + 1.
+        assertEquals(listOf(3, 3, 3, 2, 2), GridLayout.rows(count = 13, columns = 3))
+        assertEquals(listOf(4, 4, 3, 2), GridLayout.rows(count = 13, columns = 4))
+        assertEquals(listOf(4, 4, 2), GridLayout.rows(count = 10, columns = 4))
+        assertEquals(listOf(2, 2), GridLayout.rows(count = 4, columns = 2))
+    }
+
+    @Test
+    fun `en 2 columnas la ultima opcion sola ocupa la fila entera`() {
+        // Letra 1,3: 13 categorías en 2 columnas. La fila de 1 se marca para ocupar todo el ancho.
+        assertEquals(listOf(2, 2, 2, 2, 2, 2, 1), GridLayout.rows(count = 13, columns = 2))
+        assertEquals(true, GridLayout.lastSpansRow(count = 13, columns = 2))
+        assertEquals(false, GridLayout.lastSpansRow(count = 13, columns = 3))
+        assertEquals(false, GridLayout.lastSpansRow(count = 12, columns = 2))
+    }
+
+    @Test
+    fun `cada campo le da al teclado una tecla que hace algo`() {
+        assertEquals(ImeKey.Done, ImeRule.of(hasAction = true, search = false))
+        assertEquals(ImeKey.Search, ImeRule.of(hasAction = false, search = true))
+        assertEquals(ImeKey.Next, ImeRule.of(hasAction = false, search = false))
+    }
 }

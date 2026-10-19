@@ -188,6 +188,7 @@ fun DraftFormScreen(
                         label = stringResource(Res.string.form_phrase),
                         placeholder = stringResource(Res.string.capture_hint),
                         singleLine = false,
+                        onImeAction = { if (state.phrase.isNotBlank()) scope.launch { presenter.fillFromPhrase() } },
                         enabled = enabled,
                     )
                     CdActions(
@@ -237,8 +238,8 @@ fun DraftFormScreen(
 
             CdSection(stringResource(Res.string.field_method)) {
                 CdChoice(
-                    listOf(CdOption<PaymentMethod?>(null, stringResource(Res.string.form_none))) +
-                        PaymentMethod.entries.map { CdOption<PaymentMethod?>(it, stringResource(it.label())) },
+                    listOf(CdOption<PaymentMethod?>(null, stringResource(Res.string.form_none), icon = CoinDenIcon.HELP.vector)) +
+                        PaymentMethod.entries.map { CdOption<PaymentMethod?>(it, stringResource(it.label()), icon = it.icon().vector) },
                     selected = state.method,
                     onSelect = presenter::onMethodChange,
                     enabled = enabled,
@@ -252,11 +253,19 @@ fun DraftFormScreen(
                         (changes[CorrectionField.CATEGORY]?.let { (it as? FieldChange.Category)?.before } as? CategoryRef.Custom)?.id
                     val missing = stringResource(Res.string.spending_category_missing)
                     val options =
-                        listOf(CdOption<CategoryRef?>(null, stringResource(Res.string.category_none))) +
-                            BaseCategory.entries.map { CdOption<CategoryRef?>(CategoryRef.Base(it), stringResource(it.label())) } +
+                        listOf(CdOption<CategoryRef?>(null, stringResource(Res.string.category_none), icon = CoinDenIcon.HELP.vector)) +
+                            BaseCategory.entries.map {
+                                CdOption<CategoryRef?>(CategoryRef.Base(it), stringResource(it.label()), icon = it.icon().vector)
+                            } +
                             state.customCategories
                                 .filter { !it.archived || it.id == selectedCustom || it.id == previousCustom }
-                                .map { CdOption<CategoryRef?>(CategoryRef.Custom(it.id), it.name ?: missing) }
+                                .map {
+                                    CdOption<CategoryRef?>(
+                                        CategoryRef.Custom(it.id),
+                                        it.name ?: missing,
+                                        icon = CoinDenIcon.TAG.vector,
+                                    )
+                                }
                     CdChoice(
                         options,
                         selected = state.category,
@@ -264,6 +273,7 @@ fun DraftFormScreen(
                         usage = state.categoryUsage.mapKeys { (key, _) -> key as CategoryRef? },
                         moreLabel = stringResource(Res.string.form_more_categories),
                         enabled = enabled,
+                        sheetTitle = stringResource(Res.string.field_category),
                     )
                 }
             }

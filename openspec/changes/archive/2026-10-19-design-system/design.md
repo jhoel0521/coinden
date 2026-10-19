@@ -62,7 +62,7 @@ Los segmentados usan `SingleChoiceSegmentedButtonRow` de Material 3, envuelto: l
 
 ### D4. Cuadrícula sin sueltas (puro)
 
-`GridLayout.columns(available, minCell = 96.dp)` toma entre 2 y 4 columnas. Cada celda mide `available / columns`. La última fila conserva el ancho de celda y se alinea a la izquierda, de modo que ninguna opción se estira ni queda distinta.
+`GridLayout.columns(available, minCell = 96.dp)` toma entre 2 y 4 columnas. Cada celda mide `available / columns`. La última fila conserva el ancho de celda y se alinea a la izquierda, de modo que ninguna opción se estira ni queda distinta. `columns` prefiere la cantidad que no deja una sola al final (4 opciones: 2 x 2); si ninguna lo logra, `GridLayout.rows` reparte las filas (13 en 3 columnas: 3, 3, 3, 2, 2). En 2 columnas no hay reparto posible: con una cantidad impar, la última ocupa la fila entera (`lastSpansRow`).
 
 ### D5. Componentes que saben dónde están
 
@@ -95,6 +95,18 @@ Tocar la fila abre el formulario, como hoy. La tarjeta completa (`DraftCardView`
 ### D8. Prueba que prohíbe los controles sueltos
 
 `androidUnitTest/.../RawMaterialUsageTest.kt` recorre `src/commonMain/kotlin` fuera de `ui/components`. Falla si encuentra imports de `androidx.compose.material3` que no estén en la lista permitida (`Text`, `Icon`, `MaterialTheme`, `LocalContentColor`, `HorizontalDivider`, `CircularProgressIndicator`, `ExperimentalMaterial3Api`, `ModalBottomSheet` y el selector de fecha). Corre en `npm test`.
+
+### D9. Mosaicos con ícono
+
+`CdOption` gana un `icon` opcional. `CdChoice` usa `TileLayout.of(count, available, minTile = 64.dp)` cuando todas sus opciones tienen ícono y son 5 o menos:
+- `Row` si `available / count >= minTile`: una barra de mosaicos del mismo ancho (ícono de 24 dp arriba y etiqueta de hasta 2 líneas debajo, 72 dp de alto mínimo).
+- `Grid(columns)` si no: los mismos mosaicos en columnas iguales, con `GridLayout.columns`.
+
+La elegida lleva relleno `secondaryContainer`, borde `primary` y el ícono en `primary`; las demás, borde suave. El ícono sale del catálogo `CoinDenIcon`, que suma `HELP` para "Sin indicar". Con más de 5 opciones (las categorías), la fila muestra `TileLayout.top = 3` más usadas, con la elegida siempre entre ellas, y un mosaico "Más…" que abre `CdChoiceGrid` en una hoja; la cuadrícula también dibuja mosaicos cuando todas sus opciones tienen ícono. Cada categoría base tiene su ícono (`BaseCategory.icon()`), las propias usan `TAG` y "Sin categoría" usa `HELP`. Lo usan el medio de pago, la categoría del formulario y el tipo de billetera (onboarding y ajustes). La cuadrícula de texto queda para opciones sin ícono, como las monedas.
+
+### D10. La tecla del teclado
+
+`ImeRule.of(hasAction, search)` decide la tecla: `Done` si el campo trae `onImeAction`, `Search` en un buscador y `Next` en los demás. `CdField` la aplica con `KeyboardActions`: `Next` llama a `focusManager.moveFocus(FocusDirection.Next)` y, si no hay otro campo, cierra el teclado; `Done` y `Search` ejecutan la acción (si hay) y cierran el teclado. Una frase de varias líneas con acción también usa `Done`, porque lo dicho es una sola frase. Las pantallas pasan como acción la misma lambda del botón de su formulario: "Llenar", "Agregar billetera", "Agregar moneda" o "Guardar" la tasa.
 
 ## Risks / Trade-offs
 
