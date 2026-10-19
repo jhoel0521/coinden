@@ -316,4 +316,5 @@
     <string name="lock_prompt_title">Desbloquear CoinDen</string>
     <string name="lock_prompt_subtitle">Use sua digital ou o bloqueio do telefone</string>
     <string name="lock_open_settings">Configurar bloqueio de tela</string>
+    <string name="profile_site">Site e política de privacidade</string>
 </resources>

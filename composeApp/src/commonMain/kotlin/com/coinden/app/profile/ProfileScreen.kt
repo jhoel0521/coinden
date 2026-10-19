@@ -11,6 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.home_language
@@ -23,6 +24,7 @@ import coinden.composeapp.generated.resources.profile_about
 import coinden.composeapp.generated.resources.profile_about_text
 import coinden.composeapp.generated.resources.profile_security
 import coinden.composeapp.generated.resources.profile_settings
+import coinden.composeapp.generated.resources.profile_site
 import coinden.composeapp.generated.resources.profile_title
 import coinden.composeapp.generated.resources.settings_title
 import com.coinden.app.lock.AppLockController
@@ -51,6 +53,7 @@ fun ProfileScreen(
     val lockState by lock.state.collectAsState()
     val availability by lock.availability.collectAsState()
     val scope = rememberCoroutineScope()
+    val uriHandler = LocalUriHandler.current
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
@@ -92,6 +95,8 @@ fun ProfileScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                // Abre el navegador; la app no cobra ni pide donaciones.
+                CdListOption(stringResource(Res.string.profile_site), { uriHandler.openUri(ProjectSite.url(language)) })
             }
         }
     }

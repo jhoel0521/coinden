@@ -316,4 +316,5 @@
     <string name="lock_prompt_title">Unlock CoinDen</string>
     <string name="lock_prompt_subtitle">Use your fingerprint or your phone\'s screen lock</string>
     <string name="lock_open_settings">Set up screen lock</string>
+    <string name="profile_site">Website and privacy policy</string>
 </resources>
