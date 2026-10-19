@@ -22,3 +22,8 @@ Thumbs.db
 
 # Compilación nativa de CMake (whisper.cpp)
 .cxx/
+
+# Llave de subida a Google Play: nunca al repositorio
+keystore.properties
+*.jks
+*.keystore
