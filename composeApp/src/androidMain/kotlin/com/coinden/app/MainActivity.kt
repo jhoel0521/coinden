@@ -52,6 +52,8 @@ class MainActivity : FragmentActivity() {
                 onSharedTaken = { shared.value = null },
                 lock = app.lock,
                 appVersion = version,
+                foreground = app.foreground,
+                forms = app.forms,
             )
         }
     }

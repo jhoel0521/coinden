@@ -73,6 +73,7 @@ fun MainScreen(
     utcOffsetMinutes: Int,
     language: String,
     appVersion: String,
+    foreground: ForegroundSignal,
     onDictate: () -> Unit,
     onPhoto: () -> Unit,
     onWrite: () -> Unit,
@@ -94,7 +95,9 @@ fun MainScreen(
     // Inicio solo existe desbloqueada; también da el número de pendientes de la barra.
     val home = if (lockState.locked) null else remember { HomePresenter(container) }
     val homeState = home?.state?.collectAsState()?.value
-    LaunchedEffect(home, captureState.result, tab) { if (tab != NavTab.HOME) home?.load() }
+    // Al volver a la app se recarga: lo compartido desde otra app ya cuenta entre los pendientes.
+    val returns by foreground.returns.collectAsState()
+    LaunchedEffect(home, captureState.result, tab, returns) { if (tab != NavTab.HOME) home?.load() }
 
     // La raíz respeta las barras del sistema: el contenido no queda bajo la hora ni la barra de abajo bajo los gestos.
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
@@ -104,7 +107,7 @@ fun MainScreen(
             } else {
                 when (tab) {
                     NavTab.HOME, NavTab.CAPTURE ->
-                        home?.let { HomeScreen(it, locale, onReview = { tab = NavTab.REVIEW }, reload = captureState.result) }
+                        home?.let { HomeScreen(it, locale, onReview = { tab = NavTab.REVIEW }, reload = captureState.result to returns) }
                     NavTab.REVIEW -> {
                         val inbox = remember { ReviewInboxPresenter(container) }
                         ReviewInboxScreen(inbox, locale, utcOffsetMinutes, onOpen = openForm)

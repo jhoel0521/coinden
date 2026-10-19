@@ -10,6 +10,9 @@ enum class CaptureTip { SAY_WALLET, SAY_AMOUNT }
 object CaptureCoach {
     /** Lo que faltó: la billetera (o quedó sugerida) y el monto. Nada si está completo o no es pendiente con propuesta. */
     fun tipsFor(draft: Draft): Set<CaptureTip> {
+        // El consejo es para lo que la persona escribe o dicta: un comprobante (foto, PDF o texto
+        // de varias líneas compartido) no lo dictó nadie.
+        if (draft.header.evidence.isReceipt) return emptySet()
         val (proposal, missing) =
             when (draft) {
                 is Draft.Ready -> draft.proposal to emptySet()
@@ -88,3 +91,7 @@ data class CaptureStats(
 )
 
 private val Evidence.isUnreadPhrase: Boolean get() = attachmentRef == null && !text.isNullOrBlank()
+
+/** Una foto o un PDF, o un texto de varias líneas (un comprobante pegado o compartido). Un audio es una frase dicha. */
+private val Evidence.isReceipt: Boolean
+    get() = source == EvidenceSource.PHOTO || (text?.lines()?.count { it.isNotBlank() } ?: 0) > 1
