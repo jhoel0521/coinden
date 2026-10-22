@@ -14,7 +14,7 @@ import os
 import re
 
 import fitz
-from PIL import Image, ImageChops, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 BRAND = os.path.join(ROOT, "design", "brand")
@@ -33,6 +33,15 @@ ART_DP = 66
 # Splash (API 31+): lienzo de 288 dp; el ícono se recorta en un círculo de 192 dp.
 SPLASH_DP = 288
 SPLASH_ART_DP = 176
+
+# Ficha de Google Play: no va dentro de la app.
+PLAY = os.path.join(ROOT, "docs", "play", "graphics")
+FONT = os.path.join(COMPOSE, "font", "bricolage_grotesque.ttf")
+TAGLINES = {
+    "es": "Tus gastos, en tu teléfono.",
+    "en": "Your spending, on your phone.",
+    "pt": "Seus gastos, no seu celular.",
+}
 
 
 def svg_with_background(name: str) -> str:
@@ -123,6 +132,22 @@ def main() -> None:
         folder = os.path.join(COMPOSE, f"drawable-{qualifier}")
         save(transparent(logo_svg, 200 * factor), os.path.join(folder, "coinden_logo.webp"), "WEBP", lossless=True, method=6)
         save(transparent(icon_svg, 48 * factor), os.path.join(folder, "coinden_icon.webp"), "WEBP", lossless=True, method=6)
+
+    print("Ficha de Google Play (ícono 512 y gráfico destacado 1024x500 por idioma):")
+    save(render(icon_svg, 512).convert("RGB"), os.path.join(PLAY, "icon-512.png"))
+    logo = transparent(logo_svg, 420)
+    for language, tagline in TAGLINES.items():
+        save(feature_graphic(logo, tagline), os.path.join(PLAY, f"feature-graphic-{language}.png"))
+
+
+def feature_graphic(logo: Image.Image, tagline: str) -> Image.Image:
+    """Fondo de la marca, el búho a la izquierda y el nombre con la frase a la derecha."""
+    image = Image.new("RGBA", (1024, 500), BACKGROUND_RGB + (255,))
+    image.alpha_composite(logo, (50, 40))
+    draw = ImageDraw.Draw(image)
+    draw.text((500, 150), "CoinDen", font=ImageFont.truetype(FONT, 104), fill=(0xFF, 0xDB, 0xCB))
+    draw.text((504, 290), tagline, font=ImageFont.truetype(FONT, 38), fill=(0xFF, 0xB6, 0x93))
+    return image.convert("RGB")
 
 
 if __name__ == "__main__":

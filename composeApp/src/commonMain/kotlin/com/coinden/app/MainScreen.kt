@@ -83,6 +83,7 @@ fun MainScreen(
     onCategories: () -> Unit,
     onPrivacy: () -> Unit,
     onVoiceModels: () -> Unit,
+    onLicenses: () -> Unit,
 ) {
     var tab by rememberSaveable { mutableStateOf(NavTab.HOME) }
     var choosingCapture by remember { mutableStateOf(false) }
@@ -111,7 +112,7 @@ fun MainScreen(
                         home?.let { HomeScreen(it, locale, onReview = { tab = NavTab.REVIEW }, reload = captureState.result to returns) }
                     NavTab.REVIEW -> {
                         val inbox = remember { ReviewInboxPresenter(container) }
-                        ReviewInboxScreen(inbox, locale, utcOffsetMinutes, onOpen = openForm)
+                        ReviewInboxScreen(inbox, locale, utcOffsetMinutes, onOpen = openForm, reload = captureState.result to returns)
                     }
                     NavTab.MOVEMENTS ->
                         MovementsScreen(
@@ -131,6 +132,7 @@ fun MainScreen(
                             onCategories = onCategories,
                             onPrivacy = onPrivacy,
                             onVoiceModels = onVoiceModels,
+                            onLicenses = onLicenses,
                         )
                 }
             }

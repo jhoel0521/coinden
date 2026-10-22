@@ -1,8 +1,11 @@
 package com.coinden.app.profile
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -12,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.categories_title
@@ -20,9 +24,11 @@ import coinden.composeapp.generated.resources.home_privacy
 import coinden.composeapp.generated.resources.language_en
 import coinden.composeapp.generated.resources.language_es
 import coinden.composeapp.generated.resources.language_pt
+import coinden.composeapp.generated.resources.licenses_title
 import coinden.composeapp.generated.resources.models_title
 import coinden.composeapp.generated.resources.profile_about
 import coinden.composeapp.generated.resources.profile_about_text
+import coinden.composeapp.generated.resources.profile_credits
 import coinden.composeapp.generated.resources.profile_security
 import coinden.composeapp.generated.resources.profile_settings
 import coinden.composeapp.generated.resources.profile_site
@@ -51,6 +57,7 @@ fun ProfileScreen(
     onCategories: () -> Unit,
     onPrivacy: () -> Unit,
     onVoiceModels: () -> Unit,
+    onLicenses: () -> Unit,
 ) {
     val lockState by lock.state.collectAsState()
     val availability by lock.availability.collectAsState()
@@ -100,6 +107,17 @@ fun ProfileScreen(
                 )
                 // Abre el navegador; la app no cobra ni pide donaciones.
                 CdListOption(stringResource(Res.string.profile_site), { uriHandler.openUri(ProjectSite.url(language)) })
+                CdListOption(stringResource(Res.string.licenses_title), onLicenses)
+                Text(
+                    stringResource(Res.string.profile_credits, ProjectSite.AUTHOR),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier =
+                        Modifier
+                            .heightIn(min = 48.dp)
+                            .wrapContentHeight()
+                            .clickable(role = Role.Button) { uriHandler.openUri(ProjectSite.REPOSITORY) },
+                )
             }
         }
     }
