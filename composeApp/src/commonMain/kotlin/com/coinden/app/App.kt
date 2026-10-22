@@ -45,6 +45,7 @@ import com.coinden.app.perception.VoiceModelsPresenter
 import com.coinden.app.perception.VoiceModelsScreen
 import com.coinden.app.profile.CustomCategoriesPresenter
 import com.coinden.app.profile.CustomCategoriesScreen
+import com.coinden.app.profile.LicensesScreen
 import com.coinden.app.settings.WalletSettingsPresenter
 import com.coinden.app.settings.WalletSettingsScreen
 import com.coinden.app.theme.CoinDenTheme
@@ -64,6 +65,7 @@ private object Routes {
     const val VOICE_MODELS = "voice-models"
     const val SETTINGS = "settings"
     const val CATEGORIES = "categories"
+    const val LICENSES = "licenses"
     const val REVIEW = "review/{draftId}"
     const val CORRECT = "correct/{draftId}/{source}"
     const val EVIDENCE = "evidence/{draftId}"
@@ -190,6 +192,8 @@ private fun AppNavHost(
                 onVoiceModels = { nav.navigate(Routes.VOICE_MODELS) },
             )
         }
+        // Sin saldos: se abre aunque la app esté bloqueada.
+        composable(Routes.LICENSES) { LicensesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.VOICE_MODELS) {
             val models = remember { VoiceModelsPresenter(platform.voiceModels) }
             VoiceModelsScreen(models, onBack = { nav.popBackStack() })
@@ -251,6 +255,7 @@ private fun AppNavHost(
                 onCategories = { nav.navigate(Routes.CATEGORIES) },
                 onPrivacy = { nav.navigate(Routes.PRIVACY) },
                 onVoiceModels = { nav.navigate(Routes.VOICE_MODELS) },
+                onLicenses = { nav.navigate(Routes.LICENSES) },
             )
         }
         composable(Routes.CATEGORIES) {

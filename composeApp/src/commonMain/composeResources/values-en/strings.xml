@@ -330,4 +330,8 @@
     <string name="categories_error_empty">Type a name for the category.</string>
     <string name="categories_hint">Archiving deletes nothing: expenses that already have it keep it. When you rename it, all its expenses show the new name.</string>
     <string name="categories_not_found">This category is not available.</string>
+    <string name="licenses_title">Open source licenses</string>
+    <string name="licenses_hint">CoinDen is built with these free libraries and fonts. Tap one to read its license.</string>
+    <string name="licenses_terms">%1$s: opens its terms in the browser</string>
+    <string name="profile_credits">Made by %1$s</string>
 </resources>

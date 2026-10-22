@@ -85,8 +85,8 @@ T = {
         "updated": "Vigente desde el",
         "support_title": "Apoya CoinDen",
         "support_intro": "CoinDen es gratis para siempre, sin publicidad y sin venta de datos. Vive de donaciones.",
-        "support_sponsors": "Con GitHub Sponsors (necesitas una cuenta de GitHub, es gratis):",
-        "support_sponsors_btn": "Donar con GitHub Sponsors",
+        "support_sponsors": "¿Te sirve CoinDen? Invítame un café: una donación única con GitHub Sponsors (necesitas una cuenta de GitHub, es gratis).",
+        "support_sponsors_btn": "☕ Invítame un café",
         "support_paypal": "Con PayPal:",
         "support_other": "También ayudas si compartes CoinDen, reportas fallos o propones traducciones en el repositorio.",
     },
@@ -148,8 +148,8 @@ T = {
         "updated": "Effective",
         "support_title": "Support CoinDen",
         "support_intro": "CoinDen is free forever, with no ads and no data sales. It lives on donations.",
-        "support_sponsors": "With GitHub Sponsors (you need a free GitHub account):",
-        "support_sponsors_btn": "Donate with GitHub Sponsors",
+        "support_sponsors": "Find CoinDen useful? Buy me a coffee: a one-time donation with GitHub Sponsors (you need a free GitHub account).",
+        "support_sponsors_btn": "☕ Buy me a coffee",
         "support_paypal": "With PayPal:",
         "support_other": "You also help by sharing CoinDen, reporting bugs or suggesting translations in the repository.",
     },
@@ -211,8 +211,8 @@ T = {
         "updated": "Vigente desde",
         "support_title": "Apoie o CoinDen",
         "support_intro": "O CoinDen é grátis para sempre, sem anúncios e sem venda de dados. Vive de doações.",
-        "support_sponsors": "Com GitHub Sponsors (você precisa de uma conta gratuita no GitHub):",
-        "support_sponsors_btn": "Doar com GitHub Sponsors",
+        "support_sponsors": "O CoinDen te ajuda? Me pague um café: uma doação única com GitHub Sponsors (você precisa de uma conta gratuita no GitHub).",
+        "support_sponsors_btn": "☕ Me pague um café",
         "support_paypal": "Com PayPal:",
         "support_other": "Você também ajuda compartilhando o CoinDen, relatando falhas ou sugerindo traduções no repositório.",
     },
@@ -301,7 +301,7 @@ def support(lang: str) -> str:
     paypal = f'<div class="card"><p>{html.escape(t["support_paypal"])}</p><p><a class="btn" href="{PAYPAL}">PayPal</a></p></div>' if PAYPAL else ""
     body = f"""<h1>{html.escape(t['support_title'])}</h1>
 <p>{html.escape(t['support_intro'])}</p>
-<div class="card"><p>{html.escape(t['support_sponsors'])}</p><p><a class="btn" href="{SPONSORS}">{html.escape(t['support_sponsors_btn'])}</a></p></div>
+<div class="card"><p>{html.escape(t['support_sponsors'])}</p><p><a class="btn" href="{SPONSORS}?frequency=one-time">{html.escape(t['support_sponsors_btn'])}</a></p></div>
 {paypal}
 <p class="muted">{html.escape(t['support_other'])}</p>"""
     return page(lang, "support", f"{t['support_title']} · CoinDen", body)

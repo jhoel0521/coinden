@@ -37,7 +37,7 @@ La app DEBE (MUST) permitir archivar y reactivar billeteras propias sin borrar e
 
 #### Scenario: Última activa
 - **WHEN** Carlos intenta archivar su única billetera activa
-- **THEN** se informa que necesita conservar una activa y no vuelve al onboarding
+- **THEN** se informa de inmediato, sin el diálogo de confirmación, que necesita conservar una activa, y no vuelve al onboarding
 
 #### Scenario: Reactivar
 - **WHEN** Carlos reactiva una billetera archivada

@@ -84,11 +84,13 @@ fun ReviewInboxScreen(
     utcOffsetMinutes: Int,
     onOpen: (FormMode) -> Unit,
     onBack: (() -> Unit)? = null,
+    reload: Any? = null,
 ) {
     val state by presenter.state.collectAsState()
     val scope = rememberCoroutineScope()
     val scheme = MaterialTheme.colorScheme
-    LaunchedEffect(presenter) { presenter.load() }
+    // Como en Inicio: lo confirmado desde la hoja de captura o lo compartido sale o entra de la lista.
+    LaunchedEffect(presenter, reload) { presenter.load() }
 
     val ready = state.load == ScreenLoad.READY
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {

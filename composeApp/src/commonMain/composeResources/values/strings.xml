@@ -330,4 +330,8 @@
     <string name="categories_error_empty">Escribe un nombre para la categoría.</string>
     <string name="categories_hint">Archivar no borra: los gastos que ya la tienen la conservan. Al renombrar, todos sus gastos muestran el nombre nuevo.</string>
     <string name="categories_not_found">Esta categoría no está disponible.</string>
+    <string name="licenses_title">Licencias de código abierto</string>
+    <string name="licenses_hint">CoinDen se construye con estas librerías y fuentes libres. Toca una para leer su licencia.</string>
+    <string name="licenses_terms">%1$s: abre sus términos en el navegador</string>
+    <string name="profile_credits">Hecho por %1$s</string>
 </resources>

@@ -67,7 +67,7 @@ Escribir DEBE (MUST) abrir una página con todos los campos del movimiento: tipo
 - **THEN** "Más detalles" aparece abierto y muestra la referencia
 
 ### Requirement: Compartir a CoinDen
-La app DEBE (MUST) aparecer como destino al compartir texto, imágenes, PDF o audios desde otras apps. Al compartir, CoinDen guarda la captura, muestra un aviso corto y devuelve a la otra app, sin abrir su pantalla; el texto pasa por el intérprete y la imagen, el PDF o el audio se guardan cifrados y se procesan en la cola. Si el onboarding no terminó, abre la app para terminarlo.
+La app DEBE (MUST) aparecer como destino al compartir texto, imágenes, PDF o audios desde otras apps. Al compartir, CoinDen guarda la captura, muestra un aviso corto y devuelve a la otra app, sin abrir su pantalla; el texto pasa por el intérprete y la imagen, el PDF o el audio se guardan cifrados y se procesan en la cola. Si el onboarding no terminó, abre la app para terminarlo. Al volver a CoinDen, Inicio y la barra ya cuentan lo compartido entre los pendientes.
 
 #### Scenario: Texto de un comprobante
 - **WHEN** Carlos comparte desde su banco el texto de un comprobante de pago por QR
@@ -92,6 +92,10 @@ La app DEBE (MUST) aparecer como destino al compartir texto, imágenes, PDF o au
 #### Scenario: Pegar un texto que no se puede compartir
 - **WHEN** Carlos copia un mensaje en WhatsApp y lo pega en la frase del formulario
 - **THEN** el formulario se llena con lo que el intérprete entiende de ese texto
+
+#### Scenario: Volver después de compartir
+- **WHEN** Carlos tiene CoinDen abierta con 1 borrador pendiente, comparte dos comprobantes desde su banco y vuelve a CoinDen
+- **THEN** Inicio y la pestaña Revisar muestran 3 pendientes sin cambiar de pantalla
 
 ### Requirement: Resultado de la Captura
 Después de cada captura la app DEBE (MUST) indicar que se guardó como borrador, mostrar su tarjeta (con la referencia, si la hay) y ofrecer confirmarlo en ese momento, con la categoría sugerida si la hay, o dejarlo para la revisión. Confirmar aplica las reglas del libro; si el libro lo rechaza, el borrador sigue pendiente y se muestra el motivo. Si la app está bloqueada, confirmar pide desbloquear antes.
@@ -172,3 +176,14 @@ Al intentar salir mediante el control superior o Atrás del sistema, un formular
 #### Scenario: Consultar evidencia
 - **WHEN** Carlos abre la evidencia desde una revisión con campos editados y regresa
 - **THEN** conserva la edición sin una advertencia de abandono ni nuevas escrituras
+
+### Requirement: Formulario que Sobrevive a Recrear la Pantalla
+El formulario de captura DEBE (MUST) conservar lo que la persona escribió o eligió cuando Android recrea la pantalla (al rotar el teléfono o cambiar el tamaño de letra o el idioma del sistema). Recrear la pantalla nunca guarda ni descarta el borrador por su cuenta.
+
+#### Scenario: Rotar con el formulario a medias
+- **WHEN** Carlos escribe "almuerzo 45", elige "Transferencia o QR" y rota el teléfono
+- **THEN** el formulario sigue con "almuerzo 45" y "Transferencia o QR" elegidos
+
+#### Scenario: Cambiar el tamaño de letra
+- **WHEN** Carlos tiene el formulario a medias y cambia el tamaño de letra del sistema
+- **THEN** al volver a CoinDen el formulario conserva lo que tenía

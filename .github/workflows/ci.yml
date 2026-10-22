@@ -1,8 +1,8 @@
 name: CI Pipeline
 
+# Solo en pull requests (y a mano): la regla de main exige la rama al día, así que el PR ya
+# probó el mismo código que queda al unir. Correrlo otra vez en el push a main no aporta nada.
 on:
-  push:
-    branches: [ "main", "dev" ]
   pull_request:
     branches: [ "main", "dev" ]
   workflow_dispatch:
