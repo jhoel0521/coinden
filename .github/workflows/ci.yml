@@ -77,6 +77,12 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
+      # Gradle configura también :composeApp, que declara el NDK de whisper.cpp: sin esto falla por licencias.
+      - name: Install Android NDK and CMake (whisper.cpp)
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;30.0.15729638" "cmake;3.22.1" > /dev/null
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
