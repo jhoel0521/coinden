@@ -10,7 +10,7 @@
 - [x] 2.2 Firma desde `keystore.properties` o variables de entorno (ignorado por git); sin llave, firma de depuración.
 - [x] 2.3 `versionCode`/`versionName` desde propiedades de Gradle.
 - [x] 2.4 `release.yml`: con la etiqueta `vX.Y.Z`, AAB firmado con los secretos del repositorio como artefacto.
-- [ ] 2.5 Instalar la versión optimizada en el emulador y recorrer onboarding, captura, lectura de un comprobante y bloqueo.
+- [x] 2.5 Instalar la versión optimizada en el emulador y recorrer onboarding, captura, lectura de un comprobante y bloqueo.
 - [x] 2.6 Hallazgo de la prueba: al confirmar desde la hoja de captura con la pestaña Revisar abierta, la lista no se recargaba y el gasto seguía en "Listos"; ahora se recarga como Inicio.
 
 ## 3. Licencias (app-navigation: Perfil de la Persona)
@@ -20,11 +20,11 @@
 
 ## 4. Ficha de Play
 
-- [ ] 4.1 `docs/play/`: textos en es, en y pt, ícono de 512, gráfico de 1024×500, capturas y respuestas para las declaraciones; guía paso a paso.
+- [x] 4.1 `docs/play/`: textos en es, en y pt, ícono de 512, gráfico de 1024×500, capturas y respuestas para las declaraciones; guía paso a paso.
 
 ## 5. Cierre
 
-- [ ] 5.1 `npm test`, `npm run lint`, `npm run build:android`, `bundleRelease` y `openspec validate --all` en verde.
+- [x] 5.1 `npm test`, `npm run lint`, `npm run build:android`, `bundleRelease` y `openspec validate --all` en verde.
 
 ## Workflow follow-up
 

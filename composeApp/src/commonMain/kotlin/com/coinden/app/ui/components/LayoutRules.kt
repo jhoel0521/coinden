@@ -32,24 +32,28 @@ sealed interface ChoiceArrangement {
 
 /**
  * Elige la forma de un grupo de elección única. [open]: la lista crece con los datos de la
- * persona (billeteras, monedas). [labelsWidth]: lo que ocupan juntos los textos con su relleno,
- * medido con la letra actual. Nunca deja una opción sola en una fila incompleta.
+ * persona (billeteras, monedas). [widestLabel]: el texto más largo medido con la letra actual (dp).
+ * Los segmentados son del mismo ancho, así que caben si el más largo entra en su parte con su
+ * relleno y la marca de la elegida. Nunca deja una opción sola en una fila incompleta.
  */
 object ChoiceLayout {
     private const val MAX_SEGMENTS = 4
     private const val MAX_SCROLL_FIXED = 8
     private const val TOP = 4
 
+    /** Relleno de un segmentado (12 dp por lado) más la marca de la elegida (18 dp y 8 de separación). */
+    private const val SEGMENT_EXTRA = 52f
+
     fun of(
         count: Int,
         open: Boolean,
-        labelsWidth: Float,
+        widestLabel: Float,
         available: Float,
     ): ChoiceArrangement =
         when {
             open -> ChoiceArrangement.ScrollRow
             count > MAX_SCROLL_FIXED -> ChoiceArrangement.TopAndMore(TOP)
-            count <= MAX_SEGMENTS && labelsWidth <= available -> ChoiceArrangement.Segmented
+            count <= MAX_SEGMENTS && count * (widestLabel + SEGMENT_EXTRA) <= available -> ChoiceArrangement.Segmented
             else -> ChoiceArrangement.ScrollRow
         }
 }

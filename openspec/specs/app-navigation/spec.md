@@ -35,7 +35,7 @@ La pestaña Movimientos DEBE (MUST) mostrar el historial de movimientos confirma
 - **THEN** ve el resumen del mes actual, y al elegir "Historial" vuelve a la lista de movimientos
 
 ### Requirement: Perfil de la Persona
-La pestaña Perfil DEBE (MUST) reunir la configuración de la persona: Seguridad (el bloqueo con huella o PIN), Idioma, Billeteras y tasas, Categorías propias, Privacidad, Modelos de voz y Acerca de (versión de la app, que no hay cuenta ni servidores y un enlace al sitio del proyecto con su política de privacidad, en el idioma de la app). El enlace abre el navegador; la app no cobra ni pide donaciones. Cambiar el idioma desde Perfil cambia toda la app al momento.
+La pestaña Perfil DEBE (MUST) reunir la configuración de la persona: Seguridad (el bloqueo con huella o PIN), Idioma, Billeteras y tasas, Categorías propias, Privacidad, Modelos de voz y Acerca de (versión de la app, que no hay cuenta ni servidores, un enlace al sitio del proyecto con su política de privacidad en el idioma de la app, las licencias de código abierto con su texto completo, y en letra pequeña el crédito de quien hace CoinDen, con su usuario de GitHub y un enlace al repositorio). El enlace abre el navegador; la app no cobra ni pide donaciones. Cambiar el idioma desde Perfil cambia toda la app al momento.
 
 #### Scenario: Lo que hay en Perfil
 - **WHEN** Carlos abre Perfil
@@ -56,3 +56,11 @@ La pestaña Perfil DEBE (MUST) reunir la configuración de la persona: Seguridad
 #### Scenario: Categorías propias desde Perfil
 - **WHEN** Carlos toca "Categorías propias" en Perfil
 - **THEN** ve sus categorías activas y archivadas y puede crear, renombrar, archivar o reactivar
+
+#### Scenario: Licencias de código abierto
+- **WHEN** Carlos toca "Licencias de código abierto" en Acerca de
+- **THEN** ve cada librería que usa CoinDen con su licencia, y puede leer el texto completo de cada licencia sin conexión
+
+#### Scenario: Crédito del autor
+- **WHEN** Carlos abre Acerca de
+- **THEN** ve en letra pequeña "Hecho por @jhoel0521", y al tocarlo se abre el repositorio de CoinDen en GitHub en el navegador

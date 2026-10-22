@@ -103,24 +103,21 @@ fun <T> CdChoice(
     val style = MaterialTheme.typography.labelLarge
     val density = LocalDensity.current
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val labelsWidth =
+        val widestLabel =
             with(density) {
-                options
-                    .sumOf {
-                        (
-                            measurer
-                                .measure(it.label, style)
-                                .size.width
-                                .toDp()
-                                .value + 40f
-                        ).toDouble()
-                    }.toFloat()
+                options.maxOf {
+                    measurer
+                        .measure(it.label, style)
+                        .size.width
+                        .toDp()
+                        .value
+                }
             }
         val arrangement =
             if (moreLabel == null && !open && options.size > 8) {
                 ChoiceArrangement.ScrollRow
             } else {
-                ChoiceLayout.of(options.size, open, labelsWidth, maxWidth.value)
+                ChoiceLayout.of(options.size, open, widestLabel, maxWidth.value)
             }
         when (arrangement) {
             ChoiceArrangement.Segmented ->
