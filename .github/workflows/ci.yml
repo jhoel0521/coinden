@@ -77,6 +77,7 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
+      # Gradle configura también :composeApp, que declara el NDK de whisper.cpp: sin esto falla por licencias.
       - name: Install Android NDK and CMake (whisper.cpp)
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
@@ -85,8 +86,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build project
-        run: ./gradlew assemble
+      # Solo los módulos core: la app de depuración la compila el job "Android APK" y la release
+      # (R8 + whisper.cpp nativo, lenta) la arma release.yml con cada etiqueta vX.Y.Z.
+      - name: Build core modules
+        run: ./gradlew :core:domain:assemble :core:data-memory:assemble :core:data-local:assemble
 
   android:
     name: Android APK

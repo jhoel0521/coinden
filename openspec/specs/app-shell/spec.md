@@ -39,11 +39,15 @@ La interfaz DEBE (MUST) tomar todos sus textos de recursos traducibles (español
 - **THEN** la pantalla muestra el nombre traducido desde los recursos de la interfaz, por ejemplo "Comida"
 
 ### Requirement: APK Compilado en CI
-La integración continua DEBE (MUST) compilar el APK de depuración en cada push y pull request, además de ejecutar el lint y las pruebas existentes.
+La integración continua DEBE (MUST) compilar el APK de depuración en cada pull request, además de ejecutar el lint y las pruebas existentes. No vuelve a correr al unir a `main`: la regla de `main` exige que la rama esté al día, así que el pull request ya probó el mismo código.
 
 #### Scenario: Pull request que rompe la app
 - **WHEN** un cambio impide compilar la app Android
 - **THEN** el job de compilación del APK falla en la integración continua
+
+#### Scenario: Unir un pull request
+- **WHEN** la persona une un pull request a `main`
+- **THEN** la integración continua no vuelve a correr las pruebas y la compilación
 
 ### Requirement: Icono de Lanzamiento Identificable
 El APK DEBE (MUST) declarar un icono de CoinDen reconocible en el lanzador y selector de apps, con versión adaptable, redonda y monocromática. Usa la identidad de `design/brand/`: fondo sólido #1C140F y el arte del ícono como primer plano dentro de la zona segura (66 de 108 dp), de modo que ninguna máscara recorte el arte; la versión monocromática es su silueta. Para Android 8.0 hay mipmaps de cada densidad.
@@ -62,3 +66,18 @@ Al abrir la app, Android DEBE (MUST) mostrar el splash con fondo #1C140F y el í
 #### Scenario: Abrir la app
 - **WHEN** Carlos abre CoinDen en frío
 - **THEN** ve el fondo #1C140F con el ícono centrado y luego la bienvenida o Inicio
+
+### Requirement: Versión de Publicación Firmada
+El proyecto DEBE (MUST) generar una versión de publicación optimizada (código y recursos reducidos) en formato AAB, firmada con la llave de subida de la persona. La llave y sus contraseñas nunca se guardan en el repositorio: se leen de un archivo local ignorado por git o de los secretos del CI. El número de versión sale de la etiqueta `vX.Y.Z`. La versión optimizada funciona igual que la de depuración: base cifrada, lectura de comprobantes, dictado y bloqueo.
+
+#### Scenario: Etiqueta de versión
+- **WHEN** la persona publica la etiqueta `v0.2.0`
+- **THEN** el CI arma un AAB firmado con versión "0.2.0" y lo deja para descargar
+
+#### Scenario: Sin llave en la máquina
+- **WHEN** se arma la versión de publicación sin el archivo de la llave
+- **THEN** se firma con la llave de depuración para probarla localmente, y no sirve para subir a Play
+
+#### Scenario: La versión optimizada funciona
+- **WHEN** se instala la versión de publicación y Carlos hace el onboarding, captura un gasto y activa el bloqueo
+- **THEN** todo funciona igual que en la versión de depuración

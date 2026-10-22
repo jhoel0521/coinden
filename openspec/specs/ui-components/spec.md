@@ -28,7 +28,7 @@ Un grupo de acciones DEBE (MUST) acomodarse según cuántas tenga. Una sola ocup
 - **THEN** se apilan a todo el ancho y "Confirmar" queda al final como principal
 
 ### Requirement: Elección Única según la Cantidad de Opciones
-Un grupo de elección única DEBE (MUST) elegir su forma según sus opciones: hasta 4 que caben en una fila, segmentados del mismo ancho; una lista abierta o que no cabe, una fila deslizable con la elegida visible; más de 8 fijas, las más usadas y "Más…" con una cuadrícula de columnas fijas. Ninguna forma deja una opción sola en una fila incompleta.
+Un grupo de elección única DEBE (MUST) elegir su forma según sus opciones: hasta 4 que caben en una fila, segmentados del mismo ancho (caben si la etiqueta más larga entra entera en su parte, con la marca de la elegida); una lista abierta o que no cabe, una fila deslizable con la elegida visible; más de 8 fijas, las más usadas y "Más…" con una cuadrícula de columnas fijas. Ninguna forma deja una opción sola en una fila incompleta.
 
 #### Scenario: Tipo de movimiento
 - **WHEN** Carlos abre el formulario
@@ -45,6 +45,10 @@ Un grupo de elección única DEBE (MUST) elegir su forma según sus opciones: ha
 #### Scenario: Letra grande
 - **WHEN** Carlos usa letra grande y las 4 categorías más usadas ya no caben en una fila
 - **THEN** el grupo pasa a una fila deslizable en lugar de cortarse en dos filas
+
+#### Scenario: Idiomas con la letra al máximo
+- **WHEN** Carlos tiene la letra del sistema al máximo y abre la bienvenida
+- **THEN** "Español", "English" y "Português" se ven enteros, sin cortarse; si no entran como segmentados del mismo ancho, pasan a una fila deslizable
 
 ### Requirement: Cuadrícula sin Opciones Sueltas
 Cuando las opciones se muestran en varias filas (como "Más…" o los tipos de billetera), el sistema DEBE (MUST) usar columnas fijas del mismo ancho, de modo que cada opción tenga el mismo tamaño y la última fila quede alineada con las demás.

@@ -23,24 +23,31 @@ class LayoutRulesTest {
 
     @Test
     fun `gasto e ingreso son segmentados`() {
-        assertEquals(ChoiceArrangement.Segmented, ChoiceLayout.of(count = 2, open = false, labelsWidth = 160f, available = 340f))
+        assertEquals(ChoiceArrangement.Segmented, ChoiceLayout.of(count = 2, open = false, widestLabel = 70f, available = 340f))
     }
 
     @Test
     fun `cuatro medios que no caben con letra grande pasan a fila deslizable`() {
-        assertEquals(ChoiceArrangement.Segmented, ChoiceLayout.of(count = 4, open = false, labelsWidth = 300f, available = 340f))
-        assertEquals(ChoiceArrangement.ScrollRow, ChoiceLayout.of(count = 4, open = false, labelsWidth = 420f, available = 340f))
+        assertEquals(ChoiceArrangement.Segmented, ChoiceLayout.of(count = 4, open = false, widestLabel = 30f, available = 340f))
+        assertEquals(ChoiceArrangement.ScrollRow, ChoiceLayout.of(count = 4, open = false, widestLabel = 60f, available = 340f))
+    }
+
+    @Test
+    fun `los segmentados son del mismo ancho y la etiqueta mas larga tiene que entrar en su parte`() {
+        // "Español", "English", "Português" con la letra al máximo: el total cabe, pero "Português" no entra en un tercio.
+        assertEquals(ChoiceArrangement.ScrollRow, ChoiceLayout.of(count = 3, open = false, widestLabel = 89f, available = 371f))
+        assertEquals(ChoiceArrangement.Segmented, ChoiceLayout.of(count = 3, open = false, widestLabel = 60f, available = 371f))
     }
 
     @Test
     fun `las billeteras son una lista abierta y se deslizan`() {
-        assertEquals(ChoiceArrangement.ScrollRow, ChoiceLayout.of(count = 2, open = true, labelsWidth = 100f, available = 340f))
+        assertEquals(ChoiceArrangement.ScrollRow, ChoiceLayout.of(count = 2, open = true, widestLabel = 50f, available = 340f))
     }
 
     @Test
     fun `cinco a ocho fijas se deslizan y mas de ocho muestran las mas usadas`() {
-        assertEquals(ChoiceArrangement.ScrollRow, ChoiceLayout.of(count = 6, open = false, labelsWidth = 200f, available = 340f))
-        assertEquals(ChoiceArrangement.TopAndMore(4), ChoiceLayout.of(count = 13, open = false, labelsWidth = 900f, available = 340f))
+        assertEquals(ChoiceArrangement.ScrollRow, ChoiceLayout.of(count = 6, open = false, widestLabel = 30f, available = 340f))
+        assertEquals(ChoiceArrangement.TopAndMore(4), ChoiceLayout.of(count = 13, open = false, widestLabel = 70f, available = 340f))
     }
 
     @Test
