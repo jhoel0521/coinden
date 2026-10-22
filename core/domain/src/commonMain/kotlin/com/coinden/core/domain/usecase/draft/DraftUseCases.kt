@@ -171,12 +171,13 @@ class ReviseDraftUseCase(
     suspend operator fun invoke(
         draftId: String,
         proposal: MovementProposal,
+        category: CategoryRef? = null,
     ): DraftResult {
         val draft = ctx.load(draftId) ?: return Rejected(DraftError.NotFound)
         if (draft.isTerminal) return Rejected(DraftError.TerminalState)
         val revised =
             ctx.record(draft) { id, device, now ->
-                DraftEvent.Revised(id, draftId, draft.header.ownerId, device, now, now, proposal.markedCorrected())
+                DraftEvent.Revised(id, draftId, draft.header.ownerId, device, now, now, proposal.markedCorrected(), category)
             }
         return DraftResult.Ok(revised)
     }
@@ -231,7 +232,8 @@ class ConfirmDraftUseCase(
         if (ctx.wallets.findEvent(ledgerEventId) == null) {
             register(ready.movement, ledgerEventId)?.let { return Rejected(it) }
         }
-        classify(ready, ledgerEventId, category)
+        // Sin una categoría nueva, vale la que eligió al guardar el borrador.
+        classify(ready, ledgerEventId, category ?: ready.header.chosenCategory)
 
         val confirmed =
             ctx.record(ready) { id, device, now ->
@@ -388,7 +390,10 @@ class ConfirmReadyDraftsUseCase(
         draftIds.associateWith { id ->
             val draft = ctx.load(id)
             val note = ((draft as? Draft.Ready)?.movement as? ReadyMovement.Expense)?.note
-            val category = note?.let { ctx.categorization?.suggest(draft.header.ownerId, it)?.category }
+            // La categoría elegida al guardar gana a la sugerencia de la nota.
+            val category =
+                draft?.header?.chosenCategory
+                    ?: note?.let { ctx.categorization?.suggest(draft.header.ownerId, it)?.category }
             confirm(id, category)
         }
 }
