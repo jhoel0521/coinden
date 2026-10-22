@@ -135,6 +135,8 @@ class DraftCards(
         val wallet = walletOf(draft, proposal, directory)
         val note = (proposal as? MovementProposal.Expense)?.note
         val suggestion = note?.let { container.categorization.suggest(container.ownerId, it) }
+        // La categoría elegida al guardar el borrador se muestra (y se confirma) antes que la sugerencia.
+        val chosen = draft.header.chosenCategory
         val evidence = draft.header.evidence
         val tips = CaptureCoach.tipsFor(draft)
         return DraftCard(
@@ -148,9 +150,10 @@ class DraftCards(
             confidence = draft.confidence,
             paymentMethod = proposal?.let(::paymentMethodOf),
             category =
-                suggestion?.let {
-                    CategoryView(it.category, it.reason, (it.category as? CategoryRef.Custom)?.let { c -> customNames[c.id] })
-                },
+                chosen?.let { CategoryView(it, reason = null, customName = (it as? CategoryRef.Custom)?.let { c -> customNames[c.id] }) }
+                    ?: suggestion?.let {
+                        CategoryView(it.category, it.reason, (it.category as? CategoryRef.Custom)?.let { c -> customNames[c.id] })
+                    },
             walletSuggestion = proposal?.let(::walletSuggestionOf),
             evidenceSource = evidence.source,
             attachmentRef = evidence.attachmentRef,

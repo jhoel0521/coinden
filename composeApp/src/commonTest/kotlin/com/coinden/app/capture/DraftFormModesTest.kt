@@ -5,6 +5,8 @@ import com.coinden.app.seedCarlos
 import com.coinden.app.testContainer
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.category.BaseCategory
+import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.draft.CorrectionField
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.DraftResult
@@ -84,6 +86,20 @@ class DraftFormModesTest {
             assertIs<Draft.Ready>(container.drafts.load(photo.id))
             assertEquals(listOf(photo.id), container.pending())
             assertEquals(bs("100"), container.balanceOf("Billetera"))
+        }
+
+    @Test
+    fun `guardar con una categoria y reabrir la muestra marcada (issue 14)`() =
+        runTest {
+            val container = carlos()
+            val draft = container.say("gasté 30 en veterinario bnb")
+            val form = container.form(FormMode.Review(draft.id))
+            form.onCategoryChange(CategoryRef.Base(BaseCategory.LEISURE))
+            assertTrue(form.keep())
+
+            val reopened = container.form(FormMode.Review(draft.id))
+
+            assertEquals(CategoryRef.Base(BaseCategory.LEISURE), reopened.state.value.category)
         }
 
     @Test

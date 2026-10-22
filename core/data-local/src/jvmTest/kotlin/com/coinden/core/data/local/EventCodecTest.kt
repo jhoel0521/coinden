@@ -169,6 +169,9 @@ class EventCodecTest {
             ) +
                 proposals.mapIndexed { i, p -> DraftEvent.Interpreted("i$i", "draft", "carlos", "dev", t, t, p) } +
                 proposals.mapIndexed { i, p -> DraftEvent.Revised("r$i", "draft", "carlos", "dev", t, t, p) } +
+                // La categoría elegida al guardar el borrador: base o propia.
+                DraftEvent.Revised("rb", "draft", "carlos", "dev", t, t, proposals.first(), CategoryRef.Base(BaseCategory.FOOD)) +
+                DraftEvent.Revised("rc", "draft", "carlos", "dev", t, t, proposals.first(), CategoryRef.Custom("cat-mascotas")) +
                 movements.mapIndexed { i, m -> DraftEvent.Confirmed("c$i", "draft", "carlos", "dev", t, t, "e$i", m) }
         events.forEach { event ->
             val stored = EventCodec.encodeDraft(event)
@@ -324,5 +327,16 @@ class EventCodecTest {
         val profile = StateCodec.decodeProfile(legacy)
         assertEquals(emptyList(), profile.currencies)
         assertEquals("1 USD = 11.20 BOB", profile.referenceRateFor(Currency.USD)?.currentRate.toString())
+    }
+
+    @Test
+    fun `una revision guardada antes de la categoria elegida se lee sin categoria`() {
+        val legacy =
+            EventCodec.encodeDraft(
+                DraftEvent.Revised("r0", "draft", "carlos", "dev", t, t, MovementProposal.Expense(note = "almuerzo")),
+            )
+        val payload = legacy.payload.replace(Regex(",?\"category\":null"), "")
+        val decoded = EventCodec.decodeDraft(legacy.type, legacy.version, payload) as DraftEvent.Revised
+        assertEquals(null, decoded.category)
     }
 }

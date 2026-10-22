@@ -3,6 +3,7 @@ package com.coinden.core.domain.model.draft
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.ExchangeRate
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.wallet.Wallet
 
 /** Datos comunes a todo borrador: quién, qué evidencia y cuándo se capturó. */
@@ -17,6 +18,8 @@ data class DraftHeader(
     val perceivedText: String? = null,
     /** Movimiento confirmado que este comprobante propone corregir (cambio pendiente), si hay. */
     val correctionTarget: String? = null,
+    /** Categoría que la persona eligió al guardar el borrador sin confirmarlo; null si no eligió. */
+    val chosenCategory: CategoryRef? = null,
 )
 
 /**

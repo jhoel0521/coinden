@@ -200,7 +200,10 @@ class DraftFormPresenter(
                 else -> null
             }
         val note = proposal?.noteOrNull()
-        val category = note?.let { container.categorization.suggest(container.ownerId, it) }?.category
+        // La categoría elegida al guardar gana a la sugerencia de la nota.
+        val category =
+            draft.header.chosenCategory
+                ?: note?.let { container.categorization.suggest(container.ownerId, it) }?.category
         mutableState.update { s ->
             (proposal?.let { s.filledWith(it, category) } ?: s.copy(walletId = directory.defaultWalletId))
                 .copy(
@@ -346,7 +349,7 @@ class DraftFormPresenter(
     suspend fun keep(): Boolean =
         write {
             val draftId = (mode as? FormMode.Review)?.draftId ?: return@write null
-            accepted(container.reviseDraft(draftId, proposalOf(state.value)))
+            accepted(container.reviseDraft(draftId, proposalOf(state.value), state.value.category))
         } ?: false
 
     /**
@@ -360,7 +363,7 @@ class DraftFormPresenter(
                 when (mode) {
                     FormMode.New -> return@write null
                     is FormMode.Review -> {
-                        val revised = container.reviseDraft(mode.draftId, proposalOf(s))
+                        val revised = container.reviseDraft(mode.draftId, proposalOf(s), s.category)
                         if (revised is DraftResult.Rejected) revised else container.confirmDraft(mode.draftId, s.category)
                     }
                     is FormMode.Correct ->

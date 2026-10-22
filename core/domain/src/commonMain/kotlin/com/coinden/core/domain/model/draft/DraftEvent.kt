@@ -1,5 +1,7 @@
 package com.coinden.core.domain.model.draft
 
+import com.coinden.core.domain.model.category.CategoryRef
+
 /**
  * Transición de un borrador, guardada como evento append-only (sync-ready).
  *
@@ -33,7 +35,10 @@ sealed interface DraftEvent {
         val proposal: MovementProposal,
     ) : DraftEvent
 
-    /** El usuario reemplaza la propuesta entera (completar, corregir o convertir un No soportado). */
+    /**
+     * El usuario reemplaza la propuesta entera (completar, corregir o convertir un No soportado).
+     * [category] es la categoría que eligió al guardar; null si no eligió ninguna.
+     */
     data class Revised(
         override val id: String,
         override val draftId: String,
@@ -42,6 +47,7 @@ sealed interface DraftEvent {
         override val occurredAtEpochMs: Long,
         override val recordedAtEpochMs: Long,
         val proposal: MovementProposal,
+        val category: CategoryRef? = null,
     ) : DraftEvent
 
     data class Confirmed(
@@ -203,7 +209,11 @@ object DraftProjection {
                     is DraftEvent.Corrected, is DraftEvent.CorrectionProposed,
                     -> state
                     is DraftEvent.Interpreted -> DraftEvaluator.evaluate(header, event.proposal, directory)
-                    is DraftEvent.Revised -> DraftEvaluator.evaluate(header, event.proposal, directory)
+                    is DraftEvent.Revised -> {
+                        // La revisión más reciente dice la categoría elegida (o que no hay).
+                        header = header.copy(chosenCategory = event.category)
+                        DraftEvaluator.evaluate(header, event.proposal, directory)
+                    }
                     is DraftEvent.Confirmed -> Draft.Confirmed(header, event.movement, event.ledgerEventId)
                     is DraftEvent.Discarded -> Draft.Discarded(header, event.mergedInto)
                 }

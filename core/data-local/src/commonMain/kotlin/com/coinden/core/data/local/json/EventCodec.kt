@@ -170,7 +170,7 @@ object EventCodec {
                 store(
                     DraftTypes.REVISED,
                     ProposalEventDto.serializer(),
-                    ProposalEventDto(draft, event.proposal.toDto()),
+                    ProposalEventDto(draft, event.proposal.toDto(), event.category?.toDto()),
                 )
             is DraftEvent.Confirmed ->
                 store(DraftTypes.CONFIRMED, ConfirmedDto.serializer(), ConfirmedDto(draft, event.ledgerEventId, event.movement.toDto()))
@@ -222,7 +222,18 @@ object EventCodec {
                 }
             DraftTypes.REVISED ->
                 load(version, payload, ProposalEventDto.serializer())?.let {
-                    with(it.draft) { DraftEvent.Revised(id, draftId, ownerId, deviceId, occurredAt, recordedAt, it.proposal.toDomain()) }
+                    with(it.draft) {
+                        DraftEvent.Revised(
+                            id,
+                            draftId,
+                            ownerId,
+                            deviceId,
+                            occurredAt,
+                            recordedAt,
+                            it.proposal.toDomain(),
+                            it.category?.toDomain(),
+                        )
+                    }
                 }
             DraftTypes.CONFIRMED ->
                 load(version, payload, ConfirmedDto.serializer())?.let {
@@ -405,6 +416,8 @@ internal data class CapturedDto(
 internal data class ProposalEventDto(
     val draft: DraftFieldsDto,
     val proposal: ProposalDto,
+    /** Solo en una revisión: la categoría elegida al guardar (no existe en datos de antes). */
+    val category: CategoryRefDto? = null,
 )
 
 @Serializable
