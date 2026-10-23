@@ -4,6 +4,7 @@ import com.coinden.app.capture.AttachmentStore
 import com.coinden.app.capture.InMemoryAttachmentStore
 import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.i18n.LanguageAwarePacks
+import com.coinden.core.data.memory.InMemoryBundleRepository
 import com.coinden.core.data.memory.InMemoryCategorizationRepository
 import com.coinden.core.data.memory.InMemoryCurrencyProfileRepository
 import com.coinden.core.data.memory.InMemoryDraftRepository
@@ -15,7 +16,9 @@ import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.WalletDirectory
+import com.coinden.core.domain.model.interpret.BundleInterpreter
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
+import com.coinden.core.domain.port.output.BundleRepositoryPort
 import com.coinden.core.domain.port.output.CategorizationRepositoryPort
 import com.coinden.core.domain.port.output.ClockPort
 import com.coinden.core.domain.port.output.CurrencyCatalogPort
@@ -28,6 +31,7 @@ import com.coinden.core.domain.port.output.RegionalSettingsPort
 import com.coinden.core.domain.port.output.WalletAliasRepositoryPort
 import com.coinden.core.domain.port.output.WalletRepositoryPort
 import com.coinden.core.domain.usecase.GetConsolidatedPortfolioUseCase
+import com.coinden.core.domain.usecase.bundle.BundleContext
 import com.coinden.core.domain.usecase.category.CategorizationContext
 import com.coinden.core.domain.usecase.category.SpendingByCategoryUseCase
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
@@ -63,6 +67,8 @@ class AppStorage(
     val categorization: CategorizationRepositoryPort,
     val profiles: CurrencyProfileRepositoryPort,
     val preferences: PreferencesRepositoryPort,
+    /** Paquetes de captura: lo que la persona manda junto en un momento. */
+    val bundles: BundleRepositoryPort,
 ) {
     companion object {
         fun inMemory() =
@@ -73,6 +79,7 @@ class AppStorage(
                 InMemoryCategorizationRepository(),
                 InMemoryCurrencyProfileRepository(),
                 InMemoryPreferencesRepository(),
+                InMemoryBundleRepository(),
             )
     }
 }
@@ -122,6 +129,17 @@ class AppContainer(
             categorization = categorization,
         )
     val interpreter = TextDraftInterpreter(packs, regional)
+
+    /**
+     * Los paquetes de captura: lo que la persona manda junto se interpreta junto. El intérprete
+     * del paquete son las reglas; cuando haya modelo local, entra con el mismo contrato.
+     */
+    val bundles =
+        BundleContext(
+            bundles = storage.bundles,
+            drafts = drafts,
+            interpreter = BundleInterpreter(interpreter),
+        )
 
     val createWallet = CreateWalletUseCase(ledger)
     val setDefaultWallet = SetDefaultWalletUseCase(drafts)

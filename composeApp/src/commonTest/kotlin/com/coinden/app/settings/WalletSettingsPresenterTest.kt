@@ -196,6 +196,7 @@ class WalletSettingsPresenterTest {
                             original.categorization,
                             original.profiles,
                             original.preferences,
+                            original.bundles,
                         ),
                 )
             seedCarlos(c)

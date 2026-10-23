@@ -13,6 +13,7 @@ import com.coinden.app.packs.PackStore
 import com.coinden.app.perception.AndroidPdfReader
 import com.coinden.app.perception.AppPerception
 import com.coinden.core.data.local.AndroidDatabase
+import com.coinden.core.data.local.LocalBundleRepository
 import com.coinden.core.data.local.LocalCategorizationRepository
 import com.coinden.core.data.local.LocalCurrencyProfileRepository
 import com.coinden.core.data.local.LocalDraftRepository
@@ -77,6 +78,7 @@ class CoinDenApplication : Application() {
                 categorization = LocalCategorizationRepository(db, io),
                 profiles = LocalCurrencyProfileRepository(db, io),
                 preferences = LocalPreferencesRepository(db, io),
+                bundles = LocalBundleRepository(db, io),
             )
         val catalog = PlatformCurrencyCatalog()
         val device = Locale.getDefault()

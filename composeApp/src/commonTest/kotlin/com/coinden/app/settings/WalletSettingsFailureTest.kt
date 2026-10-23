@@ -38,6 +38,7 @@ class WalletSettingsFailureTest {
                             storage.categorization,
                             profiles,
                             storage.preferences,
+                            storage.bundles,
                         ),
                 )
             seedCarlos(c)
@@ -79,6 +80,7 @@ class WalletSettingsFailureTest {
                             storage.categorization,
                             storage.profiles,
                             storage.preferences,
+                            storage.bundles,
                         ),
                 )
             seedCarlos(c)
