@@ -12,11 +12,11 @@ import com.coinden.core.domain.model.interpret.DateTimeReader
 import com.coinden.core.domain.model.interpret.GenericReceiptReader
 import com.coinden.core.domain.model.interpret.InterpretContext
 import com.coinden.core.domain.model.interpret.LanguagePack
-import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.interpret.merged
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.support.testLocale
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -42,7 +42,7 @@ class GenericReceiptReaderTest {
 
     @Test
     fun `Argentina - transferencia de un banco nunca visto`() {
-        val es = listOf(LanguagePacks.ENGLISH, LanguagePacks.SPANISH).merged()
+        val es = listOf(TestPacks.english, TestPacks.spanish).merged()
         val proposal = GenericReceiptReader.read(AnonymizedReceipts.AR_UNKNOWN_TRANSFER, ctx(es, testLocale("es", "AR"), -180)).single()
         val expense = assertIs<MovementProposal.Expense>(proposal)
         assertEquals(ProposedAmount("8000.00", Currency.ARS), expense.amount)
@@ -56,7 +56,7 @@ class GenericReceiptReaderTest {
 
     @Test
     fun `Brasil - Pix leido con el paquete pt`() {
-        val pt = listOf(LanguagePacks.ENGLISH, LanguagePacks.PORTUGUESE).merged()
+        val pt = listOf(TestPacks.english, TestPacks.portuguese).merged()
         val expense =
             assertIs<MovementProposal.Expense>(
                 GenericReceiptReader.read(AnonymizedReceipts.BR_PIX, ctx(pt, testLocale("pt", "BR"), -180)).single(),
@@ -70,7 +70,7 @@ class GenericReceiptReaderTest {
 
     @Test
     fun `Brasil - el mismo Pix sin el paquete pt se lee por el simbolo con menos confianza`() {
-        val en = listOf(LanguagePacks.ENGLISH).merged()
+        val en = listOf(TestPacks.english).merged()
         val expense =
             assertIs<MovementProposal.Expense>(
                 GenericReceiptReader.read(AnonymizedReceipts.BR_PIX, ctx(en, testLocale("pt", "BR"), -180)).single(),
@@ -82,7 +82,7 @@ class GenericReceiptReaderTest {
 
     @Test
     fun `EEUU - pago en ingles`() {
-        val en = listOf(LanguagePacks.ENGLISH).merged()
+        val en = listOf(TestPacks.english).merged()
         val expense =
             assertIs<MovementProposal.Expense>(
                 GenericReceiptReader.read(AnonymizedReceipts.US_PAYMENT, ctx(en, testLocale("en", "US"), -240)).single(),
@@ -94,7 +94,7 @@ class GenericReceiptReaderTest {
 
     @Test
     fun `retiro generico hacia la billetera por defecto`() {
-        val es = listOf(LanguagePacks.ENGLISH, LanguagePacks.SPANISH).merged()
+        val es = listOf(TestPacks.english, TestPacks.spanish).merged()
         val text = "Banco Desconocido\nRetiro de efectivo\nMonto Bs10.00"
         val transfer = assertIs<MovementProposal.Transfer>(GenericReceiptReader.read(text, ctx(es, testLocale("es", "BO"), -240)).single())
         assertEquals(ProposedAmount("10.00", Currency.BOB), transfer.out)
@@ -104,7 +104,7 @@ class GenericReceiptReaderTest {
 
     @Test
     fun `reconoce un comprobante por sus etiquetas`() {
-        val es = listOf(LanguagePacks.ENGLISH, LanguagePacks.SPANISH).merged()
+        val es = listOf(TestPacks.english, TestPacks.spanish).merged()
         assertTrue(GenericReceiptReader.looksLikeReceipt(AnonymizedReceipts.AR_UNKNOWN_TRANSFER, fromPhoto = false, es))
         assertTrue(!GenericReceiptReader.looksLikeReceipt("almuerzo 45 qr", fromPhoto = false, es))
         assertTrue(GenericReceiptReader.looksLikeReceipt("cualquier cosa", fromPhoto = true, es))

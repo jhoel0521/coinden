@@ -27,7 +27,7 @@ class TextDraftInterpreter(
 ) : DraftInterpreterPort {
     /** Las palabras de los nombres de [wallets] que este intérprete reconoce al leer una frase (palabra -> id). */
     suspend fun walletNameHints(wallets: List<Wallet>): Map<String, String> {
-        val pack = (listOf(LanguagePacks.ENGLISH) + packs.languagePacks().filter { it.code != LanguagePacks.ENGLISH.code }).merged()
+        val pack = packs.languagePacks().merged()
         return WalletNameHints.derive(wallets, pack, regional.settings().locale)
     }
 
@@ -37,7 +37,7 @@ class TextDraftInterpreter(
     ): List<MovementProposal> {
         val text = evidence.text?.takeIf { it.isNotBlank() } ?: return emptyList()
         val settings = regional.settings()
-        val pack = (listOf(LanguagePacks.ENGLISH) + packs.languagePacks().filter { it.code != LanguagePacks.ENGLISH.code }).merged()
+        val pack = packs.languagePacks().merged()
         val ctx = InterpretContext(pack, settings.locale, settings.utcOffsetMinutes, wallets)
 
         packs.receiptTemplates().firstOrNull { TemplateReader.matches(it, text) }?.let { return TemplateReader.read(it, text, ctx) }

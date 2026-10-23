@@ -12,11 +12,10 @@ import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.WalletRef
 import com.coinden.core.domain.model.interpret.BundleInterpreter
-import com.coinden.core.domain.model.interpret.LanguagePacks
-import com.coinden.core.domain.model.interpret.ReceiptTemplates
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
 import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.usecase.bundle.AttachEvidenceUseCase
 import com.coinden.core.domain.usecase.bundle.AttachResult
 import com.coinden.core.domain.usecase.bundle.BundleContext
@@ -50,7 +49,7 @@ class CarlosCaptureBundleFeatureTest {
     private val ids = SequentialIdGenerator("carlos")
     private val clock = FixedClock()
     private val device = FixedDevice("celular-carlos")
-    private val packs = FakeInstalledPacks(listOf(LanguagePacks.SPANISH), ReceiptTemplates.all)
+    private val packs = FakeInstalledPacks(listOf(TestPacks.spanish), TestPacks.templates)
     private val draftRepo = InMemoryDraftRepository()
     private val drafts = DraftContext(draftRepo, wallets, InMemoryWalletAliasRepository(), ids, clock, device)
     private val ledger = LedgerContext(wallets, ids, clock, device)

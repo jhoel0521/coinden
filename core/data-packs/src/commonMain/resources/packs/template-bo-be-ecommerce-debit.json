@@ -1,0 +1,12 @@
+{
+    "formatVersion": 1,
+    "id": "bo-be-ecommerce-debit",
+    "markers": [
+        "debito por compra"
+    ],
+    "kind": "EXPENSE",
+    "amountLabel": "importe",
+    "noteLabel": "nota",
+    "accountLabel": "cuenta",
+    "referenceLabel": "nro de transaccion"
+}

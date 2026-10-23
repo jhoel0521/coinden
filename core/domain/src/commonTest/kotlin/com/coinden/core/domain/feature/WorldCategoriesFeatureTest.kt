@@ -10,11 +10,11 @@ import com.coinden.core.domain.model.draft.DraftResult
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.EvidenceSource
 import com.coinden.core.domain.model.interpret.LanguagePack
-import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.support.testLocale
 import com.coinden.core.domain.usecase.ConfigureLocalCurrencyUseCase
 import com.coinden.core.domain.usecase.category.CategorizationContext
@@ -102,7 +102,7 @@ class WorldCategoriesFeatureTest {
     @Test
     fun `Ana en portugues`() =
         runTest {
-            val ana = Person("ana", testLocale("pt", "BR"), listOf(LanguagePacks.PORTUGUESE))
+            val ana = Person("ana", testLocale("pt", "BR"), listOf(TestPacks.portuguese))
             val brl = Currency.of("BRL")
             ConfigureLocalCurrencyUseCase(
                 ana.profiles,

@@ -1,0 +1,184 @@
+{
+    "formatVersion": 1,
+    "code": "pt",
+    "amountLabels": [
+        "montante",
+        "quantia",
+        "total",
+        "valor",
+        "valor pago"
+    ],
+    "counterpartyLabels": [
+        "destinatario",
+        "favorecido",
+        "para",
+        "quem recebeu",
+        "recebedor"
+    ],
+    "accountLabels": [
+        "conta",
+        "conta de origem",
+        "de"
+    ],
+    "noteLabels": [
+        "descricao",
+        "mensagem",
+        "observacao"
+    ],
+    "referenceLabels": [
+        "autenticacao",
+        "codigo da transacao",
+        "id da transacao"
+    ],
+    "expenseWords": [
+        "compra",
+        "comprei",
+        "enviado",
+        "enviei",
+        "gastei",
+        "pagamento",
+        "pago",
+        "paguei",
+        "pix enviado"
+    ],
+    "incomeWords": [
+        "pix recebido",
+        "recebeu",
+        "recebi",
+        "recebido"
+    ],
+    "withdrawalWords": [
+        "retirada",
+        "saque",
+        "saquei"
+    ],
+    "exchangeWords": [
+        "troquei",
+        "vendi"
+    ],
+    "notePrepositions": [
+        "com",
+        "de",
+        "para",
+        "pela",
+        "pelo",
+        "por"
+    ],
+    "conjunctions": [
+        "e"
+    ],
+    "rateMarkers": [
+        "a"
+    ],
+    "receivedMarkers": [
+        "me deram",
+        "por",
+        "recebi"
+    ],
+    "genericWalletWords": [
+        "banco",
+        "conta",
+        "meu",
+        "minha",
+        "poupanca"
+    ],
+    "months": {
+        "abr": 4,
+        "abril": 4,
+        "ago": 8,
+        "agosto": 8,
+        "dez": 12,
+        "dezembro": 12,
+        "fev": 2,
+        "fevereiro": 2,
+        "jan": 1,
+        "janeiro": 1,
+        "jul": 7,
+        "julho": 7,
+        "jun": 6,
+        "junho": 6,
+        "mai": 5,
+        "maio": 5,
+        "mar": 3,
+        "marco": 3,
+        "nov": 11,
+        "novembro": 11,
+        "out": 10,
+        "outubro": 10,
+        "set": 9,
+        "setembro": 9
+    },
+    "currencyWords": {
+        "dolar": "USD",
+        "dolares": "USD",
+        "euros": "EUR",
+        "reais": "BRL",
+        "real": "BRL"
+    },
+    "categoryWords": {
+        "agua": "BILLS",
+        "almoco": "FOOD",
+        "aluguel": "HOUSING",
+        "assinatura": "SUBSCRIPTIONS",
+        "bar": "LEISURE",
+        "cabify": "TRANSPORT",
+        "cafe": "FOOD",
+        "cerveja": "LEISURE",
+        "chatgpt": "SUBSCRIPTIONS",
+        "cinema": "LEISURE",
+        "combustivel": "TRANSPORT",
+        "comida": "FOOD",
+        "compras": "SHOPPING",
+        "conta": "BILLS",
+        "curso": "EDUCATION",
+        "dentista": "HEALTH",
+        "didi": "TRANSPORT",
+        "disney": "SUBSCRIPTIONS",
+        "emprestimo": "PEOPLE",
+        "escola": "EDUCATION",
+        "faculdade": "EDUCATION",
+        "farmacia": "HEALTH",
+        "feira": "GROCERIES",
+        "festa": "LEISURE",
+        "gasolina": "TRANSPORT",
+        "hbo": "SUBSCRIPTIONS",
+        "icloud": "SUBSCRIPTIONS",
+        "indriver": "TRANSPORT",
+        "internet": "BILLS",
+        "jantar": "FOOD",
+        "lanche": "FOOD",
+        "livros": "EDUCATION",
+        "luz": "BILLS",
+        "medico": "HEALTH",
+        "mercado": "GROCERIES",
+        "metro": "TRANSPORT",
+        "netflix": "SUBSCRIPTIONS",
+        "onibus": "TRANSPORT",
+        "padaria": "FOOD",
+        "pizza": "FOOD",
+        "presente": "PEOPLE",
+        "remedio": "HEALTH",
+        "restaurante": "FOOD",
+        "roupa": "SHOPPING",
+        "sapato": "SHOPPING",
+        "spotify": "SUBSCRIPTIONS",
+        "streaming": "SUBSCRIPTIONS",
+        "supermercado": "GROCERIES",
+        "tarifa": "FEES",
+        "taxa": "FEES",
+        "taxi": "TRANSPORT",
+        "telefone": "BILLS",
+        "transporte": "TRANSPORT",
+        "uber": "TRANSPORT",
+        "youtube": "SUBSCRIPTIONS"
+    },
+    "paymentMethodWords": {
+        "cartao": "CARD",
+        "debito": "CARD",
+        "dinheiro": "CASH",
+        "pix": "TRANSFER",
+        "qr": "TRANSFER",
+        "ted": "TRANSFER",
+        "transferencia": "TRANSFER"
+    }
+}

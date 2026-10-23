@@ -11,11 +11,10 @@ import com.coinden.core.domain.model.draft.FieldOrigin
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.WalletDirectory
 import com.coinden.core.domain.model.draft.WalletRef
-import com.coinden.core.domain.model.interpret.LanguagePacks
-import com.coinden.core.domain.model.interpret.ReceiptTemplates
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -31,7 +30,7 @@ class TextDraftInterpreterTest {
             aliases = mapOf("yape" to "yape"),
             defaultWalletId = "billetera",
         )
-    private val packs = FakeInstalledPacks(listOf(LanguagePacks.SPANISH), ReceiptTemplates.all)
+    private val packs = FakeInstalledPacks(listOf(TestPacks.spanish), TestPacks.templates)
     private val interpreter = TextDraftInterpreter(packs, FixedRegionalSettings())
 
     private suspend fun interpret(

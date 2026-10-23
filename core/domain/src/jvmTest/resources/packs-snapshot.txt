@@ -1,0 +1,574 @@
+# paquete en
+  amountLabels (4)
+    amount
+    amount paid
+    sum
+    total
+  counterpartyLabels (6)
+    beneficiary
+    merchant
+    paid to
+    payee
+    recipient
+    to
+  accountLabels (4)
+    account
+    from
+    from account
+    source account
+  noteLabels (3)
+    description
+    memo
+    note
+  referenceLabels (8)
+    confirmation
+    confirmation number
+    reference
+    reference number
+    transaction hash
+    transaction id
+    tx hash
+    txid
+  expenseWords (9)
+    bought
+    buy
+    debit
+    paid
+    pay
+    purchase
+    sent
+    spend
+    spent
+  incomeWords (5)
+    deposit
+    deposited
+    earned
+    got paid
+    received
+  withdrawalWords (4)
+    atm
+    withdraw
+    withdrawal
+    withdrew
+  exchangeWords (3)
+    changed
+    exchanged
+    sold
+  notePrepositions (4)
+    by
+    for
+    on
+    via
+  conjunctions (1)
+    and
+  rateMarkers (1)
+    at
+  receivedMarkers (3)
+    for
+    got
+    received
+  genericWalletWords (5)
+    account
+    bank
+    checking
+    my
+    savings
+  months (24)
+    apr -> 4
+    april -> 4
+    aug -> 8
+    august -> 8
+    dec -> 12
+    december -> 12
+    feb -> 2
+    february -> 2
+    jan -> 1
+    january -> 1
+    jul -> 7
+    july -> 7
+    jun -> 6
+    june -> 6
+    mar -> 3
+    march -> 3
+    may -> 5
+    nov -> 11
+    november -> 11
+    oct -> 10
+    october -> 10
+    sep -> 9
+    sept -> 9
+    september -> 9
+  currencyWords (5)
+    dollar -> USD
+    dollars -> USD
+    euro -> EUR
+    euros -> EUR
+    pesos -> (locale)
+  categoryWords (60)
+    bar -> LEISURE
+    bill -> BILLS
+    books -> EDUCATION
+    breakfast -> FOOD
+    burger -> FOOD
+    bus -> TRANSPORT
+    cabify -> TRANSPORT
+    chatgpt -> SUBSCRIPTIONS
+    cinema -> LEISURE
+    clothes -> SHOPPING
+    coffee -> FOOD
+    commission -> FEES
+    course -> EDUCATION
+    dentist -> HEALTH
+    didi -> TRANSPORT
+    dinner -> FOOD
+    disney -> SUBSCRIPTIONS
+    doctor -> HEALTH
+    drinks -> LEISURE
+    electricity -> BILLS
+    fee -> FEES
+    food -> FOOD
+    fuel -> TRANSPORT
+    gas -> TRANSPORT
+    gift -> PEOPLE
+    groceries -> GROCERIES
+    hbo -> SUBSCRIPTIONS
+    hospital -> HEALTH
+    icloud -> SUBSCRIPTIONS
+    indriver -> TRANSPORT
+    internet -> BILLS
+    loan -> PEOPLE
+    lunch -> FOOD
+    market -> GROCERIES
+    medicine -> HEALTH
+    metro -> TRANSPORT
+    movies -> LEISURE
+    netflix -> SUBSCRIPTIONS
+    parking -> TRANSPORT
+    party -> LEISURE
+    pharmacy -> HEALTH
+    phone -> BILLS
+    pizza -> FOOD
+    rent -> HOUSING
+    restaurant -> FOOD
+    school -> EDUCATION
+    shoes -> SHOPPING
+    shopping -> SHOPPING
+    snack -> FOOD
+    spotify -> SUBSCRIPTIONS
+    streaming -> SUBSCRIPTIONS
+    subscription -> SUBSCRIPTIONS
+    supermarket -> GROCERIES
+    taxi -> TRANSPORT
+    transport -> TRANSPORT
+    transportation -> TRANSPORT
+    tuition -> EDUCATION
+    uber -> TRANSPORT
+    water -> BILLS
+    youtube -> SUBSCRIPTIONS
+  paymentMethodWords (5)
+    card -> CARD
+    cash -> CASH
+    debit -> CARD
+    qr -> TRANSFER
+    transfer -> TRANSFER
+# paquete es
+  amountLabels (5)
+    importe
+    monto
+    total
+    total pagado
+    valor
+  counterpartyLabels (5)
+    beneficiario
+    comercio
+    destinatario
+    pagaste a
+    para
+  accountLabels (4)
+    cuenta
+    cuenta de origen
+    cuenta origen
+    desde
+  noteLabels (4)
+    concepto
+    descripcion
+    glosa
+    nota
+  referenceLabels (7)
+    codigo de transaccion
+    nro de operacion
+    nro de transaccion
+    numero de operacion
+    numero de transaccion
+    operacion n
+    referencia
+  expenseWords (11)
+    compra
+    compre
+    debito
+    enviaste
+    envie
+    gaste
+    pagaste
+    pago
+    pague
+    transferiste
+    yapeaste
+  incomeWords (5)
+    cobre
+    deposito
+    me pagaron
+    recibi
+    recibiste
+  withdrawalWords (4)
+    cajero
+    retire
+    retiro
+    saque
+  exchangeWords (2)
+    cambie
+    vendi
+  notePrepositions (4)
+    de
+    en
+    para
+    por
+  conjunctions (2)
+    e
+    y
+  rateMarkers (1)
+    a
+  receivedMarkers (4)
+    me dieron
+    me dio
+    por
+    recibi
+  genericWalletWords (7)
+    ahorro
+    ahorros
+    banco
+    caja
+    cuenta
+    mi
+    mis
+  months (26)
+    abr -> 4
+    abril -> 4
+    ago -> 8
+    agosto -> 8
+    dic -> 12
+    diciembre -> 12
+    ene -> 1
+    enero -> 1
+    feb -> 2
+    febrero -> 2
+    jul -> 7
+    julio -> 7
+    jun -> 6
+    junio -> 6
+    mar -> 3
+    marzo -> 3
+    may -> 5
+    mayo -> 5
+    nov -> 11
+    noviembre -> 11
+    oct -> 10
+    octubre -> 10
+    sep -> 9
+    septiembre -> 9
+    set -> 9
+    setiembre -> 9
+  currencyWords (8)
+    boliviano -> BOB
+    bolivianos -> BOB
+    dolar -> USD
+    dolares -> USD
+    euros -> EUR
+    peso -> (locale)
+    pesos -> (locale)
+    reales -> BRL
+  categoryWords (71)
+    abarrotes -> GROCERIES
+    agua -> BILLS
+    almuerzo -> FOOD
+    alquiler -> HOUSING
+    anticretico -> HOUSING
+    boliche -> LEISURE
+    cabify -> TRANSPORT
+    cafe -> FOOD
+    cena -> FOOD
+    cerveza -> LEISURE
+    chatgpt -> SUBSCRIPTIONS
+    cine -> LEISURE
+    colectivo -> TRANSPORT
+    colegio -> EDUCATION
+    comida -> FOOD
+    comision -> FEES
+    credito -> BILLS
+    curso -> EDUCATION
+    dentista -> HEALTH
+    desayuno -> FOOD
+    didi -> TRANSPORT
+    disney -> SUBSCRIPTIONS
+    doctor -> HEALTH
+    empanada -> FOOD
+    farmacia -> HEALTH
+    farmacias -> HEALTH
+    fiesta -> LEISURE
+    gasolina -> TRANSPORT
+    hamburguesa -> FOOD
+    hbo -> SUBSCRIPTIONS
+    icloud -> SUBSCRIPTIONS
+    indriver -> TRANSPORT
+    internet -> BILLS
+    libros -> EDUCATION
+    luz -> BILLS
+    mantenimiento -> FEES
+    matricula -> EDUCATION
+    medicamentos -> HEALTH
+    medico -> HEALTH
+    megas -> BILLS
+    menu -> FOOD
+    mercado -> GROCERIES
+    micro -> TRANSPORT
+    minibus -> TRANSPORT
+    netflix -> SUBSCRIPTIONS
+    pasaje -> TRANSPORT
+    pizza -> FOOD
+    polera -> SHOPPING
+    prestamo -> PEOPLE
+    regalo -> PEOPLE
+    remedio -> HEALTH
+    ropa -> SHOPPING
+    salida -> LEISURE
+    saltena -> FOOD
+    saltenas -> FOOD
+    semillita -> FOOD
+    semillitas -> FOOD
+    spotify -> SUBSCRIPTIONS
+    streaming -> SUBSCRIPTIONS
+    super -> GROCERIES
+    supermercado -> GROCERIES
+    suscripcion -> SUBSCRIPTIONS
+    taxi -> TRANSPORT
+    telefono -> BILLS
+    transporte -> TRANSPORT
+    trufi -> TRANSPORT
+    uber -> TRANSPORT
+    universidad -> EDUCATION
+    verduras -> GROCERIES
+    youtube -> SUBSCRIPTIONS
+    zapatos -> SHOPPING
+  paymentMethodWords (5)
+    debito -> CARD
+    efectivo -> CASH
+    qr -> TRANSFER
+    tarjeta -> CARD
+    transferencia -> TRANSFER
+# paquete pt
+  amountLabels (5)
+    montante
+    quantia
+    total
+    valor
+    valor pago
+  counterpartyLabels (5)
+    destinatario
+    favorecido
+    para
+    quem recebeu
+    recebedor
+  accountLabels (3)
+    conta
+    conta de origem
+    de
+  noteLabels (3)
+    descricao
+    mensagem
+    observacao
+  referenceLabels (3)
+    autenticacao
+    codigo da transacao
+    id da transacao
+  expenseWords (9)
+    compra
+    comprei
+    enviado
+    enviei
+    gastei
+    pagamento
+    pago
+    paguei
+    pix enviado
+  incomeWords (4)
+    pix recebido
+    recebeu
+    recebi
+    recebido
+  withdrawalWords (3)
+    retirada
+    saque
+    saquei
+  exchangeWords (2)
+    troquei
+    vendi
+  notePrepositions (6)
+    com
+    de
+    para
+    pela
+    pelo
+    por
+  conjunctions (1)
+    e
+  rateMarkers (1)
+    a
+  receivedMarkers (3)
+    me deram
+    por
+    recebi
+  genericWalletWords (5)
+    banco
+    conta
+    meu
+    minha
+    poupanca
+  months (24)
+    abr -> 4
+    abril -> 4
+    ago -> 8
+    agosto -> 8
+    dez -> 12
+    dezembro -> 12
+    fev -> 2
+    fevereiro -> 2
+    jan -> 1
+    janeiro -> 1
+    jul -> 7
+    julho -> 7
+    jun -> 6
+    junho -> 6
+    mai -> 5
+    maio -> 5
+    mar -> 3
+    marco -> 3
+    nov -> 11
+    novembro -> 11
+    out -> 10
+    outubro -> 10
+    set -> 9
+    setembro -> 9
+  currencyWords (5)
+    dolar -> USD
+    dolares -> USD
+    euros -> EUR
+    reais -> BRL
+    real -> BRL
+  categoryWords (55)
+    agua -> BILLS
+    almoco -> FOOD
+    aluguel -> HOUSING
+    assinatura -> SUBSCRIPTIONS
+    bar -> LEISURE
+    cabify -> TRANSPORT
+    cafe -> FOOD
+    cerveja -> LEISURE
+    chatgpt -> SUBSCRIPTIONS
+    cinema -> LEISURE
+    combustivel -> TRANSPORT
+    comida -> FOOD
+    compras -> SHOPPING
+    conta -> BILLS
+    curso -> EDUCATION
+    dentista -> HEALTH
+    didi -> TRANSPORT
+    disney -> SUBSCRIPTIONS
+    emprestimo -> PEOPLE
+    escola -> EDUCATION
+    faculdade -> EDUCATION
+    farmacia -> HEALTH
+    feira -> GROCERIES
+    festa -> LEISURE
+    gasolina -> TRANSPORT
+    hbo -> SUBSCRIPTIONS
+    icloud -> SUBSCRIPTIONS
+    indriver -> TRANSPORT
+    internet -> BILLS
+    jantar -> FOOD
+    lanche -> FOOD
+    livros -> EDUCATION
+    luz -> BILLS
+    medico -> HEALTH
+    mercado -> GROCERIES
+    metro -> TRANSPORT
+    netflix -> SUBSCRIPTIONS
+    onibus -> TRANSPORT
+    padaria -> FOOD
+    pizza -> FOOD
+    presente -> PEOPLE
+    remedio -> HEALTH
+    restaurante -> FOOD
+    roupa -> SHOPPING
+    sapato -> SHOPPING
+    spotify -> SUBSCRIPTIONS
+    streaming -> SUBSCRIPTIONS
+    supermercado -> GROCERIES
+    tarifa -> FEES
+    taxa -> FEES
+    taxi -> TRANSPORT
+    telefone -> BILLS
+    transporte -> TRANSPORT
+    uber -> TRANSPORT
+    youtube -> SUBSCRIPTIONS
+  paymentMethodWords (7)
+    cartao -> CARD
+    debito -> CARD
+    dinheiro -> CASH
+    pix -> TRANSFER
+    qr -> TRANSFER
+    ted -> TRANSFER
+    transferencia -> TRANSFER
+# plantilla bo-be-cash-withdrawal
+  kind: WITHDRAWAL
+  markers (1)
+    retiro de efectivo
+  amountLabel: monto
+  counterpartyLabel: -
+  noteLabel: -
+  accountLabel: cuenta origen
+  referenceLabel: nro de transaccion
+  issuerWalletHint: -
+  counterpartyAfterAmount: false
+# plantilla bo-be-ecommerce-debit
+  kind: EXPENSE
+  markers (1)
+    debito por compra
+  amountLabel: importe
+  counterpartyLabel: -
+  noteLabel: nota
+  accountLabel: cuenta
+  referenceLabel: nro de transaccion
+  issuerWalletHint: -
+  counterpartyAfterAmount: false
+# plantilla bo-be-qr-payment
+  kind: EXPENSE
+  markers (1)
+    pago qr
+  amountLabel: importe
+  counterpartyLabel: beneficiario
+  noteLabel: nota
+  accountLabel: cuenta origen
+  referenceLabel: nro de transaccion
+  issuerWalletHint: -
+  counterpartyAfterAmount: false
+# plantilla bo-yape-payment
+  kind: EXPENSE
+  markers (1)
+    yapeaste
+  amountLabel: -
+  counterpartyLabel: -
+  noteLabel: -
+  accountLabel: -
+  referenceLabel: nro de transaccion
+  issuerWalletHint: yape
+  counterpartyAfterAmount: true

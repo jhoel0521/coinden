@@ -11,13 +11,13 @@ import com.coinden.core.domain.model.draft.WalletSuggestion
 import com.coinden.core.domain.model.draft.WalletSuggestionReason
 import com.coinden.core.domain.model.interpret.InterpretContext
 import com.coinden.core.domain.model.interpret.LanguagePack
-import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.interpret.PhraseReader
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.interpret.merged
 import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.support.testLocale
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,9 +28,9 @@ class PhraseReaderTest {
     private val colchon = Wallet("colchon", "u", "Dólares colchón", Currency.USD, WalletType.CASH)
     private val directory = WalletDirectory(listOf(billetera, bnb, colchon), mapOf("bnb" to "bnb"), defaultWalletId = "billetera")
 
-    private val en = listOf(LanguagePacks.ENGLISH).merged()
-    private val es = listOf(LanguagePacks.ENGLISH, LanguagePacks.SPANISH).merged()
-    private val pt = listOf(LanguagePacks.ENGLISH, LanguagePacks.PORTUGUESE).merged()
+    private val en = listOf(TestPacks.english).merged()
+    private val es = listOf(TestPacks.english, TestPacks.spanish).merged()
+    private val pt = listOf(TestPacks.english, TestPacks.portuguese).merged()
 
     private fun read(
         text: String,

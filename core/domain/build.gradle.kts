@@ -31,6 +31,9 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
+            // Solo para las pruebas: cargan los paquetes reales desde sus archivos de datos.
+            // El dominio de producción sigue sin depender de ningún framework.
+            implementation(project(":core:data-packs"))
         }
     }
 }

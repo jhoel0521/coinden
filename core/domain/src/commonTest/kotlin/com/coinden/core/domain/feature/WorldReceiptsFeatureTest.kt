@@ -12,12 +12,12 @@ import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.WalletRef
 import com.coinden.core.domain.model.interpret.LanguagePack
-import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.support.testLocale
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
 import com.coinden.core.domain.usecase.draft.ConfirmDraftUseCase
@@ -77,7 +77,7 @@ class WorldReceiptsFeatureTest {
     @Test
     fun `Facundo en Argentina con un banco desconocido`() =
         runTest {
-            val facundo = Person("facundo", testLocale("es", "AR"), -180, listOf(LanguagePacks.SPANISH))
+            val facundo = Person("facundo", testLocale("es", "AR"), -180, listOf(TestPacks.spanish))
             val galicia = facundo.wallet("Banco Galicia", Money.parseCanonical("50000", Currency.ARS), WalletType.BANK)
             facundo.wallet("Efectivo", Money.parseCanonical("1000", Currency.ARS), WalletType.CASH)
             SetWalletAliasesUseCase(facundo.ctx)("facundo", galicia.id, setOf("4444555566"))
@@ -114,7 +114,7 @@ class WorldReceiptsFeatureTest {
     @Test
     fun `Ana en Brasil con Pix y una frase en portugues`() =
         runTest {
-            val ana = Person("ana", testLocale("pt", "BR"), -180, listOf(LanguagePacks.PORTUGUESE))
+            val ana = Person("ana", testLocale("pt", "BR"), -180, listOf(TestPacks.portuguese))
             val nubank = ana.wallet("Nubank", Money.parseCanonical("300", Currency.of("BRL")), WalletType.BANK)
             val carteira = ana.wallet("Carteira", Money.parseCanonical("50", Currency.of("BRL")), WalletType.CASH)
 

@@ -7,15 +7,14 @@ import com.coinden.core.domain.model.draft.EvidenceSource
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.WalletDirectory
 import com.coinden.core.domain.model.interpret.LanguagePack
-import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.interpret.ReceiptTemplate
-import com.coinden.core.domain.model.interpret.ReceiptTemplates
 import com.coinden.core.domain.model.interpret.RegionalSettings
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
 import com.coinden.core.domain.port.output.InstalledPacksPort
 import com.coinden.core.domain.port.output.RegionalSettingsPort
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.support.testLocale
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -42,9 +41,10 @@ class ReceiptReferenceTest {
     ): String? {
         val packs =
             object : InstalledPacksPort {
-                override fun languagePacks(): List<LanguagePack> = listOf(LanguagePacks.SPANISH, LanguagePacks.PORTUGUESE)
+                // El inglés viaja con la app, así que siempre está: el puerto lo promete.
+                override fun languagePacks(): List<LanguagePack> = listOf(TestPacks.english, TestPacks.spanish, TestPacks.portuguese)
 
-                override fun receiptTemplates(): List<ReceiptTemplate> = ReceiptTemplates.all
+                override fun receiptTemplates(): List<ReceiptTemplate> = TestPacks.templates
             }
         val regional =
             object : RegionalSettingsPort {
