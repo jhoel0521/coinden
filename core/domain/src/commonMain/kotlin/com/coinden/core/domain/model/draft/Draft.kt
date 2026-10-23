@@ -3,6 +3,7 @@ package com.coinden.core.domain.model.draft
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.ExchangeRate
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.bundle.ReviewReason
 import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.wallet.Wallet
 
@@ -20,6 +21,12 @@ data class DraftHeader(
     val correctionTarget: String? = null,
     /** Categoría que la persona eligió al guardar el borrador sin confirmarlo; null si no eligió. */
     val chosenCategory: CategoryRef? = null,
+    /** Paquete de captura del que salió; null en los borradores de antes de los paquetes. */
+    val bundleId: String? = null,
+    /** Qué pago del paquete es este borrador. */
+    val paymentKey: String? = null,
+    /** Motivos del intérprete del paquete para revisarlo; vacío si nada lo detiene. */
+    val reviewReasons: Set<ReviewReason> = emptySet(),
 )
 
 /**
@@ -145,8 +152,8 @@ sealed interface Draft {
         get() =
             when (this) {
                 is Captured, is Unsupported, is Discarded -> Confidence.LOW
-                is Incomplete -> proposal.confidence
-                is Ready -> proposal.confidence
+                is Incomplete -> proposal.confidence.reviewed(header)
+                is Ready -> proposal.confidence.reviewed(header)
                 is Confirmed -> Confidence.HIGH
             }
 
@@ -351,3 +358,7 @@ object DraftEvaluator {
         }
     }
 }
+
+/** Un motivo de revisión del paquete baja la confianza a MEDIA como mucho: el borrador va a revisar. */
+private fun Confidence.reviewed(header: DraftHeader): Confidence =
+    if (header.reviewReasons.isNotEmpty() && this == Confidence.HIGH) Confidence.MEDIUM else this

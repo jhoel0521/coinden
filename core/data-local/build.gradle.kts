@@ -61,6 +61,10 @@ sqldelight {
             packageName.set("com.coinden.core.data.local.db")
             // SQLCipher 4.6 trae SQLite 3.46: se usa el dialecto 3.25 por los upsert (ON CONFLICT ... DO UPDATE).
             dialect(libs.sqldelight.dialect.sqlite325)
+            // Actualizar nunca borra datos: cada versión del esquema publicada se guarda como N.db y
+            // verifyMigrations comprueba que las migraciones .sqm llevan de la anterior a la actual.
+            schemaOutputDirectory.set(file("src/commonMain/sqldelight/databases"))
+            verifyMigrations.set(true)
         }
     }
 }

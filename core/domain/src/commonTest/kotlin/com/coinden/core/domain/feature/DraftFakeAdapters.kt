@@ -1,9 +1,11 @@
 package com.coinden.core.domain.feature
 
+import com.coinden.core.domain.model.bundle.BundleEvent
 import com.coinden.core.domain.model.draft.DraftEvent
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.WalletDirectory
+import com.coinden.core.domain.port.output.BundleRepositoryPort
 import com.coinden.core.domain.port.output.DraftInterpreterPort
 import com.coinden.core.domain.port.output.DraftRepositoryPort
 import com.coinden.core.domain.port.output.WalletAliasRepositoryPort
@@ -75,4 +77,23 @@ class ScriptedInterpreter(
         if (key in failingKeys) throw IllegalStateException("Intérprete caído para '$key'")
         return script[key].orEmpty()
     }
+}
+
+/**
+ * Historial de paquetes de captura en memoria, append-only.
+ */
+class InMemoryBundleRepository : BundleRepositoryPort {
+    private val events = mutableListOf<BundleEvent>()
+
+    override suspend fun appendEvent(event: BundleEvent) {
+        check(events.none { it.id == event.id }) { "El historial es append-only: el evento ${event.id} ya existe" }
+        events += event
+    }
+
+    override suspend fun eventsFor(bundleId: String): List<BundleEvent> = events.filter { it.bundleId == bundleId }
+
+    override suspend fun bundleIdsFor(ownerId: String): List<String> =
+        events.filter { it.ownerId == ownerId }.map { it.bundleId }.distinct()
+
+    val allEvents: List<BundleEvent> get() = events.toList()
 }

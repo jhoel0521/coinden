@@ -1,5 +1,6 @@
 package com.coinden.core.domain.model.draft
 
+import com.coinden.core.domain.model.bundle.ReviewReason
 import com.coinden.core.domain.model.category.CategoryRef
 
 /**
@@ -23,6 +24,10 @@ sealed interface DraftEvent {
         override val occurredAtEpochMs: Long,
         override val recordedAtEpochMs: Long,
         val evidence: Evidence,
+        /** Paquete de captura del que salió el borrador; null en los borradores de antes de los paquetes. */
+        val bundleId: String? = null,
+        /** Qué pago del paquete es: el id del comprobante que lo funda o la clave de un pago dicho. */
+        val paymentKey: String? = null,
     ) : DraftEvent
 
     data class Interpreted(
@@ -33,6 +38,8 @@ sealed interface DraftEvent {
         override val occurredAtEpochMs: Long,
         override val recordedAtEpochMs: Long,
         val proposal: MovementProposal,
+        /** Por qué el intérprete del paquete deja este pago para revisar (vacío: nada lo detiene). */
+        val reviewReasons: Set<ReviewReason> = emptySet(),
     ) : DraftEvent
 
     /**
@@ -167,7 +174,15 @@ object DraftProjection {
         directory: WalletDirectory,
     ): Draft? {
         val captured = events.filterIsInstance<DraftEvent.Captured>().minWithOrNull(CHRONOLOGICAL) ?: return null
-        var header = DraftHeader(captured.draftId, captured.ownerId, captured.evidence, captured.occurredAtEpochMs)
+        var header =
+            DraftHeader(
+                captured.draftId,
+                captured.ownerId,
+                captured.evidence,
+                captured.occurredAtEpochMs,
+                bundleId = captured.bundleId,
+                paymentKey = captured.paymentKey,
+            )
 
         var state: Draft = Draft.Captured(header)
         for (event in events.sortedWith(CHRONOLOGICAL)) {
@@ -208,10 +223,14 @@ object DraftProjection {
                     is DraftEvent.Captured, is DraftEvent.MarkedDistinct, is DraftEvent.Merged, is DraftEvent.Perceived,
                     is DraftEvent.Corrected, is DraftEvent.CorrectionProposed,
                     -> state
-                    is DraftEvent.Interpreted -> DraftEvaluator.evaluate(header, event.proposal, directory)
+                    is DraftEvent.Interpreted -> {
+                        header = header.copy(reviewReasons = event.reviewReasons)
+                        DraftEvaluator.evaluate(header, event.proposal, directory)
+                    }
                     is DraftEvent.Revised -> {
-                        // La revisión más reciente dice la categoría elegida (o que no hay).
-                        header = header.copy(chosenCategory = event.category)
+                        // La revisión más reciente dice la categoría elegida (o que no hay). Lo que la
+                        // persona corrige a mano resuelve los motivos de revisión del intérprete.
+                        header = header.copy(chosenCategory = event.category, reviewReasons = emptySet())
                         DraftEvaluator.evaluate(header, event.proposal, directory)
                     }
                     is DraftEvent.Confirmed -> Draft.Confirmed(header, event.movement, event.ledgerEventId)
