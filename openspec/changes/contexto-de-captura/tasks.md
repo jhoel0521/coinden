@@ -53,8 +53,8 @@
 
 ## 4. Persistencia
 
-- [ ] 4.1 Batería de contrato (memoria y base local): todos los `BundleEvent` y los campos nuevos de `DraftEvent` se guardan y se leen iguales; los eventos de la 0.1.0 se leen sin los campos nuevos.
-- [ ] 4.2 `EventCodec` y `DraftTypes`/`BundleTypes` con los DTO versionados.
+- [x] 4.1 Batería de contrato (memoria y base local): todos los `BundleEvent` y los campos nuevos de `DraftEvent` se guardan y se leen iguales; los eventos de la 0.1.0 se leen sin los campos nuevos.
+- [x] 4.2 `EventCodec` y `DraftTypes`/`BundleTypes` con los DTO versionados.
 
 ## 5. Cola de lectura (background-processing)
 

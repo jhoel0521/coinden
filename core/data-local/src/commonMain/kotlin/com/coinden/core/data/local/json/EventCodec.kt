@@ -1,5 +1,6 @@
 package com.coinden.core.data.local.json
 
+import com.coinden.core.domain.model.bundle.BundleEvent
 import com.coinden.core.domain.model.category.ClassificationEvent
 import com.coinden.core.domain.model.draft.CorrectionOrigin
 import com.coinden.core.domain.model.draft.DraftEvent
@@ -308,6 +309,123 @@ object EventCodec {
         }
 
     // --- Clasificaciones -----------------------------------------------------
+
+    // --- Paquetes de captura -------------------------------------------------
+
+    fun encodeBundle(event: BundleEvent): StoredEvent =
+        when (event) {
+            is BundleEvent.Opened -> store(BundleTypes.OPENED, BundleOpenedDto.serializer(), BundleOpenedDto(event.fields(), event.ownerId))
+            is BundleEvent.EvidenceAttached ->
+                store(
+                    BundleTypes.EVIDENCE_ATTACHED,
+                    EvidenceAttachedDto.serializer(),
+                    EvidenceAttachedDto(event.fields(), event.ownerId, event.evidenceId, event.evidence.toDto(), event.role.toDto()),
+                )
+            is BundleEvent.EvidenceExcluded ->
+                store(
+                    BundleTypes.EVIDENCE_EXCLUDED,
+                    EvidenceExcludedDto.serializer(),
+                    EvidenceExcludedDto(event.fields(), event.ownerId, event.evidenceId),
+                )
+            is BundleEvent.EvidencePerceived ->
+                store(
+                    BundleTypes.EVIDENCE_PERCEIVED,
+                    EvidencePerceivedDto.serializer(),
+                    EvidencePerceivedDto(event.fields(), event.ownerId, event.evidenceId, event.text, event.engine),
+                )
+            is BundleEvent.Closed -> store(BundleTypes.CLOSED, BundleClosedDto.serializer(), BundleClosedDto(event.fields(), event.ownerId))
+            is BundleEvent.Reopened ->
+                store(
+                    BundleTypes.REOPENED,
+                    BundleReopenedDto.serializer(),
+                    BundleReopenedDto(event.fields(), event.ownerId),
+                )
+            is BundleEvent.EvidenceSplit ->
+                store(
+                    BundleTypes.EVIDENCE_SPLIT,
+                    EvidenceSplitDto.serializer(),
+                    EvidenceSplitDto(event.fields(), event.ownerId, event.evidenceId, event.newBundleId),
+                )
+        }
+
+    /**
+     * El flujo y el dueño vienen del sobre de la tabla, no del contenido. Un tipo desconocido o
+     * una versión más nueva devuelven null: el evento se conserva en disco y solo se omite al leer.
+     */
+    fun decodeBundle(
+        type: String,
+        version: Long,
+        payload: String,
+        bundleId: String,
+    ): BundleEvent? =
+        when (type) {
+            BundleTypes.OPENED ->
+                load(version, payload, BundleOpenedDto.serializer())?.let {
+                    BundleEvent.Opened(it.fields.id, bundleId, it.ownerId, it.fields.deviceId, it.fields.occurredAt, it.fields.recordedAt)
+                }
+            BundleTypes.EVIDENCE_ATTACHED ->
+                load(version, payload, EvidenceAttachedDto.serializer())?.let {
+                    BundleEvent.EvidenceAttached(
+                        it.fields.id,
+                        bundleId,
+                        it.ownerId,
+                        it.fields.deviceId,
+                        it.fields.occurredAt,
+                        it.fields.recordedAt,
+                        it.evidenceId,
+                        it.evidence.toDomain(),
+                        it.role.toEvidenceRole(),
+                    )
+                }
+            BundleTypes.EVIDENCE_EXCLUDED ->
+                load(version, payload, EvidenceExcludedDto.serializer())?.let {
+                    BundleEvent.EvidenceExcluded(
+                        it.fields.id,
+                        bundleId,
+                        it.ownerId,
+                        it.fields.deviceId,
+                        it.fields.occurredAt,
+                        it.fields.recordedAt,
+                        it.evidenceId,
+                    )
+                }
+            BundleTypes.EVIDENCE_PERCEIVED ->
+                load(version, payload, EvidencePerceivedDto.serializer())?.let {
+                    BundleEvent.EvidencePerceived(
+                        it.fields.id,
+                        bundleId,
+                        it.ownerId,
+                        it.fields.deviceId,
+                        it.fields.occurredAt,
+                        it.fields.recordedAt,
+                        it.evidenceId,
+                        it.text,
+                        it.engine,
+                    )
+                }
+            BundleTypes.CLOSED ->
+                load(version, payload, BundleClosedDto.serializer())?.let {
+                    BundleEvent.Closed(it.fields.id, bundleId, it.ownerId, it.fields.deviceId, it.fields.occurredAt, it.fields.recordedAt)
+                }
+            BundleTypes.REOPENED ->
+                load(version, payload, BundleReopenedDto.serializer())?.let {
+                    BundleEvent.Reopened(it.fields.id, bundleId, it.ownerId, it.fields.deviceId, it.fields.occurredAt, it.fields.recordedAt)
+                }
+            BundleTypes.EVIDENCE_SPLIT ->
+                load(version, payload, EvidenceSplitDto.serializer())?.let {
+                    BundleEvent.EvidenceSplit(
+                        it.fields.id,
+                        bundleId,
+                        it.ownerId,
+                        it.fields.deviceId,
+                        it.fields.occurredAt,
+                        it.fields.recordedAt,
+                        it.evidenceId,
+                        it.newBundleId,
+                    )
+                }
+            else -> null
+        }
 
     fun encodeClassification(event: ClassificationEvent): StoredEvent =
         store(

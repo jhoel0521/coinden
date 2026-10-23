@@ -5,12 +5,14 @@ import com.coinden.core.data.local.json.EventCodec
 import com.coinden.core.data.local.json.StateCodec
 import com.coinden.core.data.local.json.StoredEvent
 import com.coinden.core.domain.model.UserCurrencyProfile
+import com.coinden.core.domain.model.bundle.BundleEvent
 import com.coinden.core.domain.model.category.CategoryRule
 import com.coinden.core.domain.model.category.ClassificationEvent
 import com.coinden.core.domain.model.category.CustomCategory
 import com.coinden.core.domain.model.draft.DraftEvent
 import com.coinden.core.domain.model.wallet.LedgerEvent
 import com.coinden.core.domain.model.wallet.Wallet
+import com.coinden.core.domain.port.output.BundleRepositoryPort
 import com.coinden.core.domain.port.output.CategorizationRepositoryPort
 import com.coinden.core.domain.port.output.CurrencyProfileRepositoryPort
 import com.coinden.core.domain.port.output.DraftRepositoryPort
@@ -30,6 +32,7 @@ private object Streams {
     const val LEDGER = "ledger"
     const val DRAFT = "draft"
     const val CLASSIFICATION = "classification"
+    const val BUNDLE = "bundle"
 }
 
 /** Escribe en el hilo de la base. Lo que devuelve el driver no se expone: los puertos devuelven Unit. */
@@ -144,6 +147,39 @@ class LocalDraftRepository(
         withContext(dispatcher) {
             q.refsByOwner(Streams.DRAFT, ownerId).executeAsList()
         }
+}
+
+/** Paquetes de captura sobre la base local. Mismos tipos nuevos, misma tabla, mismo esquema. */
+class LocalBundleRepository(
+    private val db: CoinDenDatabase,
+    private val dispatcher: CoroutineDispatcher,
+) : BundleRepositoryPort {
+    private val q get() = db.coinDenQueries
+
+    override suspend fun appendEvent(event: BundleEvent) =
+        withContext(dispatcher) {
+            db.append(
+                event.id,
+                Streams.BUNDLE,
+                event.ownerId,
+                event.deviceId,
+                event.occurredAtEpochMs,
+                event.recordedAtEpochMs,
+                EventCodec.encodeBundle(event),
+                setOf(event.bundleId),
+            )
+        }
+
+    override suspend fun eventsFor(bundleId: String): List<BundleEvent> =
+        withContext(dispatcher) {
+            q
+                .eventsByRef(bundleId, Streams.BUNDLE)
+                .executeAsList()
+                .mapNotNull { EventCodec.decodeBundle(it.type, it.version, it.payload, bundleId) }
+        }
+
+    override suspend fun bundleIdsFor(ownerId: String): List<String> =
+        withContext(dispatcher) { q.refsByOwner(Streams.BUNDLE, ownerId).executeAsList() }
 }
 
 class LocalWalletAliasRepository(

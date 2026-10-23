@@ -1,12 +1,14 @@
 package com.coinden.core.data.memory
 
 import com.coinden.core.domain.model.UserCurrencyProfile
+import com.coinden.core.domain.model.bundle.BundleEvent
 import com.coinden.core.domain.model.category.CategoryRule
 import com.coinden.core.domain.model.category.ClassificationEvent
 import com.coinden.core.domain.model.category.CustomCategory
 import com.coinden.core.domain.model.draft.DraftEvent
 import com.coinden.core.domain.model.wallet.LedgerEvent
 import com.coinden.core.domain.model.wallet.Wallet
+import com.coinden.core.domain.port.output.BundleRepositoryPort
 import com.coinden.core.domain.port.output.CategorizationRepositoryPort
 import com.coinden.core.domain.port.output.CurrencyProfileRepositoryPort
 import com.coinden.core.domain.port.output.DraftRepositoryPort
@@ -69,6 +71,23 @@ class InMemoryDraftRepository : DraftRepositoryPort {
 
     override suspend fun draftIdsFor(ownerId: String): List<String> =
         mutex.withLock { events.filter { it.ownerId == ownerId }.map { it.draftId }.distinct() }
+}
+
+/** Paquetes de captura en memoria. Append-only, como el historial de borradores. */
+class InMemoryBundleRepository : BundleRepositoryPort {
+    private val mutex = Mutex()
+    private val events = mutableListOf<BundleEvent>()
+
+    override suspend fun appendEvent(event: BundleEvent) =
+        mutex.withLock {
+            check(events.none { it.id == event.id }) { "El historial de paquetes es de solo agregar: ${event.id} ya existe" }
+            events += event
+        }
+
+    override suspend fun eventsFor(bundleId: String): List<BundleEvent> = mutex.withLock { events.filter { it.bundleId == bundleId } }
+
+    override suspend fun bundleIdsFor(ownerId: String): List<String> =
+        mutex.withLock { events.filter { it.ownerId == ownerId }.map { it.bundleId }.distinct() }
 }
 
 class InMemoryWalletAliasRepository : WalletAliasRepositoryPort {
