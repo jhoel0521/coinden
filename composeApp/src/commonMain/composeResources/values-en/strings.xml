@@ -334,4 +334,19 @@
     <string name="licenses_hint">CoinDen is built with these free libraries and fonts. Tap one to read its license.</string>
     <string name="licenses_terms">%1$s: opens its terms in the browser</string>
     <string name="profile_credits">Made by %1$s</string>
+    <string name="context_title">What you sent</string>
+    <string name="context_subtitle">Add anything that explains it. It saves when you leave.</string>
+    <string name="context_record">Record audio</string>
+    <string name="context_write_note">Write a note</string>
+    <string name="context_add_photo">Add photo</string>
+    <string name="context_remove">Remove</string>
+    <string name="context_removed">Removed</string>
+    <string name="context_done">Done</string>
+    <string name="context_note_hint">What was this payment for?</string>
+    <string name="context_no_microphone">No microphone permission. You can write a note.</string>
+    <string name="context_item_receipt">Receipt</string>
+    <string name="context_item_photo">Photo</string>
+    <string name="context_item_audio">Audio</string>
+    <string name="context_item_note">Note</string>
+    <string name="context_empty">Nothing in this bundle yet.</string>
 </resources>

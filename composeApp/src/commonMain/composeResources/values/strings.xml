@@ -334,4 +334,19 @@
     <string name="licenses_hint">CoinDen se construye con estas librerías y fuentes libres. Toca una para leer su licencia.</string>
     <string name="licenses_terms">%1$s: abre sus términos en el navegador</string>
     <string name="profile_credits">Hecho por %1$s</string>
+    <string name="context_title">Lo que mandaste</string>
+    <string name="context_subtitle">Sumá lo que lo explique. Al salir se guarda.</string>
+    <string name="context_record">Grabar audio</string>
+    <string name="context_write_note">Escribir nota</string>
+    <string name="context_add_photo">Sumar foto</string>
+    <string name="context_remove">Quitar</string>
+    <string name="context_removed">Quitada</string>
+    <string name="context_done">Listo</string>
+    <string name="context_note_hint">¿De qué fue este pago?</string>
+    <string name="context_no_microphone">Sin permiso de micrófono. Podés escribir una nota.</string>
+    <string name="context_item_receipt">Comprobante</string>
+    <string name="context_item_photo">Foto</string>
+    <string name="context_item_audio">Audio</string>
+    <string name="context_item_note">Nota</string>
+    <string name="context_empty">Todavía no hay nada en este paquete.</string>
 </resources>

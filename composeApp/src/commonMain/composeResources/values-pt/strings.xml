@@ -334,4 +334,19 @@
     <string name="licenses_hint">O CoinDen é feito com estas bibliotecas e fontes livres. Toque em uma para ler a licença.</string>
     <string name="licenses_terms">%1$s: abre os termos no navegador</string>
     <string name="profile_credits">Feito por %1$s</string>
+    <string name="context_title">O que você mandou</string>
+    <string name="context_subtitle">Some o que explique. Ao sair, fica salvo.</string>
+    <string name="context_record">Gravar áudio</string>
+    <string name="context_write_note">Escrever nota</string>
+    <string name="context_add_photo">Somar foto</string>
+    <string name="context_remove">Remover</string>
+    <string name="context_removed">Removida</string>
+    <string name="context_done">Pronto</string>
+    <string name="context_note_hint">Do que foi este pagamento?</string>
+    <string name="context_no_microphone">Sem permissão de microfone. Você pode escrever uma nota.</string>
+    <string name="context_item_receipt">Comprovante</string>
+    <string name="context_item_photo">Foto</string>
+    <string name="context_item_audio">Áudio</string>
+    <string name="context_item_note">Nota</string>
+    <string name="context_empty">Ainda não há nada neste pacote.</string>
 </resources>
