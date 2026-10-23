@@ -9,6 +9,7 @@ import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.i18n.AppLanguage
 import com.coinden.app.lock.AndroidDeviceAuth
 import com.coinden.app.lock.AppLockController
+import com.coinden.app.packs.PackStore
 import com.coinden.app.perception.AndroidPdfReader
 import com.coinden.app.perception.AppPerception
 import com.coinden.core.data.local.AndroidDatabase
@@ -35,6 +36,9 @@ import java.util.TimeZone
 
 /** Abre la base cifrada y arma el contenedor una sola vez por proceso (sobrevive a la rotación). */
 class CoinDenApplication : Application() {
+    lateinit var packStore: PackStore
+        private set
+
     lateinit var container: AppContainer
         private set
 
@@ -86,6 +90,7 @@ class CoinDenApplication : Application() {
                 currency = catalog.forRegion(device.country) ?: Currency.USD,
                 decimalSeparator = DecimalFormatSymbols.getInstance(device).decimalSeparator,
             )
+        packStore = PackStore(this)
         val offsetMinutes = TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 60_000
         // Lectura única y local al iniciar (milisegundos); pasa a carga asíncrona cuando haga falta.
         val savedLanguage = runBlocking { storage.preferences.languageCode() }
@@ -100,6 +105,7 @@ class CoinDenApplication : Application() {
                 currencyNames = PlatformCurrencyNames,
                 initialLanguage = savedLanguage ?: AppLanguage.proposedFor(device.language),
                 attachments = EncryptedAttachmentStore(filesDir.resolve("attachments")),
+                downloadedPacks = { packStore.downloadedTexts() },
             )
         // Una versión anterior podía dejar un PDF descifrado en la caché si se cortaba la lectura.
         AndroidPdfReader.clearLeftovers(this)

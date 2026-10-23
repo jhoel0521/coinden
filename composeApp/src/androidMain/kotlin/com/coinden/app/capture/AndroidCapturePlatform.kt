@@ -52,8 +52,8 @@ import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.camera_close
 import coinden.composeapp.generated.resources.camera_gallery
 import coinden.composeapp.generated.resources.camera_shutter
+import com.coinden.app.download.DownloadResult
 import com.coinden.app.perception.AppPerception
-import com.coinden.app.perception.DownloadResult
 import com.coinden.app.perception.ProcessingQueue
 import com.coinden.app.perception.VoiceModel
 import com.coinden.app.perception.VoiceModelManager

@@ -28,8 +28,8 @@
 
 ## 5. Descarga y verificación
 
-- [ ] 5.1 Pruebas: se muestra el tamaño antes; se verifica la huella; un archivo que no coincide se borra y no se usa; la petición no lleva datos de la persona; se puede borrar lo descargado.
-- [ ] 5.2 Descarga de paquetes y plantillas sobre el mismo mecanismo que los modelos de voz, sin duplicarlo.
+- [x] 5.1 Pruebas: se muestra el tamaño antes; se verifica la huella; un archivo que no coincide se borra y no se usa; la petición no lleva datos de la persona; se puede borrar lo descargado.
+- [x] 5.2 Descarga de paquetes y plantillas sobre el mismo mecanismo que los modelos de voz, sin duplicarlo.
 
 ## 6. Cierre
 

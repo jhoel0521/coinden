@@ -93,6 +93,11 @@ class AppContainer(
     initialLanguage: String = "es",
     /** Fotos, PDF y audios de las evidencias: cifrados en el teléfono, en memoria en las pruebas. */
     val attachments: AttachmentStore = InMemoryAttachmentStore(),
+    /**
+     * Los paquetes de idioma y plantillas que la persona descargó. Se suman a los que viajan con
+     * la app; vacío significa que todavía no descargó ninguno, y la app funciona igual.
+     */
+    private val downloadedPacks: () -> List<String> = { emptyList() },
 ) {
     private val languageState = MutableStateFlow(initialLanguage)
 
@@ -101,7 +106,7 @@ class AppContainer(
     val languageCode: String get() = languageState.value
 
     private val ids = UuidIdGenerator()
-    private val packs = LanguageAwarePacks({ languageCode })
+    private val packs = LanguageAwarePacks({ languageCode }, downloadedPacks)
 
     val ledger = LedgerContext(storage.wallets, ids, clock, device)
     val categorization = CategorizationContext(storage.categorization, storage.wallets, packs, ids, clock, device)
