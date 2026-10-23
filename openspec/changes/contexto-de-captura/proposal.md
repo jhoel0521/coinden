@@ -76,7 +76,7 @@ El intérprete lee cada captura por separado, como si cada una fuera un gasto. L
   - el intérprete del paquete con frases, emparejamiento y motivos de revisión;
   - los casos de uso para abrir, agregar, quitar, cerrar, reabrir y separar;
   - las pruebas de feature de Carlos con los casos acordados.
-- **Paquetes de idioma (datos):** las palabras de contexto en es, en y pt, como "le di", "en efectivo", "acá te paso el comprobante", "esto es de", "luego" y "después".
+- **Interpretación:** este cambio no agrega palabras de idioma a ningún paquete. Entender lo que la persona dijo es tarea del modelo local (`interprete-por-modelo`), y las reglas verifican lo que propone.
 - **`core/data-local` y `core/data-memory`:** persistir los eventos nuevos. Los borradores de antes se leen como paquetes de una sola evidencia. La migración del esquema se prueba abriendo una base creada por la versión 0.1.0: actualizar desde Play nunca borra datos.
 - **`composeApp`:**
   - `ShareActivity` con `ACTION_SEND_MULTIPLE`;

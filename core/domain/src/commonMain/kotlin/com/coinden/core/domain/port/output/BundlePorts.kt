@@ -45,3 +45,40 @@ interface BundleInterpreterPort {
         wallets: WalletDirectory,
     ): List<BundlePayment>
 }
+
+/**
+ * Puerto de Salida (SPI) del intérprete de intenciones: el modelo de lenguaje que corre **solo en
+ * el teléfono**. Entiende qué quiso decir la persona; el dominio verifica lo que propone.
+ *
+ * Devuelve el mismo contrato que las reglas, así que el dominio no sabe cuál de los dos habló.
+ * Un `null` significa "no hubo propuesta utilizable": no hay modelo, no entra en este teléfono, no
+ * llegó a tiempo o su respuesta no cumplió el formato cerrado. En todos esos casos manda el
+ * respaldo determinista, y la app sigue funcionando igual.
+ *
+ * [categories] y [wallets] van cerrados a propósito: el modelo elige de ahí y no puede inventar.
+ */
+interface IntentInterpreterPort {
+    suspend fun interpret(
+        texts: List<BundleText>,
+        wallets: WalletDirectory,
+        categories: Set<String>,
+    ): List<BundlePayment>?
+}
+
+/**
+ * Puerto de Salida (SPI) del motor que corre el modelo en el teléfono.
+ *
+ * El adaptador es quien fija el prompt de sistema, la temperatura 0 y aplica [grammar] durante la
+ * decodificación, de modo que la respuesta no pueda salirse del formato. El dominio solo le pasa
+ * datos y lee lo que vuelve.
+ *
+ * Devuelve `null` cuando no hay modelo, no entra en este teléfono, no llegó a tiempo o falló:
+ * nunca lanza, porque quedarse sin modelo no es un error, es el caso normal de la mitad de los
+ * teléfonos.
+ */
+interface LocalModelPort {
+    suspend fun complete(
+        input: String,
+        grammar: String,
+    ): String?
+}

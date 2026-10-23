@@ -124,31 +124,32 @@ Se crea un flujo nuevo por paquete, `bundle:<uuid>`, guardado en la misma tabla 
   Con algún motivo, la confianza baja a MEDIA y el borrador va a "Para revisar".
 - **Borradores de la 0.1.0:** no tienen `bundleId`. Al leerlos, se proyectan como un paquete virtual cerrado con su evidencia, **sin escribir nada**. Se materializa un `bundle:<draftId>` solo si la persona lo reabre.
 
-### 3. Intérprete del paquete: `BundleInterpreter`
+### 3. Intérprete del paquete: el modelo propone, las reglas verifican
 
-Es puro, vive en `core/domain/model/interpret`, y su entrada y salida son:
+Interpretar **qué quiso decir** la persona (qué pagó, a quién, qué audio explica qué comprobante)
+es tarea del modelo de lenguaje local, no de listas de palabras por idioma. Lo define el cambio
+`interprete-por-modelo`; aquí solo se usa su contrato.
 
 ```
-interpret(texts: List<BundleText(evidenceId, role, text)>, directory, regional, packs)
-  → List<BundlePayment(paymentKey, proposal, evidenceIds, reviewReasons)>
+BundleInterpreter.interpret(texts, wallets)
+  1. IntentInterpreterPort.interpret(texts, wallets, categories)  -> propuestas, o null
+  2. ProposalValidator.validate(...)  sobre cada propuesta
+  3. sin modelo, o propuesta rechazada -> respaldo determinista
+  4. lo dudoso sale con su ReviewReason
 ```
 
-Pasos:
+- **Los comprobantes siguen siendo reglas.** Un comprobante son hechos, no lenguaje: lo leen las
+  plantillas y el lector genérico, como siempre. El modelo no los reinterpreta.
+- **El validador manda.** Ninguna propuesta llega a un borrador sin pasar por él: el monto tiene
+  que estar en alguna evidencia, la billetera y la categoría tienen que existir, y los hechos del
+  comprobante no se cambian.
+- **Sin modelo no se pierde el paquete:** cada comprobante da su pago con sus hechos, el contexto
+  queda como nota y el borrador va a revisar. Menos listo, nunca mal registrado.
+- **Si el modelo y las reglas no coinciden**, el borrador va a revisar mostrando las dos lecturas.
 
-1. **Comprobantes:** cada texto `RECEIPT` pasa por `TextDraftInterpreter` (plantillas y lector genérico). Cada propuesta con monto es un pago con hechos (`FieldOrigin.EVIDENCE`). Los pagos se ordenan por la hora del pago.
-2. **Contexto:** `ContextPhraseReader` parte los textos `CONTEXT` en frases. Usa los conectores del paquete de idioma (`context.connectors`: "y luego", "después", ","…). Cada frase se lee en **modo contexto** con el mismo lector de frases, que no exige verbo:
-   - **frase con monto:** monto, medio y nota;
-   - **frase explicativa:** nota, categoría y billetera.
-3. **Emparejar las frases con monto** según la spec: monto y medio, gemelos por orden, otro medio da otro pago, contradicción con un solo comprobante, y otro pago para revisar.
-4. **Frases explicativas:** van al pago que queda sin explicar o se sugieren en todos.
-5. **Combinar:** se reutiliza `ProposalMerge.combine(receipt, context)` por pago, y nunca se reemplaza un hecho `EVIDENCE`. Si lo dicho contradice un hecho, se agrega `CONTRADICTION` en vez de cambiarlo.
-
-**Modelo de lenguaje (adaptador futuro):** recibe la misma lista de `BundleText` y devuelve `BundlePayment`. Las reglas lo validan con la misma función que valida las propias.
-
-**Palabras nuevas en los paquetes es, en y pt** (`LanguagePack.context`):
-- conectores;
-- frases de referencia ("acá te paso el comprobante", "this is the receipt", "aqui está o comprovante");
-- verbos de pago a una persona ("le di", "I gave", "dei").
+**Lo que se descartó:** un `ContextPhraseReader` con conectores, frases de referencia y verbos de
+pago a una persona, todo por idioma. Resolvía los escenarios de la spec a costa de una lista nueva
+por cada caso nuevo, y eso no escala a "mundial desde el día 1".
 
 ### 4. Reinterpretar sin pisar: `BundleReconciler`
 

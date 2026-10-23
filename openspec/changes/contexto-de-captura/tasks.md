@@ -29,13 +29,13 @@
   - crea los nuevos;
   - descarta los huérfanos enlazados.
 
-## 3. Intérprete del paquete (text-interpreter)
+## 3. Intérprete del paquete (text-interpreter, intent-interpreter)
 
-- [ ] 3.1 Paquetes de idioma es, en y pt: `context` con conectores, frases de referencia y verbos de pago a una persona (datos, no código).
-- [ ] 3.2 Pruebas de `ContextPhraseReader`:
-  - "esto es de mi comida";
-  - "estaba comiendo y luego un ambulante pasó y le di 25 en efectivo".
-- [ ] 3.3 Pruebas de `BundleInterpreter` con cada escenario de la spec:
+> Depende de `interprete-por-modelo`: interpretar lo que la persona quiso decir es tarea del
+> modelo local, y las reglas verifican lo que propone. Este cambio ya no agrega palabras de
+> contexto a ningún paquete de idioma.
+
+- [ ] 3.1 Pruebas del paquete con cada escenario de la spec:
   - comprobante y audio;
   - sin comprobante;
   - ambulante;
@@ -48,7 +48,8 @@
   - billetera dicha;
   - foto sin leer;
   - modelo y reglas no coinciden.
-- [ ] 3.4 Implementar `ContextPhraseReader` y `BundleInterpreter`, reutilizando `TextDraftInterpreter` y `ProposalMerge`.
+- [ ] 3.2 `BundleInterpreter` pide la interpretación al `IntentInterpreterPort` y valida cada propuesta con `ProposalValidator`; sin modelo, el respaldo determinista arma un pago por comprobante.
+- [ ] 3.3 Lo que no pasa la validación, y aquello en lo que el modelo y las reglas no coinciden, queda con su `ReviewReason` y va a revisar.
 
 ## 4. Persistencia
 

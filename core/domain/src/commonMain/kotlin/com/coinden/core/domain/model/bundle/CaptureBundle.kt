@@ -91,6 +91,19 @@ sealed interface ReviewReason {
 
     /** Un pago que solo sale de lo dicho, sin comprobante, en un paquete que tiene comprobantes. */
     data object PaymentWithoutReceipt : ReviewReason
+
+    /**
+     * El modelo de lenguaje y las reglas entendieron cosas distintas. No se elige en silencio:
+     * se muestran las dos lecturas y decide la persona.
+     */
+    data class ModelDisagrees(
+        val field: DraftField,
+        val fromModel: String,
+        val fromRules: String,
+    ) : ReviewReason
+
+    /** El modelo propuso algo que la verificación no pudo respaldar, así que no se usó como hecho. */
+    data object UnverifiedProposal : ReviewReason
 }
 
 /** Transición de un paquete, guardada como evento append-only (sync-ready). */
