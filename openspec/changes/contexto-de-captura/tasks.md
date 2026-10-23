@@ -58,7 +58,7 @@
 
 ## 5. Cola de lectura (background-processing)
 
-- [ ] 5.1 Pruebas:
+- [x] 5.1 Pruebas:
   - un paquete abierto no se procesa;
   - un paquete cerrado lee foto y audio y recién interpreta una vez;
   - lo ya leído o quitado no se relee;
