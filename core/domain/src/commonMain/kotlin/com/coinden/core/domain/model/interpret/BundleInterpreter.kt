@@ -4,10 +4,12 @@ import com.coinden.core.domain.model.bundle.EvidenceRole
 import com.coinden.core.domain.model.bundle.ReviewReason
 import com.coinden.core.domain.model.draft.DraftField
 import com.coinden.core.domain.model.draft.Evidence
+import com.coinden.core.domain.model.draft.FieldOrigin
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.ProposalMerge
 import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.WalletDirectory
+import com.coinden.core.domain.model.draft.WalletRef
 import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.port.output.BundleInterpreterPort
 import com.coinden.core.domain.port.output.BundlePayment
@@ -86,7 +88,7 @@ class BundleInterpreter(
             }
         }
 
-        if (phrases.isNotEmpty()) applyPhrases(payments, explained, phrases)
+        if (phrases.isNotEmpty()) applyPhrases(payments, explained, phrases, wallets)
         return payments + extras
     }
 
@@ -95,13 +97,21 @@ class BundleInterpreter(
         payments: MutableList<BundlePayment>,
         explained: Set<String>,
         phrases: List<BundleText>,
+        wallets: WalletDirectory,
     ) {
         val note = phrases.joinToString(". ") { it.text.trim().trimEnd('.') }
         val ids = phrases.map { it.evidenceId }.toSet()
+        // "lo pagué con bnb" no trae monto, así que el lector de frases no devuelve nada: la
+        // billetera sale del directorio de la persona, que es un dato cerrado, no una lista de
+        // idioma. Solo completa lo que el comprobante no identificó.
+        val said = phrases.firstNotNullOfOrNull { walletIn(it.text, wallets) }
         val free = payments.indices.filter { payments[it].paymentKey !in explained && payments[it].isReceiptPayment() }
         when {
-            free.size == 1 -> payments[free.single()] = payments[free.single()].withNote(note, ids, emptySet())
-            free.size > 1 -> free.forEach { payments[it] = payments[it].withNote(note, ids, setOf(ReviewReason.ContextForSeveral)) }
+            free.size == 1 -> payments[free.single()] = payments[free.single()].withNote(note, ids, emptySet()).withWallet(said)
+            free.size > 1 ->
+                free.forEach {
+                    payments[it] = payments[it].withNote(note, ids, setOf(ReviewReason.ContextForSeveral)).withWallet(said)
+                }
             else -> {
                 // Todo está explicado: la frase completa el último pago si todavía no tiene nota.
                 val last = payments.lastIndex
@@ -145,6 +155,41 @@ class BundleInterpreter(
             evidenceIds = evidenceIds + statement.evidenceIds,
             reviewReasons = reviewReasons + reasons,
         )
+
+    /** Una billetera del directorio nombrada en el texto ("bnb"), o null si no hay ninguna. */
+    private fun walletIn(
+        text: String,
+        wallets: WalletDirectory,
+    ): WalletRef? =
+        TextNormalizer
+            .words(text)
+            .firstOrNull { wallets.byHint(it.normalized) != null }
+            ?.let { WalletRef.ByHint(it.normalized) }
+
+    /**
+     * La billetera que dijo la persona completa la del pago **solo si el comprobante no la
+     * identificó**: un hecho del comprobante nunca se cambia por lo que se diga.
+     */
+    private fun BundlePayment.withWallet(said: WalletRef?): BundlePayment {
+        if (said == null) return this
+        val actual = proposal
+        val tiene =
+            when (actual) {
+                is MovementProposal.Expense -> actual.wallet != null
+                is MovementProposal.Income -> actual.wallet != null
+                else -> true
+            }
+        if (tiene) return this
+        val conBilletera =
+            when (actual) {
+                is MovementProposal.Expense ->
+                    actual.copy(wallet = said, origins = actual.origins + (DraftField.WALLET to FieldOrigin.STATED))
+                is MovementProposal.Income ->
+                    actual.copy(wallet = said, origins = actual.origins + (DraftField.WALLET to FieldOrigin.STATED))
+                else -> actual
+            }
+        return copy(proposal = conBilletera)
+    }
 
     private fun BundlePayment.withNote(
         note: String,
