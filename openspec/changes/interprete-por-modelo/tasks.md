@@ -12,7 +12,7 @@
 - [x] 2.1 Pruebas del traductor de salida: una respuesta válida se convierte en `BundlePayment`; una respuesta fuera de formato devuelve `null`; un `walletId` desconocido se descarta.
 - [x] 2.2 Gramática GBNF generada del esquema de `BundlePayment`, con la lista cerrada de monedas, billeteras y categorías de la persona.
 - [x] 2.3 Prompt de sistema fijo, en el adaptador y no en el dominio, con temperatura 0.
-- [ ] 2.4 Adaptador Android sobre `llama.cpp` por NDK, siguiendo el puente que ya existe para whisper.cpp.
+- [ ] 2.4 Adaptador Android sobre **LiteRT-LM**, con `ResponseFormat.json(...)` y el *speculative decoding* apagado.
 - [ ] 2.5 Prueba de determinismo: la misma captura dos veces da la misma propuesta.
 
 ## 3. Los dos caminos y el desacuerdo

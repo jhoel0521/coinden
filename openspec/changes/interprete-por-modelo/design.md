@@ -136,14 +136,43 @@ Criterios, en orden: **licencia libre** (el proyecto es MPL-2.0 y vive de donaci
 
 **Recomendación: Qwen 3 0.6B (Apache 2.0) como piso y Qwen 3 1.7B como recomendado en 6 GB o más.** La licencia decide: Gemma y Llama traen condiciones de uso que no encajan con un proyecto de software libre que la gente puede redistribuir. Y como la gramática garantiza el formato y el validador verifica los hechos, el riesgo de un modelo chico es *entender de menos* (el borrador va a revisar), no *registrar mal*.
 
-### 6. El runtime
+### 6. El motor
 
-**`llama.cpp` por NDK**, la misma vía que ya usa whisper.cpp:
+El criterio que decide no es la velocidad: es si el motor puede **obligar** al modelo a responder
+en el formato acordado. Sin eso, el principio 4 del Manifiesto ("solo con un formato cerrado") se
+vuelve un pedido amable, y una respuesta que no cumple hay que descartarla.
 
-- **Es lo único que garantiza el formato cerrado** con GBNF; MediaPipe y LiteRT-LM no exponen gramáticas.
-- **Licencia MIT**, compatible con el proyecto.
-- **La infraestructura ya existe**: `release.yml` ya instala NDK y CMake, y ya hay un puente nativo para whisper.cpp del que copiar el patrón.
-- **En contra:** compilar C++ para cuatro ABIs engorda el APK y el tiempo de build. Se mitiga publicando solo arm64 para el modelo (el piso ya es arm64) y dejando el resto sin el motor.
+| Motor | Licencia | ¿Fuerza el formato? | Integración en Android |
+|---|---|---|---|
+| **LiteRT-LM** (Google) | Apache 2.0 | **Sí**: JSON Schema y regex, con LLGuidance, y API en Kotlin | Nativa; usa CPU, GPU y NPU |
+| **llama.cpp** (ggml) | MIT | **Sí**: gramáticas GBNF | C++ por NDK, a mano |
+| **MNN** (Alibaba) | Apache 2.0 | **No se encontró** documentación ni issue | Nativa, muy rápido |
+| **ExecuTorch** (Meta) | BSD | **No**: está pedido como mejora; hoy solo mete el formato en el prompt | Nativa |
+
+**Recomendación: LiteRT-LM.**
+
+- Fuerza el formato, que es el requisito que manda.
+- **No agrega C++ al proyecto**: es una librería con API en Kotlin, así que el APK no carga código
+  nativo por cada ABI ni el CI compila de más.
+- **Usa la NPU y la GPU** del teléfono, no solo el procesador: menos batería, que importa cuando la
+  interpretación corre en la cola mientras la persona hace otra cosa.
+
+**Lo que hay que respetar al integrarlo:** con el formato forzado **hay que apagar el
+*speculative decoding* (MTP)**. Con las dos cosas juntas hay un fallo conocido en Android: de 60
+llamadas, ninguna sirve; con la especulación apagada, 56 de 60 devuelven JSON válido. Es
+configuración, no un impedimento, pero se prueba explícitamente.
+
+**MNN rinde más** en algunos teléfonos (unos 21,7 tok/s contra 10,2 de llama.cpp en una medición),
+pero no sirve si la respuesta no se puede usar. La velocidad se elige entre los motores que
+cumplen el requisito, no antes.
+
+**Por qué no llama.cpp**, aunque el proyecto ya compile whisper.cpp del mismo equipo: esa ventaja
+es comodidad para quien programa, no beneficio para la persona que usa la app. A cambio pide
+compilar C++ para cada ABI y no aprovecha la NPU.
+
+**Lo ya escrito no cambia.** `LocalModelPort` recibe un texto y un formato; lo único que cambia es
+cómo se expresa ese formato —de gramática GBNF a JSON Schema—, y eso vive en el adaptador. El
+validador, el traductor, el orquestador y el prompt quedan igual.
 
 ### 7. Qué pasa con la batería y el tiempo
 

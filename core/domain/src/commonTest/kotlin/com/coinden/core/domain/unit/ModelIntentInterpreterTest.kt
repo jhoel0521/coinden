@@ -100,13 +100,13 @@ class ModelIntentInterpreterTest {
         }
 
     @Test
-    fun `le pasa al modelo la gramatica con sus billeteras y categorias`() =
+    fun `le pasa al modelo el formato con sus billeteras y categorias`() =
         runTest {
             val (modelo, _) = interpretarCon(respuestaBuena)
 
             val gramatica = assertNotNull(modelo.gramatica)
-            assertTrue(gramatica.contains("""\"bnb\""""), "la gramática tiene que traer sus billeteras")
-            assertTrue(gramatica.contains("""\"comida\""""), "y sus categorías")
+            assertTrue(gramatica.contains(""""bnb""""), "el formato tiene que traer sus billeteras")
+            assertTrue(gramatica.contains(""""comida""""), "y sus categorías")
         }
 
     @Test
