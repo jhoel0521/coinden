@@ -27,7 +27,15 @@ import com.coinden.core.domain.port.output.IntentInterpreterPort
 class BundleInterpretation(
     private val model: IntentInterpreterPort?,
     private val rules: BundleInterpreterPort,
-) {
+    /** Las categorías de la persona: el modelo elige de ahí y no puede inventar otra. */
+    private val categoriesOf: suspend () -> Set<String> = { emptySet() },
+) : BundleInterpreterPort {
+    /** Cumple el mismo contrato que las reglas, así que se enchufa donde ya iban ellas. */
+    override suspend fun interpret(
+        texts: List<BundleText>,
+        wallets: WalletDirectory,
+    ): List<BundlePayment> = interpret(texts, wallets, categoriesOf())
+
     suspend fun interpret(
         texts: List<BundleText>,
         wallets: WalletDirectory,

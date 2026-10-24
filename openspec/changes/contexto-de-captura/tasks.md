@@ -48,8 +48,8 @@
   - billetera dicha;
   - foto sin leer;
   - modelo y reglas no coinciden.
-- [ ] 3.2 `BundleInterpreter` pide la interpretación al `IntentInterpreterPort` y valida cada propuesta con `ProposalValidator`; sin modelo, el respaldo determinista arma un pago por comprobante.
-- [ ] 3.3 Lo que no pasa la validación, y aquello en lo que el modelo y las reglas no coinciden, queda con su `ReviewReason` y va a revisar.
+- [x] 3.2 `BundleInterpreter` pide la interpretación al `IntentInterpreterPort` y valida cada propuesta con `ProposalValidator`; sin modelo, el respaldo determinista arma un pago por comprobante.
+- [x] 3.3 Lo que no pasa la validación, y aquello en lo que el modelo y las reglas no coinciden, queda con su `ReviewReason` y va a revisar.
 
 ## 4. Persistencia
 

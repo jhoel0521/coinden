@@ -16,6 +16,7 @@ import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.WalletDirectory
+import com.coinden.core.domain.model.interpret.BundleInterpretation
 import com.coinden.core.domain.model.interpret.BundleInterpreter
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
 import com.coinden.core.domain.port.output.BundleRepositoryPort
@@ -138,7 +139,9 @@ class AppContainer(
         BundleContext(
             bundles = storage.bundles,
             drafts = drafts,
-            interpreter = BundleInterpreter(interpreter),
+            // El modelo local todavía no está enchufado: con null manda el respaldo determinista,
+            // que es lo que corre hoy. El día que haya motor, cambia este parámetro y nada más.
+            interpreter = BundleInterpretation(model = null, rules = BundleInterpreter(interpreter)),
         )
 
     val createWallet = CreateWalletUseCase(ledger)
