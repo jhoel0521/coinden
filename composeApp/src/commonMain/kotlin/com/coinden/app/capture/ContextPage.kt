@@ -38,6 +38,7 @@ import coinden.composeapp.generated.resources.context_note_hint
 import coinden.composeapp.generated.resources.context_record
 import coinden.composeapp.generated.resources.context_remove
 import coinden.composeapp.generated.resources.context_removed
+import coinden.composeapp.generated.resources.context_stop
 import coinden.composeapp.generated.resources.context_subtitle
 import coinden.composeapp.generated.resources.context_title
 import coinden.composeapp.generated.resources.context_write_note
@@ -66,6 +67,7 @@ fun ContextPage(
     val state by presenter.state.collectAsState()
     val scope = rememberCoroutineScope()
     var note by remember { mutableStateOf("") }
+    var recording by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { presenter.load() }
 
@@ -121,11 +123,16 @@ fun ContextPage(
                 ),
                 recorder?.takeIf { state.canRecord }?.let { grabador ->
                     CdActionSpec(
-                        text = stringResource(Res.string.context_record),
+                        // Grabar tiene dos momentos: el mismo botón abre y cierra el micrófono.
+                        text = stringResource(if (recording) Res.string.context_stop else Res.string.context_record),
                         onClick = {
                             scope.launch {
-                                val resultado = grabador.record()
-                                if (resultado is RecordingOutcome.Recorded) presenter.addAudio(resultado.evidence)
+                                if (recording) {
+                                    grabador.stop()?.let { presenter.addAudio(it) }
+                                    recording = false
+                                } else {
+                                    recording = grabador.start() is RecordingStart.Started
+                                }
                             }
                         },
                     )

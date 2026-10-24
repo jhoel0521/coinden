@@ -67,7 +67,7 @@
 
 ## 6. Captura y página de contexto (capture-ui)
 
-- [ ] 6.1 Puerto `ContextRecorder` y adaptador Android con `MediaRecorder` (AAC/m4a), que cifra con `attachments`.
+- [x] 6.1 Puerto `ContextRecorder` y adaptador Android con `MediaRecorder` (AAC/m4a), que cifra con `attachments`.
 - [x] 6.2 `ContextPagePresenter` y sus pruebas:
   - agregar en loop;
   - quitar;

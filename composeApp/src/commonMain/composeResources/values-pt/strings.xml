@@ -349,4 +349,5 @@
     <string name="context_item_audio">Áudio</string>
     <string name="context_item_note">Nota</string>
     <string name="context_empty">Ainda não há nada neste pacote.</string>
+    <string name="context_stop">Parar</string>
 </resources>
