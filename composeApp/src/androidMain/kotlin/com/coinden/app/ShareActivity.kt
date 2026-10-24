@@ -17,9 +17,10 @@ import org.jetbrains.compose.resources.getString
 import java.util.Locale
 
 /**
- * Recibe lo que otra app comparte con CoinDen sin mostrar ninguna pantalla: lo guarda, avisa
- * "Guardado en CoinDen" y devuelve a la otra app. Lo pesado (leer la foto, el PDF o el audio)
- * queda para la cola. Si el onboarding no terminó, abre la app para terminarlo.
+ * Recibe lo que otra app comparte con CoinDen, uno o varios archivos a la vez, sin mostrar
+ * ninguna pantalla: lo guarda en un paquete, avisa "Guardado en CoinDen" y devuelve a la otra app.
+ * Lo pesado (leer la foto, el PDF o el audio) queda para la cola. Si el onboarding no terminó,
+ * abre la app para terminarlo.
  */
 class ShareActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,8 +36,10 @@ class ShareActivity : ComponentActivity() {
                 finish()
                 return@launch
             }
-            val content = withContext(Dispatchers.IO) { SharedIntents.read(applicationContext, intent) }
-            val saved = content?.let { QuickCapture(app.container, app.perception.queue).shared(it) }.orEmpty().isNotEmpty()
+            // Todo lo que la otra app mandó junto va a un mismo paquete, sean uno o varios archivos.
+            val contents = withContext(Dispatchers.IO) { SharedIntents.readAll(applicationContext, intent) }
+            val saved =
+                QuickCapture(app.container, app.perception.queue).sharedBundle(contents, closeNow = true) != null
             Toast
                 .makeText(
                     applicationContext,
