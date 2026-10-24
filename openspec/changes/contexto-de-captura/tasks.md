@@ -63,7 +63,7 @@
   - un paquete cerrado lee foto y audio y recién interpreta una vez;
   - lo ya leído o quitado no se relee;
   - el corte a mitad se retoma.
-- [ ] 5.2 `PerceptionService` por paquete; los borradores `Captured` de la 0.1.0 siguen por el camino actual.
+- [x] 5.2 `PerceptionService` por paquete; los borradores `Captured` de la 0.1.0 siguen por el camino actual.
 
 ## 6. Captura y página de contexto (capture-ui)
 

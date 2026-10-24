@@ -95,6 +95,31 @@ class QueueRunner(
                     processed++
                     processedFlow.emit(draftId)
                 }
+                // Los paquetes cerrados se leen de a una evidencia; el dominio interpreta solo
+                // cuando ya no queda nada por leer. Los borradores sueltos de la 0.1.0 siguen por
+                // el camino de arriba, intactos.
+                for (bundleId in service.pendingBundleIds()) {
+                    if (failures.isSettled(bundleId)) continue
+                    val outcome =
+                        try {
+                            service.perceiveBundle(bundleId)
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            failed++
+                            if (failures.fail(bundleId) >= maxAttempts) failures.settle(bundleId) else retryLater = true
+                            continue
+                        }
+                    when (outcome) {
+                        is PerceptionOutcome.Read -> failures.clear(bundleId)
+                        PerceptionOutcome.NothingRead, PerceptionOutcome.TooLong -> failures.clear(bundleId)
+                        PerceptionOutcome.NeedsVoiceModel, PerceptionOutcome.Skipped -> continue
+                    }
+                    processed++
+                    processedFlow.emit(bundleId)
+                    // Queda alguna evidencia más de este paquete: se retoma en la próxima vuelta.
+                    retryLater = retryLater || service.pendingBundleIds().contains(bundleId)
+                }
             } finally {
                 readers.release()
             }
