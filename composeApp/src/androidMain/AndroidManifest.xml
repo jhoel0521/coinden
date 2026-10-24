@@ -36,9 +36,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!-- Compartir a CoinDen sin abrir la app: guarda, avisa y devuelve a la otra app. -->
+        <!-- Compartir a CoinDen: guarda, muestra la página de contexto y, al salir, devuelve a la otra app. -->
         <activity
             android:name=".ShareActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|density|uiMode"
             android:exported="true"
             android:excludeFromRecents="true"
             android:noHistory="true"

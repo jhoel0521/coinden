@@ -24,6 +24,9 @@ interface CapturePlatform {
     /** Muestra fotos, PDF y audios de la evidencia, descifrados solo en memoria. */
     val evidenceViewer: EvidenceViewerPort
 
+    /** Graba el audio que explica un pago en la página de contexto; null si la plataforma no graba. */
+    val contextRecorder: ContextRecorder? get() = null
+
     /**
      * Devuelve una acción que pide el micrófono si hace falta y luego llama a [onResult] con
      * true si está concedido.

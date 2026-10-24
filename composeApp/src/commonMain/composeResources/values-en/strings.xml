@@ -107,6 +107,7 @@
     <string name="notice_dictation_unavailable">This phone has no on-device speech recognition. CoinDen never sends your voice to the cloud: use Write or Photo.</string>
     <string name="notice_microphone_denied">Without the microphone you cannot dictate. CoinDen only listens while you dictate and your voice never leaves the phone.</string>
     <string name="notice_camera_denied">Without the camera you cannot photograph receipts. You can still pick an image from the gallery.</string>
+    <string name="notice_saved_for_review">Saved. It finishes reading in the background and shows up in Review.</string>
     <string name="notice_dismiss">Got it</string>
     <string name="result_saved">Saved as a draft</string>
     <string name="result_confirm">Confirm</string>
@@ -341,6 +342,10 @@
     <string name="context_add_photo">Add photo</string>
     <string name="context_remove">Remove</string>
     <string name="context_removed">Removed</string>
+    <string name="evidence_bundle_title">What you sent together</string>
+    <string name="evidence_split">Split off</string>
+    <string name="capture_add_context">Add context</string>
+    <string name="capture_add_to_last">Add to the last one</string>
     <string name="context_done">Done</string>
     <string name="context_note_hint">What was this payment for?</string>
     <string name="context_no_microphone">No microphone permission. You can write a note.</string>

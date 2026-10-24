@@ -2,6 +2,7 @@ package com.coinden.app.perception
 
 import com.coinden.app.AppContainer
 import com.coinden.app.capture.CapturePresenter
+import com.coinden.app.capture.ContextPagePresenter
 import com.coinden.app.capture.DictationOutcome
 import com.coinden.app.capture.DictationPort
 import com.coinden.app.capture.DraftStatusView
@@ -105,9 +106,13 @@ class PerceptionUiTest {
     @Test
     fun `la foto se guarda primero y luego la tarjeta muestra el gasto leido`() =
         runTest {
-            val (_, presenter) = carlos()
+            val (container, presenter) = carlos()
 
             presenter.photo(byteArrayOf(1, 2, 3), "image/jpeg")
+            // Antes del resultado pasa por la página de contexto; Listo la cierra.
+            val bundleId = assertNotNull(presenter.state.value.contextBundle)
+            ContextPagePresenter(container, bundleId).done()
+            presenter.contextClosed(bundleId)
 
             val card = assertNotNull(presenter.state.value.result).cards.single()
             assertEquals(MovementKindView.EXPENSE, card.kind)

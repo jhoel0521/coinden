@@ -27,7 +27,7 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         val app = application as CoinDenApplication
-        val platform = AndroidCapturePlatform(this, app.perception)
+        val platform = AndroidCapturePlatform(this, app.perception, app.container.attachments)
         app.deviceAuth.attach(this)
         // Con el bloqueo activo, ni la vista de apps recientes ni una captura de pantalla muestran saldos.
         lifecycleScope.launch {

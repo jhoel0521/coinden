@@ -70,7 +70,10 @@ import kotlin.math.roundToInt
 class AndroidCapturePlatform(
     context: Context,
     private val perception: AppPerception,
+    attachments: AttachmentStore,
 ) : CapturePlatform {
+    override val contextRecorder: ContextRecorder = AndroidContextRecorder(context, attachments)
+
     override val dictation: DictationPort = OnDeviceDictation(context.applicationContext)
 
     override val perceptionReaders get() = perception.readers

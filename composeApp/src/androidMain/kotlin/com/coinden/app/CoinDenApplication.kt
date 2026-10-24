@@ -34,6 +34,7 @@ import com.coinden.core.domain.model.interpret.RegionalSettings
 import com.coinden.core.domain.model.interpret.UserLocale
 import com.coinden.core.domain.port.output.IntentInterpreterPort
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.text.DecimalFormatSymbols
@@ -71,6 +72,9 @@ class CoinDenApplication : Application() {
 
     /** Formularios abiertos: sobreviven a que Android recree la pantalla. */
     val forms = FormPresenters()
+
+    /** Trabajo que no puede cortarse al cerrar una pantalla, como cerrar un paquete al salir. */
+    val scope = MainScope()
 
     /**
      * El intérprete de intenciones, o null si no hay modelo descargado. Se arma una sola vez: el
