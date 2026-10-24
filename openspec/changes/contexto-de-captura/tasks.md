@@ -71,7 +71,10 @@
   - sin permiso de micrófono;
   - con la app bloqueada no muestra montos.
 - [x] 6.3 `ContextPage` (Compose) en `ShareActivity`: `ACTION_SEND_MULTIPLE`, y cerrar en `onStop`.
-- [ ] 6.4 Captura en la app (dictar, foto, escribir) pasa por `ContextPage`. La tarjeta del resultado muestra los N borradores.
+- [ ] 6.4 Captura en la app (dictar, foto, escribir) pasa por `ContextPage`. La tarjeta del
+  resultado muestra los N borradores. **Hecho:** `QuickCapture.capturedBundle` deja el paquete
+  abierto y `CaptureResult` ya lleva N tarjetas. **Falta:** que la pantalla navegue a la página
+  antes del resultado, que cambia lo que la persona ve y se verifica en un dispositivo.
 - [x] 6.5 "Agregar contexto" en la tarjeta, en Revisar y en el formulario; "Agregar al último" en la hoja de Capturar.
 - [x] 6.6 Textos en es, en y pt.
 

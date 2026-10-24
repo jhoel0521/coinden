@@ -40,6 +40,15 @@ class QuickCapture(
         return bundleId
     }
 
+    /**
+     * Lo capturado dentro de la app (dictar, foto o escribir) como paquete abierto, para que la
+     * página de contexto pueda sumarle un audio o una nota antes de cerrarlo.
+     *
+     * Un texto no tiene nada que leer, así que al cerrarlo se interpreta en el acto: capturar
+     * sigue tomando segundos. Una foto o un audio quedan para la cola, como siempre.
+     */
+    suspend fun capturedBundle(evidence: Evidence): String = StartBundleUseCase(container.bundles)(container.ownerId, listOf(evidence))
+
     /** Un texto se guarda tal cual; un archivo se cifra y conserva su huella, que evita repetirlo. */
     private suspend fun evidenceOf(content: SharedContent): Evidence? =
         when (content) {

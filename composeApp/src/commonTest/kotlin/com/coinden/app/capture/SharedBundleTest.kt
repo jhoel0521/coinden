@@ -3,7 +3,9 @@ package com.coinden.app.capture
 import com.coinden.app.perception.ProcessingQueue
 import com.coinden.app.seedCarlos
 import com.coinden.app.testContainer
+import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.EvidenceSource
+import com.coinden.core.domain.usecase.bundle.CloseBundleUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -76,6 +78,30 @@ class SharedBundleTest {
             val evidencia = assertNotNull(c.bundles.load(bundleId)).evidences.single().evidence
             assertNotNull(evidencia.attachmentRef, "el archivo se guarda cifrado, no en el evento")
             assertNotNull(evidencia.fingerprint, "sin huella no se podría evitar repetirlo")
+        }
+
+    @Test
+    fun `lo capturado en la app tambien es un paquete, y queda abierto`() =
+        runTest {
+            val (c, capture) = carlos()
+
+            val bundleId = capture.capturedBundle(Evidence(EvidenceSource.TEXT, "almuerzo 45 bnb"))
+
+            val bundle = assertNotNull(c.bundles.load(bundleId))
+            assertTrue(bundle.open, "la página de contexto puede sumarle algo antes de cerrarlo")
+            assertEquals(1, bundle.evidences.size)
+        }
+
+    @Test
+    fun `al cerrar lo capturado por texto se interpreta en el acto`() =
+        runTest {
+            val (c, capture) = carlos()
+            val bundleId = capture.capturedBundle(Evidence(EvidenceSource.TEXT, "almuerzo 45 bnb"))
+
+            CloseBundleUseCase(c.bundles)(bundleId)
+
+            // Un texto no tiene nada que leer: no pasa por la cola, capturar sigue siendo inmediato.
+            assertEquals(1, c.bundles.draftsOf(assertNotNull(c.bundles.load(bundleId))).size)
         }
 
     @Test
