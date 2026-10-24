@@ -350,4 +350,10 @@
     <string name="context_item_note">Note</string>
     <string name="context_empty">Nothing in this bundle yet.</string>
     <string name="context_stop">Stop</string>
+    <string name="inbox_reason_contradiction">What you said and the receipt don't match</string>
+    <string name="inbox_reason_model_disagrees">It was understood in two different ways</string>
+    <string name="inbox_reason_unverified">Couldn't be checked against what you sent</string>
+    <string name="inbox_reason_assigned_by_order">Two payments of the same amount: assigned by time</string>
+    <string name="inbox_reason_context_for_several">What you said could be about any of the payments</string>
+    <string name="inbox_reason_without_receipt">This payment has no receipt</string>
 </resources>

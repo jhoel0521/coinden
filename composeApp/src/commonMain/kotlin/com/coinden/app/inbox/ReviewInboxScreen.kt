@@ -34,14 +34,20 @@ import coinden.composeapp.generated.resources.inbox_change_pending_plain
 import coinden.composeapp.generated.resources.inbox_confirm_all
 import coinden.composeapp.generated.resources.inbox_empty
 import coinden.composeapp.generated.resources.inbox_ready
+import coinden.composeapp.generated.resources.inbox_reason_assigned_by_order
 import coinden.composeapp.generated.resources.inbox_reason_check_data
+import coinden.composeapp.generated.resources.inbox_reason_context_for_several
+import coinden.composeapp.generated.resources.inbox_reason_contradiction
 import coinden.composeapp.generated.resources.inbox_reason_missing_amount
 import coinden.composeapp.generated.resources.inbox_reason_missing_wallet
+import coinden.composeapp.generated.resources.inbox_reason_model_disagrees
 import coinden.composeapp.generated.resources.inbox_reason_not_movement
 import coinden.composeapp.generated.resources.inbox_reason_pending_change
 import coinden.composeapp.generated.resources.inbox_reason_same_question
 import coinden.composeapp.generated.resources.inbox_reason_suggested_wallet
 import coinden.composeapp.generated.resources.inbox_reason_unread
+import coinden.composeapp.generated.resources.inbox_reason_unverified
+import coinden.composeapp.generated.resources.inbox_reason_without_receipt
 import coinden.composeapp.generated.resources.inbox_review
 import coinden.composeapp.generated.resources.inbox_shortfall
 import coinden.composeapp.generated.resources.inbox_summary_title
@@ -278,4 +284,10 @@ private fun InboxReason.label(): StringResource =
         InboxReason.MISSING_WALLET -> Res.string.inbox_reason_missing_wallet
         InboxReason.SUGGESTED_WALLET -> Res.string.inbox_reason_suggested_wallet
         InboxReason.CHECK_DATA -> Res.string.inbox_reason_check_data
+        InboxReason.CONTRADICTION -> Res.string.inbox_reason_contradiction
+        InboxReason.MODEL_DISAGREES -> Res.string.inbox_reason_model_disagrees
+        InboxReason.UNVERIFIED -> Res.string.inbox_reason_unverified
+        InboxReason.ASSIGNED_BY_ORDER -> Res.string.inbox_reason_assigned_by_order
+        InboxReason.CONTEXT_FOR_SEVERAL -> Res.string.inbox_reason_context_for_several
+        InboxReason.WITHOUT_RECEIPT -> Res.string.inbox_reason_without_receipt
     }

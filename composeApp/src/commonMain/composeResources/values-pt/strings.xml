@@ -350,4 +350,10 @@
     <string name="context_item_note">Nota</string>
     <string name="context_empty">Ainda não há nada neste pacote.</string>
     <string name="context_stop">Parar</string>
+    <string name="inbox_reason_contradiction">O que você disse e o comprovante não batem</string>
+    <string name="inbox_reason_model_disagrees">Foi entendido de duas maneiras diferentes</string>
+    <string name="inbox_reason_unverified">Não deu para conferir com o que você mandou</string>
+    <string name="inbox_reason_assigned_by_order">Dois pagamentos do mesmo valor: atribuídos pela hora</string>
+    <string name="inbox_reason_context_for_several">O que você disse pode ser de qualquer um dos pagamentos</string>
+    <string name="inbox_reason_without_receipt">Este pagamento não tem comprovante</string>
 </resources>

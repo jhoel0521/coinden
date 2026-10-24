@@ -85,7 +85,7 @@
 
 - [x] 7.1 Pruebas del visor: evidencias en orden con su texto, las quitadas marcadas, y un audio sin leer dice que todavía no se leyó.
 - [x] 7.2 `EvidenceViewer` por paquete con Quitar y Separar.
-- [ ] 7.3 Motivo de revisión en la bandeja y el formulario; "Usar X" para la contradicción (`Revised` con el campo `CORRECTED`).
+- [x] 7.3 Motivo de revisión en la bandeja y el formulario; "Usar X" para la contradicción (`Revised` con el campo `CORRECTED`).
 
 ## 8. Cierre
 
