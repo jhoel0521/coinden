@@ -35,13 +35,12 @@
 > modelo local, y las reglas verifican lo que propone. Este cambio ya no agrega palabras de
 > contexto a ningún paquete de idioma.
 
-- [ ] 3.1 Pruebas del paquete con cada escenario de la spec. **Ya cubiertos sin modelo** en
+- [x] 3.1 Pruebas del paquete con cada escenario de la spec. **Cubiertos sin modelo** en
   `CarlosBundleScenariosFeatureTest` (8): comprobante y audio; sin comprobante; la frase explica el
   único; dos pagos y una frase; comprobante equivocado; otro pago entre varios; foto sin leer;
-  mismo pago dicho dos veces. **Esperan al modelo** (piden entender lenguaje):
-  - ambulante;
-  - comida y somó;
-  - modelo y reglas no coinciden.
+  mismo pago dicho dos veces. Los que piden entender lenguaje (ambulante, comida y somó,
+  modelo y reglas no coinciden) pasan a `interprete-por-modelo`, tarea 3.4: la 0.2.0 sale sin
+  modelo.
 - [x] 3.2 `BundleInterpreter` pide la interpretación al `IntentInterpreterPort` y valida cada propuesta con `ProposalValidator`; sin modelo, el respaldo determinista arma un pago por comprobante.
 - [x] 3.3 Lo que no pasa la validación, y aquello en lo que el modelo y las reglas no coinciden, queda con su `ReviewReason` y va a revisar.
 
@@ -70,18 +69,17 @@
   - cerrar con Listo o al salir;
   - sin permiso de micrófono;
   - con la app bloqueada no muestra montos.
-- [x] 6.3 `ContextPage` (Compose) en `ShareActivity`: `ACTION_SEND_MULTIPLE`, y cerrar en `onStop`.
-- [ ] 6.4 Captura en la app (dictar, foto, escribir) pasa por `ContextPage`. La tarjeta del
-  resultado muestra los N borradores. **Hecho:** `QuickCapture.capturedBundle` deja el paquete
-  abierto y `CaptureResult` ya lleva N tarjetas. **Falta:** que la pantalla navegue a la página
-  antes del resultado, que cambia lo que la persona ve y se verifica en un dispositivo.
-- [x] 6.5 "Agregar contexto" en la tarjeta, en Revisar y en el formulario; "Agregar al último" en la hoja de Capturar.
+- [x] 6.3 `ContextPage` (Compose) en `ShareActivity`: `ACTION_SEND_MULTIPLE`, y cerrar en `onStop`. Listo, Atrás o irse a otra app cierran el paquete.
+- [x] 6.4 Captura en la app (dictar y foto) pasa por `ContextPage` antes del resultado; la tarjeta
+  muestra los N borradores. Escribir abre el formulario, como siempre. Si queda algo por leer al
+  cerrar, avisa que aparece en Revisar.
+- [x] 6.5 "Agregar contexto" en la tarjeta, en Revisar y en el formulario; "Agregar al último" en la hoja de Capturar. Revisar y el formulario lo ofrecen en el visor del comprobante.
 - [x] 6.6 Textos en es, en y pt.
 
 ## 7. Revisión (review-inbox)
 
 - [x] 7.1 Pruebas del visor: evidencias en orden con su texto, las quitadas marcadas, y un audio sin leer dice que todavía no se leyó.
-- [x] 7.2 `EvidenceViewer` por paquete con Quitar y Separar.
+- [x] 7.2 `EvidenceViewer` por paquete con Quitar y Separar. Se abre desde el visor del comprobante, solo si el borrador sigue pendiente.
 - [x] 7.3 Motivo de revisión en la bandeja y el formulario; "Usar X" para la contradicción (`Revised` con el campo `CORRECTED`).
 
 ## 8. Cierre
@@ -94,7 +92,7 @@
   - el caso del ambulante;
   - reabrir desde Revisar;
   - Quitar y Separar.
-- [ ] 8.2 `npm test`, `npm run lint`, `npm run build:android`, `bundleRelease` y `openspec validate --all` en verde.
+- [x] 8.2 `npm test`, `npm run lint`, `npm run build:android`, `bundleRelease` y `openspec validate --all` en verde.
 
 ## Workflow follow-up
 

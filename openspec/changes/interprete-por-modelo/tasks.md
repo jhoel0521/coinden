@@ -23,6 +23,9 @@
 - [x] 3.2 Orquestador que corre modelo y respaldo, compara los hechos y arma el borrador con su motivo.
 - [x] 3.3 Motivos nuevos de revisión, como enum sin textos, traducidos en la presentación.
 
+- [ ] 3.4 Los escenarios de `contexto-de-captura` que piden entender lenguaje, con el modelo:
+  ambulante; comida y somó; modelo y reglas no coinciden; varias frases en un audio.
+
 ## 4. Descarga, verificación y pantalla
 
 - [ ] 4.1 Pruebas de las reglas de oferta: 4 GB y arm64 ofrecen el pequeño; 6 GB o más, el mediano; 2 GB, 32 bits o sin espacio no ofrecen nada.

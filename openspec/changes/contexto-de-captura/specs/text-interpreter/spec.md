@@ -19,15 +19,15 @@ Si hay un modelo de lenguaje en el teléfono, DEBE (MUST) recibir el mismo paque
 - **THEN** las reglas no aceptan el monto y el pago queda para revisar
 
 ### Requirement: Frases de Contexto
-El intérprete DEBE (MUST) partir el contexto en frases, en el orden en que se dijeron o escribieron, y entenderlas en modo contexto: una frase no necesita monto ni verbo para aportar. Una frase con monto habla de un pago; una frase sin monto lo explica (nota, categoría, billetera, para quién). Las palabras que unen o separan frases ("y luego", "después", "le di", "en efectivo", "acá te paso el comprobante", "esto es de") vienen de los paquetes de idioma, nunca del código.
+El contexto (audios transcritos y notas) DEBE (MUST) aportar a los pagos aunque no tenga monto ni verbo: una frase con monto habla de un pago y una sin monto lo explica (nota, categoría, billetera, para quién). Partir el contexto en frases y entender qué explica cada una es tarea del modelo de lenguaje, y las reglas verifican lo que propone. Sin modelo, cada audio o nota cuenta como una sola frase. Ninguna palabra para unir o separar frases vive en el código ni en los paquetes de idioma.
 
-#### Scenario: Frase sin monto
-- **WHEN** el contexto es "esto es de mi comida"
-- **THEN** es una frase explicativa con la nota "comida" y la categoría Comida
+#### Scenario: Frase sin monto sin modelo
+- **WHEN** no hay modelo, el paquete tiene un solo comprobante y el contexto es "esto es de mi comida"
+- **THEN** el pago tiene la nota "esto es de mi comida", sin motivo de revisión
 
-#### Scenario: Varias frases en un audio
-- **WHEN** el contexto es "estaba comiendo y luego un ambulante pasó y le di 25 en efectivo"
-- **THEN** hay dos frases: "estaba comiendo", explicativa, y "le di 25 en efectivo", con monto 25.00 Bs y medio efectivo
+#### Scenario: Varias frases en un audio con modelo
+- **WHEN** hay modelo y el contexto es "estaba comiendo y luego un ambulante pasó y le di 25 en efectivo"
+- **THEN** el modelo propone dos frases, "estaba comiendo", explicativa, y "le di 25 en efectivo", con monto 25.00 Bs y medio efectivo, y las reglas aceptan el 25 porque está en lo dicho
 
 ### Requirement: Emparejar Contexto con Comprobantes
 Cada frase con monto DEBE (MUST) emparejarse con los comprobantes, usando cada uno una sola vez: si coincide en monto y medio de pago, explica ese pago; si coincide el monto pero el medio es otro, es otro pago. Con varios comprobantes del mismo monto, se asignan por la hora del pago en el orden en que se dijeron, para revisar con el motivo "asignado por orden". Repetir el monto de un pago ya explicado es mencionarlo dos veces.
