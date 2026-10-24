@@ -35,18 +35,12 @@
 > modelo local, y las reglas verifican lo que propone. Este cambio ya no agrega palabras de
 > contexto a ningún paquete de idioma.
 
-- [ ] 3.1 Pruebas del paquete con cada escenario de la spec:
-  - comprobante y audio;
-  - sin comprobante;
+- [ ] 3.1 Pruebas del paquete con cada escenario de la spec. **Ya cubiertos sin modelo** en
+  `CarlosBundleScenariosFeatureTest` (8): comprobante y audio; sin comprobante; la frase explica el
+  único; dos pagos y una frase; comprobante equivocado; otro pago entre varios; foto sin leer;
+  mismo pago dicho dos veces. **Esperan al modelo** (piden entender lenguaje):
   - ambulante;
   - comida y somó;
-  - comprobante equivocado;
-  - otro pago entre varios;
-  - mismo pago dicho dos veces;
-  - dos pagos y una frase;
-  - la frase explica el único;
-  - billetera dicha;
-  - foto sin leer;
   - modelo y reglas no coinciden.
 - [x] 3.2 `BundleInterpreter` pide la interpretación al `IntentInterpreterPort` y valida cada propuesta con `ProposalValidator`; sin modelo, el respaldo determinista arma un pago por comprobante.
 - [x] 3.3 Lo que no pasa la validación, y aquello en lo que el modelo y las reglas no coinciden, queda con su `ReviewReason` y va a revisar.
