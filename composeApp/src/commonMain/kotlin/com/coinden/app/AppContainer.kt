@@ -12,6 +12,7 @@ import com.coinden.core.data.memory.InMemoryPreferencesRepository
 import com.coinden.core.data.memory.InMemoryWalletAliasRepository
 import com.coinden.core.data.memory.InMemoryWalletRepository
 import com.coinden.core.data.memory.UuidIdGenerator
+import com.coinden.core.domain.model.category.BaseCategory
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.MovementProposal
@@ -27,6 +28,7 @@ import com.coinden.core.domain.port.output.CurrencyProfileRepositoryPort
 import com.coinden.core.domain.port.output.DeviceIdentityPort
 import com.coinden.core.domain.port.output.DraftInterpreterPort
 import com.coinden.core.domain.port.output.DraftRepositoryPort
+import com.coinden.core.domain.port.output.IntentInterpreterPort
 import com.coinden.core.domain.port.output.PreferencesRepositoryPort
 import com.coinden.core.domain.port.output.RegionalSettingsPort
 import com.coinden.core.domain.port.output.WalletAliasRepositoryPort
@@ -106,6 +108,11 @@ class AppContainer(
      * la app; vacío significa que todavía no descargó ninguno, y la app funciona igual.
      */
     private val downloadedPacks: () -> List<String> = { emptyList() },
+    /**
+     * El modelo de lenguaje del teléfono, si lo hay. Con `null` manda el respaldo determinista,
+     * que es el caso de cualquier teléfono que no pueda con el modelo o no lo haya descargado.
+     */
+    private val model: IntentInterpreterPort? = null,
 ) {
     private val languageState = MutableStateFlow(initialLanguage)
 
@@ -141,7 +148,20 @@ class AppContainer(
             drafts = drafts,
             // El modelo local todavía no está enchufado: con null manda el respaldo determinista,
             // que es lo que corre hoy. El día que haya motor, cambia este parámetro y nada más.
-            interpreter = BundleInterpretation(model = null, rules = BundleInterpreter(interpreter)),
+            interpreter =
+                BundleInterpretation(
+                    model = model,
+                    rules = BundleInterpreter(interpreter),
+                    // El modelo elige de acá y no puede inventar: las base más las propias de la
+                    // persona, sin las archivadas.
+                    categoriesOf = {
+                        BaseCategory.entries.map { it.name }.toSet() +
+                            categorization.repository
+                                .customCategoriesOf(ownerId)
+                                .filterNot { it.archived }
+                                .map { it.id }
+                    },
+                ),
         )
 
     val createWallet = CreateWalletUseCase(ledger)

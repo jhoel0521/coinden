@@ -7,6 +7,8 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import com.coinden.app.capture.EncryptedAttachmentStore
 import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.i18n.AppLanguage
+import com.coinden.app.intent.AndroidLocalModel
+import com.coinden.app.intent.LiteRtModelEngine
 import com.coinden.app.lock.AndroidDeviceAuth
 import com.coinden.app.lock.AppLockController
 import com.coinden.app.packs.PackStore
@@ -27,15 +29,20 @@ import com.coinden.core.data.memory.StaticRegionalSettings
 import com.coinden.core.data.memory.SystemClock
 import com.coinden.core.data.memory.UuidIdGenerator
 import com.coinden.core.domain.model.Currency
+import com.coinden.core.domain.model.interpret.ModelIntentInterpreter
 import com.coinden.core.domain.model.interpret.RegionalSettings
 import com.coinden.core.domain.model.interpret.UserLocale
+import com.coinden.core.domain.port.output.IntentInterpreterPort
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import java.io.File
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 import java.util.TimeZone
 
 /** Abre la base cifrada y arma el contenedor una sola vez por proceso (sobrevive a la rotación). */
+private const val LANGUAGE_MODEL_FILE = "coinden-intent.litertlm"
+
 class CoinDenApplication : Application() {
     lateinit var packStore: PackStore
         private set
@@ -64,6 +71,16 @@ class CoinDenApplication : Application() {
 
     /** Formularios abiertos: sobreviven a que Android recree la pantalla. */
     val forms = FormPresenters()
+
+    /**
+     * El intérprete de intenciones, o null si no hay modelo descargado. Se arma una sola vez: el
+     * motor carga el modelo recién cuando hace falta interpretar algo.
+     */
+    private fun languageModel(): IntentInterpreterPort? {
+        val archivo = File(filesDir, "models/$LANGUAGE_MODEL_FILE")
+        if (!archivo.isFile) return null
+        return ModelIntentInterpreter(AndroidLocalModel(LiteRtModelEngine(archivo)))
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -108,7 +125,11 @@ class CoinDenApplication : Application() {
                 initialLanguage = savedLanguage ?: AppLanguage.proposedFor(device.language),
                 attachments = EncryptedAttachmentStore(filesDir.resolve("attachments")),
                 downloadedPacks = { packStore.downloadedTexts() },
+                // El modelo de lenguaje, si el teléfono lo tiene descargado. Sin él manda el
+                // respaldo determinista, que es el caso de la mayoría de los teléfonos.
+                model = languageModel(),
             )
+
         // Una versión anterior podía dejar un PDF descifrado en la caché si se cortaba la lectura.
         AndroidPdfReader.clearLeftovers(this)
         perception = AppPerception(this, container)
