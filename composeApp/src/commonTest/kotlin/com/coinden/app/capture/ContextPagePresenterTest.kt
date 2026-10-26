@@ -157,4 +157,38 @@ class ContextPagePresenterTest {
             assertFalse(p.addNote("   "))
             assertEquals(1, p.state.value.items.size)
         }
+
+    /**
+     * Escribir la nota y tocar Listo es el camino natural, y hasta ahora perdia el texto en
+     * silencio: el boton de guardar era otro. Listo tiene que llevarse lo que haya escrito.
+     */
+    @Test
+    fun `tocar Listo guarda la nota que quedo escrita`() =
+        runTest {
+            val (c, bundleId, p) = carlos()
+
+            p.done("esto es de mi comida")
+
+            val paquete = c.bundles.load(bundleId)!!
+            val nota = paquete.evidences.map { it.evidence }.firstOrNull { it.source == EvidenceSource.TEXT }
+            assertEquals("esto es de mi comida", nota?.text, "la nota escrita no llego al paquete")
+            assertTrue(p.state.value.closed, "y el paquete igual queda cerrado")
+        }
+
+    @Test
+    fun `tocar Listo sin escribir nada no agrega una nota vacia`() =
+        runTest {
+            val (c, bundleId, p) = carlos()
+
+            p.done("   ")
+
+            assertEquals(
+                1,
+                c.bundles
+                    .load(bundleId)!!
+                    .evidences.size,
+                "solo el comprobante",
+            )
+            assertTrue(p.state.value.closed)
+        }
 }

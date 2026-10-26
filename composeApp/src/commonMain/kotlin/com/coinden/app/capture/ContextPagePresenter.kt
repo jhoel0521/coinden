@@ -69,7 +69,14 @@ class ContextPagePresenter(
         refresh()
     }
 
-    suspend fun done() = close()
+    /**
+     * Listo se lleva lo que haya quedado escrito en el campo: escribir la nota y tocar Listo es
+     * el camino natural, y el botón de guardar la nota es otro. Un campo vacío no agrega nada.
+     */
+    suspend fun done(note: String = "") {
+        addNote(note)
+        close()
+    }
 
     /** Salir de la página, por el motivo que sea, cierra el paquete. */
     suspend fun onLeave() = close()

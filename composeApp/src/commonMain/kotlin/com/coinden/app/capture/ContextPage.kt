@@ -142,7 +142,8 @@ fun ContextPage(
                     text = stringResource(Res.string.context_done),
                     onClick = {
                         scope.launch {
-                            presenter.done()
+                            presenter.done(note)
+                            note = ""
                             onClosed()
                         }
                     },
