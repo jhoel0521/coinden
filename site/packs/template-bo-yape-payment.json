@@ -7,5 +7,6 @@
     "kind": "EXPENSE",
     "issuerWalletHint": "yape",
     "counterpartyAfterAmount": true,
-    "referenceLabel": "nro de transaccion"
+    "referenceLabel": "nro de transaccion",
+    "method": "TRANSFER"
 }

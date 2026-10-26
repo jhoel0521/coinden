@@ -71,7 +71,11 @@ class BundleInterpreter(
                         val target = same.first()
                         payments[payments.indexOf(target)] = target.copy(evidenceIds = target.evidenceIds + statement.evidenceIds)
                     }
-                    receipts.size == 1 && extras.isEmpty() -> {
+                    // Un solo comprobante y lo dicho no coincide: lo más probable es que hablen
+                    // del mismo pago y discrepen en el monto. Pero si el monto es el mismo y lo
+                    // que difiere es el medio ("pagué 25 en efectivo" junto a un QR de 25), son
+                    // dos pagos distintos: el comprobante prueba de dónde salió esa plata.
+                    receipts.size == 1 && extras.isEmpty() && differentAmount(payments.single().proposal, statement.proposal) -> {
                         val target = payments.single()
                         val stated = amountOf(statement.proposal)!!
                         val read = amountOf(target.proposal)
@@ -214,6 +218,16 @@ class BundleInterpreter(
             is MovementProposal.AdjustTo -> proposal.note
             else -> null
         }
+
+    /** Dos propuestas con montos que no son el mismo número, sin importar cómo se escribieron. */
+    private fun differentAmount(
+        a: MovementProposal,
+        b: MovementProposal,
+    ): Boolean {
+        val x = amountOf(a)?.value ?: return true
+        val y = amountOf(b)?.value ?: return true
+        return canonical(x) != canonical(y)
+    }
 
     /** Mismo monto y moneda; y si los dos dicen el medio de pago, el mismo: otro medio es otro pago. */
     private fun sameFacts(

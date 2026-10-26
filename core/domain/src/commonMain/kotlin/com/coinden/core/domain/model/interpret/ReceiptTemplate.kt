@@ -1,5 +1,7 @@
 package com.coinden.core.domain.model.interpret
 
+import com.coinden.core.domain.model.wallet.PaymentMethod
+
 /** Qué movimiento describe un comprobante. */
 enum class TemplateKind {
     EXPENSE,
@@ -28,4 +30,10 @@ data class ReceiptTemplate(
     val counterpartyAfterAmount: Boolean = false,
     /** Etiqueta del número de transacción, normalizada ("nro de transaccion"). */
     val referenceLabel: String? = null,
+    /**
+     * Con qué se pagó, cuando el comprobante lo prueba: un comprobante de pago QR es una
+     * transferencia, y uno de retiro es efectivo. Sin esto, una frase que dice "en efectivo"
+     * se confunde con el pago del comprobante cuando coincide el monto.
+     */
+    val method: PaymentMethod? = null,
 )

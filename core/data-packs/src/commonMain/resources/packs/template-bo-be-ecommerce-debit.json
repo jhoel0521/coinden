@@ -8,5 +8,6 @@
     "amountLabel": "importe",
     "noteLabel": "nota",
     "accountLabel": "cuenta",
-    "referenceLabel": "nro de transaccion"
+    "referenceLabel": "nro de transaccion",
+    "method": "CARD"
 }

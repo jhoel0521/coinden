@@ -70,6 +70,8 @@ object PackParser {
             issuerWalletHint = dto.issuerWalletHint,
             counterpartyAfterAmount = dto.counterpartyAfterAmount,
             referenceLabel = dto.referenceLabel,
+            // Un medio que esta app no conoce se descarta: la plantilla sigue sirviendo sin él.
+            method = PaymentMethod.entries.firstOrNull { it.name == dto.method },
         )
     }
 
@@ -118,4 +120,5 @@ private data class ReceiptTemplateFile(
     val issuerWalletHint: String? = null,
     val counterpartyAfterAmount: Boolean = false,
     val referenceLabel: String? = null,
+    val method: String? = null,
 )

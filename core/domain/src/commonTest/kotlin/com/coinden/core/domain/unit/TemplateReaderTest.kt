@@ -14,6 +14,7 @@ import com.coinden.core.domain.model.interpret.InterpretContext
 import com.coinden.core.domain.model.interpret.ReceiptTemplate
 import com.coinden.core.domain.model.interpret.TemplateReader
 import com.coinden.core.domain.model.interpret.merged
+import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
 import com.coinden.core.domain.support.TestPacks
@@ -75,6 +76,8 @@ class TemplateReaderTest {
                 "Mariela Quispe Rojas",
                 evidence,
                 reference = "900000001",
+                // Yape mueve plata de una cuenta, no es efectivo: lo dice la plantilla.
+                paymentMethod = PaymentMethod.TRANSFER,
             )
         assertEquals(expected, read(TestPacks.template("bo-yape-payment"), AnonymizedReceipts.YAPE_PAYMENT))
     }
@@ -89,6 +92,8 @@ class TemplateReaderTest {
                 "POLLOS DEL VALLE",
                 evidence,
                 reference = "400000001",
+                // Un pago QR es una transferencia: lo prueba el comprobante.
+                paymentMethod = PaymentMethod.TRANSFER,
             )
         val proposal = read(TestPacks.template("bo-be-qr-payment"), AnonymizedReceipts.BE_QR_CHICKEN)
         assertEquals(expected, proposal)

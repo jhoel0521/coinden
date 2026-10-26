@@ -8,6 +8,7 @@ import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.WalletDirectory
 import com.coinden.core.domain.model.interpret.BundleInterpreter
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
+import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
 import com.coinden.core.domain.port.output.BundlePayment
@@ -163,5 +164,39 @@ class CarlosBundleScenariosFeatureTest {
                 )
 
             assertEquals(1, pagos.size, "lo dicho coincide con el comprobante: lo explica, no lo duplica")
+        }
+
+    /**
+     * Un comprobante de pago QR y una frase que dice "efectivo" no son el mismo pago, aunque
+     * coincida el monto: el comprobante prueba de dónde salió la plata. Antes se fusionaban,
+     * porque la plantilla no decía con qué medio se pagó, y el pago QR terminaba registrado
+     * como efectivo.
+     */
+    @Test
+    fun `un comprobante QR y un pago en efectivo del mismo monto son dos pagos`() =
+        runTest {
+            val pagos =
+                interpreter.interpret(
+                    listOf(
+                        receipt("e1", "Banco ECONOMICO Pago QR otros bancos Beneficiario POLLOS DEL VALLE Importe Bs25.00"),
+                        said("e2", "le di 25 en efectivo"),
+                    ),
+                    directory,
+                )
+
+            assertEquals(2, pagos.size, "el comprobante es QR y lo dicho es efectivo: no se fusionan")
+        }
+
+    @Test
+    fun `el comprobante de pago QR trae su medio de pago`() =
+        runTest {
+            val pagos =
+                interpreter.interpret(
+                    listOf(receipt("e1", "Banco ECONOMICO Pago QR otros bancos Importe Bs25.00")),
+                    directory,
+                )
+
+            val metodo = (pagos.single().proposal as MovementProposal.Expense).paymentMethod
+            assertEquals(PaymentMethod.TRANSFER, metodo, "un pago QR es una transferencia, no efectivo")
         }
 }

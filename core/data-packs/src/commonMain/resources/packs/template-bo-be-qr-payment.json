@@ -9,5 +9,6 @@
     "counterpartyLabel": "beneficiario",
     "noteLabel": "nota",
     "accountLabel": "cuenta origen",
-    "referenceLabel": "nro de transaccion"
+    "referenceLabel": "nro de transaccion",
+    "method": "TRANSFER"
 }
