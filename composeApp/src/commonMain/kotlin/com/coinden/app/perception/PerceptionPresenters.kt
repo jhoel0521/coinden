@@ -74,8 +74,14 @@ class VoiceModelsPresenter(
     }
 }
 
+/**
+ * [chosen] separa "todavía no eligió" de "eligió que no", que es la distinción que importa:
+ * un interruptor nace en una posición, así que dejarlo apagado no prueba ninguna decisión.
+ * Sale de la bandera de aviso visto, sin guardar nada nuevo.
+ */
 data class PrivacyState(
     val googleReader: Boolean = false,
+    val chosen: Boolean = false,
 )
 
 /** Pantalla de privacidad: qué sale del teléfono y la elección del lector de Google. */
@@ -86,14 +92,20 @@ class PrivacyPresenter(
     val state: StateFlow<PrivacyState> = mutableState.asStateFlow()
 
     suspend fun load() {
-        mutableState.value = PrivacyState(container.storage.preferences.googleReaderEnabled())
+        mutableState.value =
+            PrivacyState(
+                googleReader = container.storage.preferences.googleReaderEnabled(),
+                chosen = container.storage.preferences.privacyNoticeSeen(),
+            )
     }
 
-    fun onGoogleReaderChange(enabled: Boolean) = mutableState.update { it.copy(googleReader = enabled) }
-
-    /** Guarda la elección y recuerda que la persona ya vio la pantalla. */
-    suspend fun onContinue() {
-        container.storage.preferences.setGoogleReaderEnabled(state.value.googleReader)
+    /**
+     * La persona eligió: con el lector de Google o sin él. Las dos elecciones se guardan igual,
+     * porque decir que no es una decisión, no un olvido.
+     */
+    suspend fun chooseGoogleReader(enabled: Boolean) {
+        container.storage.preferences.setGoogleReaderEnabled(enabled)
         container.storage.preferences.setPrivacyNoticeSeen()
+        mutableState.update { it.copy(googleReader = enabled, chosen = true) }
     }
 }

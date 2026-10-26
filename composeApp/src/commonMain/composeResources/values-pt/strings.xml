@@ -158,6 +158,10 @@
     <string name="privacy_google_never">Nunca recebe suas fotos, textos, valores ou dados seus. Sem ele, o app lê com um leitor livre que não envia nada.</string>
     <string name="privacy_models">Modelos de voz</string>
     <string name="privacy_continue">Entendi, continuar</string>
+    <string name="privacy_google_choose_yes">Seguir com o leitor do Google</string>
+    <string name="privacy_google_choose_no">Seguir sem ele</string>
+    <string name="privacy_google_link">Ver quais dados o Google recebe</string>
+    <string name="privacy_choose_hint">Escolha uma das duas para continuar. Você pode mudar quando quiser em Perfil.</string>
     <string name="home_privacy">Privacidade</string>
     <string name="result_reading">Lendo no celular…</string>
     <string name="result_voice_model">Para transcrever este áudio, baixe um modelo de voz.</string>

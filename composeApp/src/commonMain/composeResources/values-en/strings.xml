@@ -158,6 +158,10 @@
     <string name="privacy_google_never">It never receives your photos, texts, amounts or personal data. Without it, the app reads with a free reader that sends nothing.</string>
     <string name="privacy_models">Voice models</string>
     <string name="privacy_continue">Got it, continue</string>
+    <string name="privacy_google_choose_yes">Continue with the Google reader</string>
+    <string name="privacy_google_choose_no">Continue without it</string>
+    <string name="privacy_google_link">See what data Google receives</string>
+    <string name="privacy_choose_hint">Choose one of the two to continue. You can change it any time in Profile.</string>
     <string name="home_privacy">Privacy</string>
     <string name="result_reading">Reading on the phone…</string>
     <string name="result_voice_model">To transcribe this audio, download a voice model.</string>
