@@ -11,13 +11,13 @@ import com.coinden.core.domain.model.draft.WalletRef
 import com.coinden.core.domain.model.draft.confidence
 import com.coinden.core.domain.model.interpret.DateTimeReader
 import com.coinden.core.domain.model.interpret.InterpretContext
-import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.interpret.ReceiptTemplate
-import com.coinden.core.domain.model.interpret.ReceiptTemplates
 import com.coinden.core.domain.model.interpret.TemplateReader
 import com.coinden.core.domain.model.interpret.merged
+import com.coinden.core.domain.model.wallet.PaymentMethod
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.support.testLocale
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -39,7 +39,7 @@ class TemplateReaderTest {
             defaultWalletId = "billetera",
         )
     private val ctx =
-        InterpretContext(listOf(LanguagePacks.ENGLISH, LanguagePacks.SPANISH).merged(), testLocale("es", "BO"), -240, directory)
+        InterpretContext(listOf(TestPacks.english, TestPacks.spanish).merged(), testLocale("es", "BO"), -240, directory)
 
     /** Instante UTC de una hora local de Bolivia (UTC-4) de octubre de 2026. */
     private fun boliviaTime(
@@ -76,8 +76,10 @@ class TemplateReaderTest {
                 "Mariela Quispe Rojas",
                 evidence,
                 reference = "900000001",
+                // Yape mueve plata de una cuenta, no es efectivo: lo dice la plantilla.
+                paymentMethod = PaymentMethod.TRANSFER,
             )
-        assertEquals(expected, read(ReceiptTemplates.YAPE_BO, AnonymizedReceipts.YAPE_PAYMENT))
+        assertEquals(expected, read(TestPacks.template("bo-yape-payment"), AnonymizedReceipts.YAPE_PAYMENT))
     }
 
     @Test
@@ -90,12 +92,14 @@ class TemplateReaderTest {
                 "POLLOS DEL VALLE",
                 evidence,
                 reference = "400000001",
+                // Un pago QR es una transferencia: lo prueba el comprobante.
+                paymentMethod = PaymentMethod.TRANSFER,
             )
-        val proposal = read(ReceiptTemplates.BE_QR_PAYMENT, AnonymizedReceipts.BE_QR_CHICKEN)
+        val proposal = read(TestPacks.template("bo-be-qr-payment"), AnonymizedReceipts.BE_QR_CHICKEN)
         assertEquals(expected, proposal)
         assertEquals(com.coinden.core.domain.model.draft.Confidence.HIGH, proposal.confidence)
 
-        val pharmacy = read(ReceiptTemplates.BE_QR_PAYMENT, AnonymizedReceipts.BE_QR_PHARMACY) as MovementProposal.Expense
+        val pharmacy = read(TestPacks.template("bo-be-qr-payment"), AnonymizedReceipts.BE_QR_PHARMACY) as MovementProposal.Expense
         assertEquals(ProposedAmount("31.70", Currency.BOB), pharmacy.amount)
         assertEquals("FARMACIA EJEMPLO S.A.", pharmacy.note)
         assertEquals(boliviaTime(11, 10, 4, 28), pharmacy.occurredAtEpochMs)
@@ -103,7 +107,8 @@ class TemplateReaderTest {
 
     @Test
     fun `Banco Economico - debito por compra con signo negativo en el texto`() {
-        val proposal = assertIs<MovementProposal.Expense>(read(ReceiptTemplates.BE_ECOMMERCE_DEBIT, AnonymizedReceipts.BE_ECOMMERCE_DEBIT))
+        val proposal =
+            assertIs<MovementProposal.Expense>(read(TestPacks.template("bo-be-ecommerce-debit"), AnonymizedReceipts.BE_ECOMMERCE_DEBIT))
         assertEquals(ProposedAmount("118.71", Currency.BOB), proposal.amount)
         assertEquals(WalletRef.ByHint(account), proposal.wallet)
         assertEquals("StreamingPremium650-2530000US", proposal.note)
@@ -112,7 +117,8 @@ class TemplateReaderTest {
 
     @Test
     fun `Banco Economico - retiro de efectivo hacia la billetera por defecto`() {
-        val transfer = assertIs<MovementProposal.Transfer>(read(ReceiptTemplates.BE_CASH_WITHDRAWAL, AnonymizedReceipts.BE_CASH_WITHDRAWAL))
+        val transfer =
+            assertIs<MovementProposal.Transfer>(read(TestPacks.template("bo-be-cash-withdrawal"), AnonymizedReceipts.BE_CASH_WITHDRAWAL))
         assertEquals(ProposedAmount("10.00", Currency.BOB), transfer.out)
         assertEquals(WalletRef.ByHint(account), transfer.from)
         assertEquals(WalletRef.ById("billetera"), transfer.to)
@@ -123,13 +129,13 @@ class TemplateReaderTest {
     @Test
     fun `cuenta de origen sin alias deja la billetera faltante`() {
         val noAlias = ctx.copy(directory = directory.copy(aliases = mapOf("yape" to "yape")))
-        val proposal = TemplateReader.read(ReceiptTemplates.BE_QR_PAYMENT, AnonymizedReceipts.BE_QR_CHICKEN, noAlias).single()
+        val proposal = TemplateReader.read(TestPacks.template("bo-be-qr-payment"), AnonymizedReceipts.BE_QR_CHICKEN, noAlias).single()
         assertEquals(null, (proposal as MovementProposal.Expense).wallet)
     }
 
     @Test
     fun `una plantilla no coincide con comprobantes de otro formato`() {
-        assertFalse(TemplateReader.matches(ReceiptTemplates.YAPE_BO, AnonymizedReceipts.BE_QR_CHICKEN))
-        assertFalse(TemplateReader.matches(ReceiptTemplates.BE_QR_PAYMENT, AnonymizedReceipts.BE_CASH_WITHDRAWAL))
+        assertFalse(TemplateReader.matches(TestPacks.template("bo-yape-payment"), AnonymizedReceipts.BE_QR_CHICKEN))
+        assertFalse(TemplateReader.matches(TestPacks.template("bo-be-qr-payment"), AnonymizedReceipts.BE_CASH_WITHDRAWAL))
     }
 }

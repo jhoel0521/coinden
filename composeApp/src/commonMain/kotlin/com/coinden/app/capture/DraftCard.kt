@@ -94,7 +94,7 @@ class DraftCards(
         val questions =
             container.findSameMovementQuestions(container.ownerId, container.utcOffsetMinutes).associateBy { it.draftId }
         return drafts.map { draft ->
-            val card = card(draft, directory, customNames)
+            val card = card(draft, directory, customNames).copy(perceivedText = perceivedTextOf(draft))
             val question = questions[draft.id] ?: return@map card
             val other = container.drafts.load(question.otherDraftId) ?: return@map card
             val otherCard = card(other, directory, customNames)
@@ -164,6 +164,21 @@ class DraftCards(
             tips = tips,
             tipExample = if (CaptureTip.SAY_WALLET in tips) exampleOf(draft, proposal, directory) else null,
         )
+    }
+
+    /**
+     * Lo que se leyó del archivo. En un paquete, la lectura queda en la evidencia del paquete y no
+     * en el borrador: se busca ahí por el archivo, para no decir "sin leer" de algo ya leído.
+     */
+    private suspend fun perceivedTextOf(draft: Draft): String? {
+        draft.header.perceivedText?.let { return it }
+        val bundleId = draft.header.bundleId ?: return null
+        val ref = draft.header.evidence.attachmentRef ?: return null
+        return container.bundles
+            .load(bundleId)
+            ?.evidences
+            ?.firstOrNull { it.evidence.attachmentRef == ref }
+            ?.perceivedText
     }
 
     /** «nota monto palabra-de-billetera», con la billetera sugerida o la por defecto; null si no se puede armar. */

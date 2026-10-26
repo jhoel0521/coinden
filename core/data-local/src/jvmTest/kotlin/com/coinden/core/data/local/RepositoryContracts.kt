@@ -12,6 +12,8 @@ import com.coinden.core.domain.model.ExchangeRate
 import com.coinden.core.domain.model.ExchangeRateStrategy
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.UserCurrencyProfile
+import com.coinden.core.domain.model.bundle.BundleEvent
+import com.coinden.core.domain.model.bundle.EvidenceRole
 import com.coinden.core.domain.model.category.BaseCategory
 import com.coinden.core.domain.model.category.CategoryOrigin
 import com.coinden.core.domain.model.category.CategoryRef
@@ -26,6 +28,7 @@ import com.coinden.core.domain.model.draft.ReadyMovement
 import com.coinden.core.domain.model.wallet.LedgerEvent
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.port.output.BundleRepositoryPort
 import com.coinden.core.domain.port.output.CategorizationRepositoryPort
 import com.coinden.core.domain.port.output.CurrencyProfileRepositoryPort
 import com.coinden.core.domain.port.output.DraftRepositoryPort
@@ -402,4 +405,108 @@ class InMemoryPreferencesRepositoryContractTest : PreferencesRepositoryContract(
 
 class LocalPreferencesRepositoryContractTest : PreferencesRepositoryContract() {
     override fun repo() = LocalPreferencesRepository(freshDatabase(), Dispatchers.Unconfined)
+}
+
+/**
+ * Los paquetes de captura: la misma batería la corren memoria y base local, así que las dos se
+ * comportan igual. Es lo que permite probar el dominio en memoria y confiar en el teléfono.
+ */
+abstract class BundleRepositoryContract {
+    abstract fun repo(): BundleRepositoryPort
+
+    private fun abierto(
+        id: String,
+        bundleId: String,
+        owner: String = "carlos",
+    ) = BundleEvent.Opened(id, bundleId, owner, "dev", T, T)
+
+    @Test
+    fun `eventos por paquete en orden y paquetes por dueno sin repetir`() =
+        runTest {
+            val repo = repo()
+            val a1 = abierto("a1", "p1")
+            val b1 = abierto("b1", "p2")
+            val a2 = BundleEvent.Closed("a2", "p1", "carlos", "dev", T + 1, T + 1)
+            listOf(a1, b1, a2, abierto("c1", "p3", owner = "ana")).forEach { repo.appendEvent(it) }
+
+            assertEquals(listOf(a1, a2), repo.eventsFor("p1"))
+            assertEquals(listOf("p1", "p2"), repo.bundleIdsFor("carlos"))
+            assertEquals(listOf("p3"), repo.bundleIdsFor("ana"))
+        }
+
+    @Test
+    fun `una evidencia con su archivo y su huella vuelve igual`() =
+        runTest {
+            val repo = repo()
+            val adjunta =
+                BundleEvent.EvidenceAttached(
+                    "e1",
+                    "p1",
+                    "carlos",
+                    "dev",
+                    T,
+                    T,
+                    evidenceId = "ev1",
+                    evidence = Evidence(EvidenceSource.PHOTO, null, "att-1", "huella-1"),
+                    role = EvidenceRole.RECEIPT,
+                )
+            repo.appendEvent(abierto("a1", "p1"))
+            repo.appendEvent(adjunta)
+
+            assertEquals(adjunta, repo.eventsFor("p1").last())
+        }
+
+    @Test
+    fun `todo el ciclo del paquete se guarda y se lee igual`() =
+        runTest {
+            val repo = repo()
+            val ciclo =
+                listOf(
+                    abierto("a1", "p1"),
+                    BundleEvent.EvidenceExcluded("a2", "p1", "carlos", "dev", T + 1, T + 1, "ev1"),
+                    BundleEvent.EvidencePerceived("a3", "p1", "carlos", "dev", T + 2, T + 2, "ev2", "Importe Bs25.00", "ocr"),
+                    BundleEvent.Closed("a4", "p1", "carlos", "dev", T + 3, T + 3),
+                    BundleEvent.Reopened("a5", "p1", "carlos", "dev", T + 4, T + 4),
+                    BundleEvent.EvidenceSplit("a6", "p1", "carlos", "dev", T + 5, T + 5, "ev2", "p2"),
+                )
+            ciclo.forEach { repo.appendEvent(it) }
+
+            assertEquals(ciclo, repo.eventsFor("p1"))
+        }
+
+    @Test
+    fun `una foto que no se pudo leer se registra igual, para no releerla`() =
+        runTest {
+            val repo = repo()
+            val ilegible = BundleEvent.EvidencePerceived("a1", "p1", "carlos", "dev", T, T, "ev1", null, "ocr")
+            repo.appendEvent(ilegible)
+
+            assertEquals(ilegible, repo.eventsFor("p1").single())
+        }
+
+    @Test
+    fun `un id repetido en los paquetes se rechaza`() =
+        runTest {
+            val repo = repo()
+            repo.appendEvent(abierto("a1", "p1"))
+
+            assertFailsWith<Exception> { repo.appendEvent(abierto("a1", "p1")) }
+            assertEquals(1, repo.eventsFor("p1").size)
+        }
+
+    @Test
+    fun `un paquete sin eventos no existe`() =
+        runTest {
+            assertEquals(emptyList(), repo().eventsFor("no-existe"))
+        }
+}
+
+class InMemoryBundleRepositoryContractTest : BundleRepositoryContract() {
+    override fun repo() =
+        com.coinden.core.data.memory
+            .InMemoryBundleRepository()
+}
+
+class LocalBundleRepositoryContractTest : BundleRepositoryContract() {
+    override fun repo() = LocalBundleRepository(freshDatabase(), Dispatchers.Unconfined)
 }

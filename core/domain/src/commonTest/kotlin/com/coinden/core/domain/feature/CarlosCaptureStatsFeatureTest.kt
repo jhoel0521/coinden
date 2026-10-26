@@ -7,11 +7,10 @@ import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.EvidenceSource
 import com.coinden.core.domain.model.interpret.DateTimeReader
-import com.coinden.core.domain.model.interpret.LanguagePacks
-import com.coinden.core.domain.model.interpret.ReceiptTemplates
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
 import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
 import com.coinden.core.domain.usecase.draft.DiscardDraftUseCase
 import com.coinden.core.domain.usecase.draft.DraftContext
@@ -35,7 +34,7 @@ class CarlosCaptureStatsFeatureTest {
     private val capture =
         CaptureDraftUseCase(
             ctx,
-            TextDraftInterpreter(FakeInstalledPacks(listOf(LanguagePacks.SPANISH), ReceiptTemplates.all), FixedRegionalSettings()),
+            TextDraftInterpreter(FakeInstalledPacks(listOf(TestPacks.spanish), TestPacks.templates), FixedRegionalSettings()),
         )
     private val stats = GetCaptureStatsUseCase(ctx)
 

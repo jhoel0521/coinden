@@ -14,9 +14,9 @@ import com.coinden.core.domain.model.ExchangeRateStrategy
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.category.BaseCategory
 import com.coinden.core.domain.model.category.CategoryRef
-import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.usecase.ConfigureLocalCurrencyUseCase
 import com.coinden.core.domain.usecase.category.CategorizationContext
 import com.coinden.core.domain.usecase.category.ClassifyExpenseUseCase
@@ -41,7 +41,7 @@ class SpendingByCategoryTest {
     private val clock = FixedClock(at(21))
     private val device = FixedDevice("celular")
     private val ledger = LedgerContext(wallets, ids, clock, device)
-    private val ctx = CategorizationContext(categorization, wallets, FakeInstalledPacks(listOf(LanguagePacks.SPANISH)), ids, clock, device)
+    private val ctx = CategorizationContext(categorization, wallets, FakeInstalledPacks(listOf(TestPacks.spanish)), ids, clock, device)
     private val register = RegisterMovementUseCase(ledger)
     private val classify = ClassifyExpenseUseCase(ctx)
     private val report = SpendingByCategoryUseCase(ctx, profiles)

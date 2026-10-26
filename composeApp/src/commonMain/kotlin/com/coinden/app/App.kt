@@ -23,11 +23,13 @@ import androidx.navigation.compose.rememberNavController
 import com.coinden.app.capture.CaptureNotice
 import com.coinden.app.capture.CapturePlatform
 import com.coinden.app.capture.CapturePresenter
+import com.coinden.app.capture.ContextRoute
 import com.coinden.app.capture.DraftFormPresenter
 import com.coinden.app.capture.DraftFormScreen
 import com.coinden.app.capture.EvidencePresenter
 import com.coinden.app.capture.EvidenceScreen
 import com.coinden.app.capture.FormMode
+import com.coinden.app.capture.ReopenContext
 import com.coinden.app.capture.SharedContent
 import com.coinden.app.i18n.ProvideAppLocale
 import com.coinden.app.lock.AppLockController
@@ -69,6 +71,7 @@ private object Routes {
     const val REVIEW = "review/{draftId}"
     const val CORRECT = "correct/{draftId}/{source}"
     const val EVIDENCE = "evidence/{draftId}"
+    const val CONTEXT = "context/{bundleId}"
 
     /** Sin comprobante fuente: corrección a mano. */
     private const val NO_SOURCE = "-"
@@ -76,6 +79,8 @@ private object Routes {
     fun review(draftId: String) = "review/$draftId"
 
     fun evidence(draftId: String) = "evidence/$draftId"
+
+    fun context(bundleId: String) = "context/$bundleId"
 
     fun form(mode: FormMode): String =
         when (mode) {
@@ -170,6 +175,10 @@ private fun AppNavHost(
         }
     val scope = rememberCoroutineScope()
     val pendingShare by shared.collectAsState()
+    // "Agregar contexto": reabre el paquete del borrador y abre su página. Lo confirmado no se reabre.
+    val addContext: (String) -> Unit = { draftId ->
+        scope.launch { ReopenContext(container).forDraft(draftId)?.let { nav.navigate(Routes.context(it)) } }
+    }
     NavHost(navController = nav, startDestination = start) {
         composable(Routes.WELCOME) {
             LaunchedEffect(Unit) { onboarding.show(OnboardingStep.WELCOME) }
@@ -231,6 +240,13 @@ private fun AppNavHost(
             }
             val captureState by capture.state.collectAsState()
             // "Son el mismo" con un confirmado: se revisa en el formulario de corrección antes de aplicar nada.
+            // Lo recién capturado pasa por la página de contexto antes de mostrar el resultado.
+            LaunchedEffect(captureState.contextBundle) {
+                captureState.contextBundle?.let {
+                    capture.contextOpened()
+                    nav.navigate(Routes.context(it))
+                }
+            }
             LaunchedEffect(captureState.correction) {
                 captureState.correction?.let {
                     capture.correctionOpened()
@@ -251,6 +267,7 @@ private fun AppNavHost(
                 onWrite = { nav.navigate(Routes.FORM) },
                 openForm = { nav.navigate(Routes.form(it)) },
                 openEvidence = { nav.navigate(Routes.evidence(it)) },
+                onAddContext = addContext,
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onCategories = { nav.navigate(Routes.CATEGORIES) },
                 onPrivacy = { nav.navigate(Routes.PRIVACY) },
@@ -295,7 +312,15 @@ private fun AppNavHost(
             val draftId = entry.savedStateHandle.get<String>("draftId").orEmpty()
             Guarded(lock) {
                 val evidence = remember(draftId) { EvidencePresenter(container, draftId) }
-                EvidenceScreen(evidence, platform.evidenceViewer, onBack = { nav.popBackStack() })
+                EvidenceScreen(evidence, platform.evidenceViewer, onBack = { nav.popBackStack() }, onAddContext = { addContext(draftId) })
+            }
+        }
+        // Sin montos ni saldos: se abre aunque la app esté bloqueada, como capturar.
+        composable(Routes.CONTEXT) { entry ->
+            val bundleId = entry.savedStateHandle.get<String>("bundleId").orEmpty()
+            ContextRoute(container, bundleId, platform, entry.lifecycle, scope) {
+                capture.contextClosed(bundleId)
+                nav.popBackStack(Routes.HOME, inclusive = false)
             }
         }
         composable(Routes.CAMERA) {

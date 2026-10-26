@@ -4,6 +4,7 @@ import com.coinden.app.capture.AttachmentStore
 import com.coinden.app.capture.InMemoryAttachmentStore
 import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.i18n.LanguageAwarePacks
+import com.coinden.core.data.memory.InMemoryBundleRepository
 import com.coinden.core.data.memory.InMemoryCategorizationRepository
 import com.coinden.core.data.memory.InMemoryCurrencyProfileRepository
 import com.coinden.core.data.memory.InMemoryDraftRepository
@@ -11,11 +12,15 @@ import com.coinden.core.data.memory.InMemoryPreferencesRepository
 import com.coinden.core.data.memory.InMemoryWalletAliasRepository
 import com.coinden.core.data.memory.InMemoryWalletRepository
 import com.coinden.core.data.memory.UuidIdGenerator
+import com.coinden.core.domain.model.category.BaseCategory
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.WalletDirectory
+import com.coinden.core.domain.model.interpret.BundleInterpretation
+import com.coinden.core.domain.model.interpret.BundleInterpreter
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
+import com.coinden.core.domain.port.output.BundleRepositoryPort
 import com.coinden.core.domain.port.output.CategorizationRepositoryPort
 import com.coinden.core.domain.port.output.ClockPort
 import com.coinden.core.domain.port.output.CurrencyCatalogPort
@@ -23,11 +28,13 @@ import com.coinden.core.domain.port.output.CurrencyProfileRepositoryPort
 import com.coinden.core.domain.port.output.DeviceIdentityPort
 import com.coinden.core.domain.port.output.DraftInterpreterPort
 import com.coinden.core.domain.port.output.DraftRepositoryPort
+import com.coinden.core.domain.port.output.IntentInterpreterPort
 import com.coinden.core.domain.port.output.PreferencesRepositoryPort
 import com.coinden.core.domain.port.output.RegionalSettingsPort
 import com.coinden.core.domain.port.output.WalletAliasRepositoryPort
 import com.coinden.core.domain.port.output.WalletRepositoryPort
 import com.coinden.core.domain.usecase.GetConsolidatedPortfolioUseCase
+import com.coinden.core.domain.usecase.bundle.BundleContext
 import com.coinden.core.domain.usecase.category.CategorizationContext
 import com.coinden.core.domain.usecase.category.SpendingByCategoryUseCase
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
@@ -63,6 +70,8 @@ class AppStorage(
     val categorization: CategorizationRepositoryPort,
     val profiles: CurrencyProfileRepositoryPort,
     val preferences: PreferencesRepositoryPort,
+    /** Paquetes de captura: lo que la persona manda junto en un momento. */
+    val bundles: BundleRepositoryPort,
 ) {
     companion object {
         fun inMemory() =
@@ -73,6 +82,7 @@ class AppStorage(
                 InMemoryCategorizationRepository(),
                 InMemoryCurrencyProfileRepository(),
                 InMemoryPreferencesRepository(),
+                InMemoryBundleRepository(),
             )
     }
 }
@@ -93,6 +103,16 @@ class AppContainer(
     initialLanguage: String = "es",
     /** Fotos, PDF y audios de las evidencias: cifrados en el teléfono, en memoria en las pruebas. */
     val attachments: AttachmentStore = InMemoryAttachmentStore(),
+    /**
+     * Los paquetes de idioma y plantillas que la persona descargó. Se suman a los que viajan con
+     * la app; vacío significa que todavía no descargó ninguno, y la app funciona igual.
+     */
+    private val downloadedPacks: () -> List<String> = { emptyList() },
+    /**
+     * El modelo de lenguaje del teléfono, si lo hay. Con `null` manda el respaldo determinista,
+     * que es el caso de cualquier teléfono que no pueda con el modelo o no lo haya descargado.
+     */
+    private val model: IntentInterpreterPort? = null,
 ) {
     private val languageState = MutableStateFlow(initialLanguage)
 
@@ -101,7 +121,7 @@ class AppContainer(
     val languageCode: String get() = languageState.value
 
     private val ids = UuidIdGenerator()
-    private val packs = LanguageAwarePacks({ languageCode })
+    private val packs = LanguageAwarePacks({ languageCode }, downloadedPacks)
 
     val ledger = LedgerContext(storage.wallets, ids, clock, device)
     val categorization = CategorizationContext(storage.categorization, storage.wallets, packs, ids, clock, device)
@@ -117,6 +137,32 @@ class AppContainer(
             categorization = categorization,
         )
     val interpreter = TextDraftInterpreter(packs, regional)
+
+    /**
+     * Los paquetes de captura: lo que la persona manda junto se interpreta junto. El intérprete
+     * del paquete son las reglas; cuando haya modelo local, entra con el mismo contrato.
+     */
+    val bundles =
+        BundleContext(
+            bundles = storage.bundles,
+            drafts = drafts,
+            // El modelo local todavía no está enchufado: con null manda el respaldo determinista,
+            // que es lo que corre hoy. El día que haya motor, cambia este parámetro y nada más.
+            interpreter =
+                BundleInterpretation(
+                    model = model,
+                    rules = BundleInterpreter(interpreter),
+                    // El modelo elige de acá y no puede inventar: las base más las propias de la
+                    // persona, sin las archivadas.
+                    categoriesOf = {
+                        BaseCategory.entries.map { it.name }.toSet() +
+                            categorization.repository
+                                .customCategoriesOf(ownerId)
+                                .filterNot { it.archived }
+                                .map { it.id }
+                    },
+                ),
+        )
 
     val createWallet = CreateWalletUseCase(ledger)
     val setDefaultWallet = SetDefaultWalletUseCase(drafts)

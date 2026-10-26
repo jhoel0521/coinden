@@ -1,0 +1,194 @@
+{
+    "formatVersion": 1,
+    "code": "en",
+    "amountLabels": [
+        "amount",
+        "amount paid",
+        "sum",
+        "total"
+    ],
+    "counterpartyLabels": [
+        "beneficiary",
+        "merchant",
+        "paid to",
+        "payee",
+        "recipient",
+        "to"
+    ],
+    "accountLabels": [
+        "account",
+        "from",
+        "from account",
+        "source account"
+    ],
+    "noteLabels": [
+        "description",
+        "memo",
+        "note"
+    ],
+    "referenceLabels": [
+        "confirmation",
+        "confirmation number",
+        "reference",
+        "reference number",
+        "transaction hash",
+        "transaction id",
+        "tx hash",
+        "txid"
+    ],
+    "expenseWords": [
+        "bought",
+        "buy",
+        "debit",
+        "paid",
+        "pay",
+        "purchase",
+        "sent",
+        "spend",
+        "spent"
+    ],
+    "incomeWords": [
+        "deposit",
+        "deposited",
+        "earned",
+        "got paid",
+        "received"
+    ],
+    "withdrawalWords": [
+        "atm",
+        "withdraw",
+        "withdrawal",
+        "withdrew"
+    ],
+    "exchangeWords": [
+        "changed",
+        "exchanged",
+        "sold"
+    ],
+    "notePrepositions": [
+        "by",
+        "for",
+        "on",
+        "via"
+    ],
+    "conjunctions": [
+        "and"
+    ],
+    "rateMarkers": [
+        "at"
+    ],
+    "receivedMarkers": [
+        "for",
+        "got",
+        "received"
+    ],
+    "genericWalletWords": [
+        "account",
+        "bank",
+        "checking",
+        "my",
+        "savings"
+    ],
+    "months": {
+        "apr": 4,
+        "april": 4,
+        "aug": 8,
+        "august": 8,
+        "dec": 12,
+        "december": 12,
+        "feb": 2,
+        "february": 2,
+        "jan": 1,
+        "january": 1,
+        "jul": 7,
+        "july": 7,
+        "jun": 6,
+        "june": 6,
+        "mar": 3,
+        "march": 3,
+        "may": 5,
+        "nov": 11,
+        "november": 11,
+        "oct": 10,
+        "october": 10,
+        "sep": 9,
+        "sept": 9,
+        "september": 9
+    },
+    "currencyWords": {
+        "dollar": "USD",
+        "dollars": "USD",
+        "euro": "EUR",
+        "euros": "EUR",
+        "pesos": null
+    },
+    "categoryWords": {
+        "bar": "LEISURE",
+        "bill": "BILLS",
+        "books": "EDUCATION",
+        "breakfast": "FOOD",
+        "burger": "FOOD",
+        "bus": "TRANSPORT",
+        "cabify": "TRANSPORT",
+        "chatgpt": "SUBSCRIPTIONS",
+        "cinema": "LEISURE",
+        "clothes": "SHOPPING",
+        "coffee": "FOOD",
+        "commission": "FEES",
+        "course": "EDUCATION",
+        "dentist": "HEALTH",
+        "didi": "TRANSPORT",
+        "dinner": "FOOD",
+        "disney": "SUBSCRIPTIONS",
+        "doctor": "HEALTH",
+        "drinks": "LEISURE",
+        "electricity": "BILLS",
+        "fee": "FEES",
+        "food": "FOOD",
+        "fuel": "TRANSPORT",
+        "gas": "TRANSPORT",
+        "gift": "PEOPLE",
+        "groceries": "GROCERIES",
+        "hbo": "SUBSCRIPTIONS",
+        "hospital": "HEALTH",
+        "icloud": "SUBSCRIPTIONS",
+        "indriver": "TRANSPORT",
+        "internet": "BILLS",
+        "loan": "PEOPLE",
+        "lunch": "FOOD",
+        "market": "GROCERIES",
+        "medicine": "HEALTH",
+        "metro": "TRANSPORT",
+        "movies": "LEISURE",
+        "netflix": "SUBSCRIPTIONS",
+        "parking": "TRANSPORT",
+        "party": "LEISURE",
+        "pharmacy": "HEALTH",
+        "phone": "BILLS",
+        "pizza": "FOOD",
+        "rent": "HOUSING",
+        "restaurant": "FOOD",
+        "school": "EDUCATION",
+        "shoes": "SHOPPING",
+        "shopping": "SHOPPING",
+        "snack": "FOOD",
+        "spotify": "SUBSCRIPTIONS",
+        "streaming": "SUBSCRIPTIONS",
+        "subscription": "SUBSCRIPTIONS",
+        "supermarket": "GROCERIES",
+        "taxi": "TRANSPORT",
+        "transport": "TRANSPORT",
+        "transportation": "TRANSPORT",
+        "tuition": "EDUCATION",
+        "uber": "TRANSPORT",
+        "water": "BILLS",
+        "youtube": "SUBSCRIPTIONS"
+    },
+    "paymentMethodWords": {
+        "card": "CARD",
+        "cash": "CASH",
+        "debit": "CARD",
+        "qr": "TRANSFER",
+        "transfer": "TRANSFER"
+    }
+}

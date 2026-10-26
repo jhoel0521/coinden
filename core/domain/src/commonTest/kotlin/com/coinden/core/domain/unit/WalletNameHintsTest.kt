@@ -1,18 +1,18 @@
 package com.coinden.core.domain.unit
 
 import com.coinden.core.domain.model.Currency
-import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.interpret.WalletNameHints
 import com.coinden.core.domain.model.interpret.merged
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.support.testLocale
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /** Los apodos salen del nombre de cada billetera: el usuario no configura nada. */
 class WalletNameHintsTest {
-    private val es = listOf(LanguagePacks.ENGLISH, LanguagePacks.SPANISH).merged()
+    private val es = listOf(TestPacks.english, TestPacks.spanish).merged()
     private val bolivia = testLocale("es", "BO")
 
     private fun wallet(

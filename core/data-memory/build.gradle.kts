@@ -23,6 +23,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":core:domain"))
+            api(project(":core:data-packs"))
             implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {

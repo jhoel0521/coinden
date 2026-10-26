@@ -1,11 +1,11 @@
 package com.coinden.core.data.memory
 
+import com.coinden.core.data.packs.BundledPacks
 import com.coinden.core.domain.model.Currency
 import com.coinden.core.domain.model.Money
 import com.coinden.core.domain.model.draft.DraftEvent
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.EvidenceSource
-import com.coinden.core.domain.model.interpret.ReceiptTemplates
 import com.coinden.core.domain.model.wallet.LedgerEvent
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletType
@@ -52,8 +52,11 @@ class InMemoryAdaptersTest {
         val now = SystemClock().nowEpochMs()
         assertTrue(now >= before)
         val packs = StaticInstalledPacks()
-        assertEquals(listOf("es", "pt"), packs.languagePacks().map { it.code })
-        assertEquals(ReceiptTemplates.all, packs.receiptTemplates())
+        val codigos = packs.languagePacks().map { it.code }
+        // El puerto promete estas dos cosas, y el adaptador las cumple con los archivos de datos.
+        assertTrue("en" in codigos, "el inglés viaja con la app, así que siempre está")
+        assertEquals("es", codigos.last(), "el idioma de la app va al final para ganar al unirlos")
+        assertEquals(BundledPacks.receiptTemplates(), packs.receiptTemplates())
     }
 
     @Test

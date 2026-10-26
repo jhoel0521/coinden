@@ -38,7 +38,18 @@ class DraftFormWriteTest {
         val base = AppStorage.inMemory()
         val drafts = ControlledDrafts(base.drafts)
         val c =
-            testContainer(storage = AppStorage(base.wallets, drafts, base.aliases, base.categorization, base.profiles, base.preferences))
+            testContainer(
+                storage =
+                    AppStorage(
+                        base.wallets,
+                        drafts,
+                        base.aliases,
+                        base.categorization,
+                        base.profiles,
+                        base.preferences,
+                        base.bundles,
+                    ),
+            )
         seedCarlos(c)
         return c to drafts
     }

@@ -7,16 +7,16 @@ import com.coinden.core.domain.model.category.CategoryRule
 import com.coinden.core.domain.model.category.CategorySuggestion
 import com.coinden.core.domain.model.category.SuggestionReason
 import com.coinden.core.domain.model.draft.Confidence
-import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.interpret.merged
+import com.coinden.core.domain.support.TestPacks
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class CategorizerTest {
-    private val es = listOf(LanguagePacks.ENGLISH, LanguagePacks.SPANISH).merged()
-    private val en = listOf(LanguagePacks.ENGLISH).merged()
-    private val pt = listOf(LanguagePacks.ENGLISH, LanguagePacks.PORTUGUESE).merged()
+    private val es = listOf(TestPacks.english, TestPacks.spanish).merged()
+    private val en = listOf(TestPacks.english).merged()
+    private val pt = listOf(TestPacks.english, TestPacks.portuguese).merged()
 
     private val food = CategoryRef.Base(BaseCategory.FOOD)
     private val leisure = CategoryRef.Base(BaseCategory.LEISURE)

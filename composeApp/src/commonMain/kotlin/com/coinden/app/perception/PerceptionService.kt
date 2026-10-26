@@ -7,6 +7,8 @@ import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.EvidenceSource
 import com.coinden.core.domain.model.draft.FieldOrigin
 import com.coinden.core.domain.model.draft.MovementProposal
+import com.coinden.core.domain.usecase.bundle.PendingBundlesUseCase
+import com.coinden.core.domain.usecase.bundle.PerceiveBundleEvidenceUseCase
 
 /** Qué pasó al leer la evidencia de un borrador. */
 sealed interface PerceptionOutcome {
@@ -50,6 +52,50 @@ class PerceptionService(
             } ?: return PerceptionOutcome.NothingRead
         return interpret(draftId, text, engine)
     }
+
+    /**
+     * Lee **una** evidencia del paquete y guarda lo leído. Cuando el paquete cerrado ya no tiene
+     * nada por leer, el dominio lo interpreta solo, en una sola pasada.
+     *
+     * Un archivo que no se puede leer se registra igual con texto vacío: así no se reintenta para
+     * siempre y el paquete no queda colgado esperándolo.
+     */
+    suspend fun perceiveBundle(bundleId: String): PerceptionOutcome {
+        val bundle = container.bundles.load(bundleId) ?: return PerceptionOutcome.Skipped
+        val item = bundle.active.firstOrNull { it.needsReading } ?: return PerceptionOutcome.Skipped
+        val file = container.attachments.read(item.evidence.attachmentRef!!) ?: return PerceptionOutcome.Skipped
+
+        val read =
+            when {
+                file.mimeType.startsWith("audio/") -> {
+                    val transcriber = readers.transcribers().firstOrNull() ?: return PerceptionOutcome.NeedsVoiceModel
+                    val pcm = readers.audioDecoder.decode(file.bytes, file.mimeType)
+                    val tooLong = pcm != null && pcm.seconds > MAX_AUDIO_SECONDS
+                    if (tooLong) {
+                        null
+                    } else {
+                        pcm
+                            ?.let { transcriber.transcribe(it, container.languageCode) }
+                            ?.trim()
+                            ?.takeIf { it.isNotEmpty() }
+                            ?.let { it to transcriber.engine }
+                    }
+                }
+                file.mimeType == "application/pdf" -> readPdf(file.bytes)
+                else -> readImage(file.bytes)
+            }
+
+        // Se registra aunque no se haya leído nada: así no se reintenta para siempre ni el paquete
+        // queda colgado esperando un archivo que no se puede leer.
+        val save = PerceiveBundleEvidenceUseCase(container.bundles)
+        // Devuelve los borradores del paquete: vacío mientras quede algo por leer, y los N pagos
+        // cuando ya no queda nada y el dominio lo interpreta.
+        val drafts = save(bundleId, item.id, read?.first, read?.second ?: "sin lector")
+        return if (read == null) PerceptionOutcome.NothingRead else PerceptionOutcome.Read(drafts)
+    }
+
+    /** Paquetes cerrados con archivos sin leer, los más viejos primero. */
+    suspend fun pendingBundleIds(): List<String> = PendingBundlesUseCase(container.bundles)(container.ownerId).map { it.id }
 
     /** Si hay con qué transcribir audios (modelo de voz descargado o reconocimiento local). */
     suspend fun canTranscribe(): Boolean = readers.transcribers().isNotEmpty()

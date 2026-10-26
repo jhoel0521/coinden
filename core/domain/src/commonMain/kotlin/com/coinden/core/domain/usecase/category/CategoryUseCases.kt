@@ -10,7 +10,6 @@ import com.coinden.core.domain.model.category.Classification
 import com.coinden.core.domain.model.category.ClassificationEvent
 import com.coinden.core.domain.model.category.ClassificationProjection
 import com.coinden.core.domain.model.category.CustomCategory
-import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.interpret.merged
 import com.coinden.core.domain.model.wallet.LedgerEvent
 import com.coinden.core.domain.port.output.CategorizationRepositoryPort
@@ -45,7 +44,7 @@ class CategorizationContext(
         ownerId: String,
         description: String?,
     ): CategorySuggestion? {
-        val pack = (listOf(LanguagePacks.ENGLISH) + packs.languagePacks().filter { it.code != LanguagePacks.ENGLISH.code }).merged()
+        val pack = packs.languagePacks().merged()
         val archived =
             repository
                 .customCategoriesOf(ownerId)

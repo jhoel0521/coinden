@@ -2,6 +2,7 @@ package com.coinden.app.perception
 
 import com.coinden.app.AppContainer
 import com.coinden.app.capture.CapturePresenter
+import com.coinden.app.capture.ContextPagePresenter
 import com.coinden.app.capture.DictationOutcome
 import com.coinden.app.capture.DictationPort
 import com.coinden.app.capture.DraftStatusView
@@ -105,9 +106,13 @@ class PerceptionUiTest {
     @Test
     fun `la foto se guarda primero y luego la tarjeta muestra el gasto leido`() =
         runTest {
-            val (_, presenter) = carlos()
+            val (container, presenter) = carlos()
 
             presenter.photo(byteArrayOf(1, 2, 3), "image/jpeg")
+            // Antes del resultado pasa por la página de contexto; Listo la cierra.
+            val bundleId = assertNotNull(presenter.state.value.contextBundle)
+            ContextPagePresenter(container, bundleId).done()
+            presenter.contextClosed(bundleId)
 
             val card = assertNotNull(presenter.state.value.result).cards.single()
             assertEquals(MovementKindView.EXPENSE, card.kind)
@@ -133,18 +138,55 @@ class PerceptionUiTest {
         }
 
     @Test
-    fun `la pantalla de privacidad guarda la eleccion del lector de Google y que se vio`() =
+    fun `quien nunca eligio no tiene eleccion, y el lector arranca apagado`() =
+        runTest {
+            val privacy = PrivacyPresenter(testContainer())
+            privacy.load()
+
+            assertFalse(privacy.state.value.chosen, "todavia no eligio: hay que pedirle que elija")
+            assertFalse(privacy.state.value.googleReader, "y mientras tanto el lector esta apagado")
+        }
+
+    @Test
+    fun `elegir el lector de Google lo guarda junto con la eleccion hecha`() =
         runTest {
             val container = testContainer()
             val privacy = PrivacyPresenter(container)
             privacy.load()
-            assertFalse(privacy.state.value.googleReader)
 
-            privacy.onGoogleReaderChange(true)
-            privacy.onContinue()
+            privacy.chooseGoogleReader(true)
 
             assertTrue(container.storage.preferences.googleReaderEnabled())
-            assertTrue(container.storage.preferences.privacyNoticeSeen())
+            assertTrue(container.storage.preferences.privacyNoticeSeen(), "elegir es haber visto el aviso")
+            assertTrue(privacy.state.value.chosen)
+        }
+
+    @Test
+    fun `elegir seguir sin el lector tambien es una eleccion, no un olvido`() =
+        runTest {
+            val container = testContainer()
+            val privacy = PrivacyPresenter(container)
+            privacy.load()
+
+            privacy.chooseGoogleReader(false)
+
+            assertFalse(container.storage.preferences.googleReaderEnabled())
+            assertTrue(container.storage.preferences.privacyNoticeSeen(), "decir que no queda registrado igual")
+            assertTrue(privacy.state.value.chosen)
+        }
+
+    @Test
+    fun `quien ya eligio ve su eleccion y puede cambiarla desde Perfil`() =
+        runTest {
+            val container = testContainer()
+            PrivacyPresenter(container).apply { load() }.chooseGoogleReader(true)
+
+            val devuelta = PrivacyPresenter(container).apply { load() }
+            assertTrue(devuelta.state.value.chosen, "ya eligio: no se le vuelve a pedir")
+            assertTrue(devuelta.state.value.googleReader)
+
+            devuelta.chooseGoogleReader(false)
+            assertFalse(container.storage.preferences.googleReaderEnabled())
         }
 
     @Test

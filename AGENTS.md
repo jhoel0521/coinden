@@ -69,7 +69,7 @@ composeApp/         app Compose Multiplatform (hoy solo Android)
 
 | Acción | Comando |
 |--------|---------|
-| Pruebas | `npm test` (= `./gradlew :core:domain:jvmTest :core:data-memory:jvmTest :core:data-local:jvmTest :composeApp:testDebugUnitTest`) |
+| Pruebas | `npm test` (= `./gradlew :core:domain:jvmTest :core:data-memory:jvmTest :core:data-local:jvmTest :core:data-local:verifySqlDelightMigration :composeApp:testDebugUnitTest`) |
 | Pruebas de cifrado (emulador) | `./gradlew :core:data-local:connectedDebugAndroidTest` |
 | APK de depuración | `npm run build:android` (= `./gradlew :composeApp:assembleDebug`) |
 | Lint | `npm run lint` (= `./gradlew ktlintCheck`) |

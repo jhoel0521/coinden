@@ -9,13 +9,12 @@ import com.coinden.core.domain.model.draft.DraftField
 import com.coinden.core.domain.model.draft.DraftResult
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.EvidenceSource
-import com.coinden.core.domain.model.interpret.LanguagePacks
-import com.coinden.core.domain.model.interpret.ReceiptTemplates
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
 import com.coinden.core.domain.model.wallet.LedgerEvent
 import com.coinden.core.domain.model.wallet.Wallet
 import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
 import com.coinden.core.domain.usecase.draft.ConfirmDraftUseCase
 import com.coinden.core.domain.usecase.draft.DraftContext
@@ -46,7 +45,7 @@ class CarlosExchangeFeatureTest {
 
     // es-BO, UTC-4
     private val interpreter =
-        TextDraftInterpreter(FakeInstalledPacks(listOf(LanguagePacks.SPANISH), ReceiptTemplates.all), FixedRegionalSettings())
+        TextDraftInterpreter(FakeInstalledPacks(listOf(TestPacks.spanish), TestPacks.templates), FixedRegionalSettings())
     private val capture = CaptureDraftUseCase(ctx, interpreter)
     private val confirm = ConfirmDraftUseCase(ctx, ledger)
     private val status = GetWalletStatusUseCase(wallets)

@@ -14,11 +14,10 @@ import com.coinden.core.domain.model.draft.SameMovementQuestion
 import com.coinden.core.domain.model.draft.SameMovementReason
 import com.coinden.core.domain.model.draft.WalletRef
 import com.coinden.core.domain.model.interpret.DateTimeReader
-import com.coinden.core.domain.model.interpret.LanguagePacks
-import com.coinden.core.domain.model.interpret.ReceiptTemplates
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
 import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
 import com.coinden.core.domain.usecase.draft.DraftContext
 import com.coinden.core.domain.usecase.draft.FindSameMovementQuestionsUseCase
@@ -48,7 +47,7 @@ class CarlosPerceptionFeatureTest {
 
     private val interpreter =
         TextDraftInterpreter(
-            FakeInstalledPacks(listOf(LanguagePacks.SPANISH), ReceiptTemplates.all),
+            FakeInstalledPacks(listOf(TestPacks.spanish), TestPacks.templates),
             // es-BO, UTC-4
             FixedRegionalSettings(),
         )

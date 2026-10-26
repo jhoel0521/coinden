@@ -1,5 +1,7 @@
 package com.coinden.core.domain.model.interpret
 
+import com.coinden.core.domain.model.wallet.PaymentMethod
+
 /** Qué movimiento describe un comprobante. */
 enum class TemplateKind {
     EXPENSE,
@@ -28,54 +30,10 @@ data class ReceiptTemplate(
     val counterpartyAfterAmount: Boolean = false,
     /** Etiqueta del número de transacción, normalizada ("nro de transaccion"). */
     val referenceLabel: String? = null,
+    /**
+     * Con qué se pagó, cuando el comprobante lo prueba: un comprobante de pago QR es una
+     * transferencia, y uno de retiro es efectivo. Sin esto, una frase que dice "en efectivo"
+     * se confunde con el pago del comprobante cuando coincide el monto.
+     */
+    val method: PaymentMethod? = null,
 )
-
-/**
- * Catálogo inicial de plantillas (Bolivia). Solo se usan las que el puerto indica instaladas.
- */
-object ReceiptTemplates {
-    val YAPE_BO =
-        ReceiptTemplate(
-            id = "bo-yape-payment",
-            markers = listOf("yapeaste"),
-            kind = TemplateKind.EXPENSE,
-            issuerWalletHint = "yape",
-            counterpartyAfterAmount = true,
-            referenceLabel = "nro de transaccion",
-        )
-
-    val BE_QR_PAYMENT =
-        ReceiptTemplate(
-            id = "bo-be-qr-payment",
-            markers = listOf("pago qr"),
-            kind = TemplateKind.EXPENSE,
-            amountLabel = "importe",
-            counterpartyLabel = "beneficiario",
-            noteLabel = "nota",
-            accountLabel = "cuenta origen",
-            referenceLabel = "nro de transaccion",
-        )
-
-    val BE_ECOMMERCE_DEBIT =
-        ReceiptTemplate(
-            id = "bo-be-ecommerce-debit",
-            markers = listOf("debito por compra"),
-            kind = TemplateKind.EXPENSE,
-            amountLabel = "importe",
-            noteLabel = "nota",
-            accountLabel = "cuenta",
-            referenceLabel = "nro de transaccion",
-        )
-
-    val BE_CASH_WITHDRAWAL =
-        ReceiptTemplate(
-            id = "bo-be-cash-withdrawal",
-            markers = listOf("retiro de efectivo"),
-            kind = TemplateKind.WITHDRAWAL,
-            amountLabel = "monto",
-            accountLabel = "cuenta origen",
-            referenceLabel = "nro de transaccion",
-        )
-
-    val all: List<ReceiptTemplate> = listOf(YAPE_BO, BE_QR_PAYMENT, BE_ECOMMERCE_DEBIT, BE_CASH_WITHDRAWAL)
-}

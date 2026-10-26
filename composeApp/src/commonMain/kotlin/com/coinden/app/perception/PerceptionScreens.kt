@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.back
@@ -42,6 +43,9 @@ import coinden.composeapp.generated.resources.models_title
 import coinden.composeapp.generated.resources.privacy_continue
 import coinden.composeapp.generated.resources.privacy_downloads
 import coinden.composeapp.generated.resources.privacy_google
+import coinden.composeapp.generated.resources.privacy_google_choose_no
+import coinden.composeapp.generated.resources.privacy_google_choose_yes
+import coinden.composeapp.generated.resources.privacy_google_link
 import coinden.composeapp.generated.resources.privacy_google_never
 import coinden.composeapp.generated.resources.privacy_google_receives
 import coinden.composeapp.generated.resources.privacy_models
@@ -68,6 +72,9 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+/** La lista que publica Google de lo que recoge su lector: la persona lo comprueba en la fuente. */
+private const val GOOGLE_DATA_URL = "https://developers.google.com/ml-kit/android-data-disclosure"
+
 /**
  * Qué sale del teléfono y la elección del lector de Google (apagado por defecto). Se ve en el
  * onboarding, una vez a quien ya lo terminó, y desde Inicio.
@@ -81,6 +88,7 @@ fun PrivacyScreen(
 ) {
     val state by presenter.state.collectAsState()
     val scope = rememberCoroutineScope()
+    val uriHandler = LocalUriHandler.current
     LaunchedEffect(presenter) { presenter.load() }
 
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
@@ -93,9 +101,28 @@ fun PrivacyScreen(
             Point(CoinDenIcon.BANK, Res.string.privacy_public)
             Point(CoinDenIcon.SHIELD, Res.string.privacy_downloads)
             CdCard(tone = CardTone.Raised) {
-                CdSwitchRow(stringResource(Res.string.privacy_google), state.googleReader, presenter::onGoogleReaderChange)
+                // Quien ya eligió lo cambia con el interruptor de siempre. Quien todavía no,
+                // elige abajo: un interruptor no distingue "lo dejó apagado" de "no lo miró".
+                if (state.chosen) {
+                    CdSwitchRow(
+                        stringResource(Res.string.privacy_google),
+                        state.googleReader,
+                        { enabled -> scope.launch { presenter.chooseGoogleReader(enabled) } },
+                    )
+                } else {
+                    Text(stringResource(Res.string.privacy_google), style = MaterialTheme.typography.titleMedium)
+                }
                 Text(stringResource(Res.string.privacy_google_receives), style = MaterialTheme.typography.bodyMedium)
                 Text(stringResource(Res.string.privacy_google_never), style = MaterialTheme.typography.bodyMedium)
+                CdActions(
+                    listOf(
+                        CdActionSpec(
+                            stringResource(Res.string.privacy_google_link),
+                            { uriHandler.openUri(GOOGLE_DATA_URL) },
+                            ActionRole.Tertiary,
+                        ),
+                    ),
+                )
             }
             lock?.let {
                 val lockState by it.state.collectAsState()
@@ -106,19 +133,34 @@ fun PrivacyScreen(
             }
             CdActions(listOf(CdActionSpec(stringResource(Res.string.privacy_models), onVoiceModels)))
         }
+        // Sin elección no se avanza: las dos salidas de esta pantalla son elegir.
         CdActions(
-            listOf(
-                CdActionSpec(
-                    stringResource(Res.string.privacy_continue),
-                    {
-                        scope.launch {
-                            presenter.onContinue()
-                            onContinue()
-                        }
-                    },
-                    ActionRole.Primary,
-                ),
-            ),
+            if (state.chosen) {
+                listOf(CdActionSpec(stringResource(Res.string.privacy_continue), onContinue, ActionRole.Primary))
+            } else {
+                listOf(
+                    CdActionSpec(
+                        stringResource(Res.string.privacy_google_choose_yes),
+                        {
+                            scope.launch {
+                                presenter.chooseGoogleReader(true)
+                                onContinue()
+                            }
+                        },
+                        ActionRole.Primary,
+                    ),
+                    CdActionSpec(
+                        stringResource(Res.string.privacy_google_choose_no),
+                        {
+                            scope.launch {
+                                presenter.chooseGoogleReader(false)
+                                onContinue()
+                            }
+                        },
+                        ActionRole.Secondary,
+                    ),
+                )
+            },
             Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         )
     }

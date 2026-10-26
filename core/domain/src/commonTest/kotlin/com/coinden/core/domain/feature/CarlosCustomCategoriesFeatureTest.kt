@@ -2,8 +2,7 @@ package com.coinden.core.domain.feature
 
 import com.coinden.core.domain.model.category.CategorizationError
 import com.coinden.core.domain.model.category.CustomCategory
-import com.coinden.core.domain.model.interpret.LanguagePacks
-import com.coinden.core.domain.model.interpret.ReceiptTemplates
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.usecase.category.ArchiveCustomCategoryUseCase
 import com.coinden.core.domain.usecase.category.CategorizationContext
 import com.coinden.core.domain.usecase.category.CategorizationResult
@@ -25,7 +24,7 @@ class CarlosCustomCategoriesFeatureTest {
     private val ids = SequentialIdGenerator("carlos")
     private val clock = FixedClock()
     private val device = FixedDevice("celular-carlos")
-    private val packs = FakeInstalledPacks(listOf(LanguagePacks.SPANISH), ReceiptTemplates.all)
+    private val packs = FakeInstalledPacks(listOf(TestPacks.spanish), TestPacks.templates)
     private val repository = InMemoryCategorizationRepository()
     private val categories = CategorizationContext(repository, wallets, packs, ids, clock, device)
     private val create = CreateCustomCategoryUseCase(categories)

@@ -1,9 +1,8 @@
 package com.coinden.core.data.memory
 
+import com.coinden.core.data.packs.BundledPacks
 import com.coinden.core.domain.model.interpret.LanguagePack
-import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.interpret.ReceiptTemplate
-import com.coinden.core.domain.model.interpret.ReceiptTemplates
 import com.coinden.core.domain.model.interpret.RegionalSettings
 import com.coinden.core.domain.port.output.ClockPort
 import com.coinden.core.domain.port.output.DeviceIdentityPort
@@ -38,8 +37,8 @@ class FixedDeviceIdentity(
  * que viene con la app: español y portugués (el inglés siempre está activo) y las plantillas iniciales.
  */
 class StaticInstalledPacks(
-    private val packs: List<LanguagePack> = listOf(LanguagePacks.SPANISH, LanguagePacks.PORTUGUESE),
-    private val templates: List<ReceiptTemplate> = ReceiptTemplates.all,
+    private val packs: List<LanguagePack> = BundledPacks.languagePacks(appLanguage = "es"),
+    private val templates: List<ReceiptTemplate> = BundledPacks.receiptTemplates(),
 ) : InstalledPacksPort {
     override fun languagePacks(): List<LanguagePack> = packs
 

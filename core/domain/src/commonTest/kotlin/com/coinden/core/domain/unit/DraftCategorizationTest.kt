@@ -25,10 +25,10 @@ import com.coinden.core.domain.model.draft.EvidenceSource
 import com.coinden.core.domain.model.draft.MovementProposal
 import com.coinden.core.domain.model.draft.ProposedAmount
 import com.coinden.core.domain.model.draft.WalletRef
-import com.coinden.core.domain.model.interpret.LanguagePacks
 import com.coinden.core.domain.model.wallet.LedgerEvent
 import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.usecase.category.CategorizationContext
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
 import com.coinden.core.domain.usecase.draft.ConfirmDraftUseCase
@@ -49,7 +49,7 @@ class DraftCategorizationTest {
     private val device = FixedDevice("celular")
     private val ledger = LedgerContext(wallets, ids, clock, device)
     private val categories =
-        CategorizationContext(categorization, wallets, FakeInstalledPacks(listOf(LanguagePacks.SPANISH)), ids, clock, device)
+        CategorizationContext(categorization, wallets, FakeInstalledPacks(listOf(TestPacks.spanish)), ids, clock, device)
     private val ctx = DraftContext(InMemoryDraftRepository(), wallets, InMemoryWalletAliasRepository(), ids, clock, device, categories)
 
     private val food = CategoryRef.Base(BaseCategory.FOOD)

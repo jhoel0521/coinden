@@ -1,0 +1,11 @@
+{
+    "files": [
+        "en.json",
+        "es.json",
+        "pt.json",
+        "template-bo-be-cash-withdrawal.json",
+        "template-bo-be-ecommerce-debit.json",
+        "template-bo-be-qr-payment.json",
+        "template-bo-yape-payment.json"
+    ]
+}

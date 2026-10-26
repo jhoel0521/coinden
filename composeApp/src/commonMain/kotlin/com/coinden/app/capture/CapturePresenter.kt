@@ -29,7 +29,7 @@ sealed interface SharedContent {
 }
 
 /** Avisos de la captura (la pantalla los traduce). */
-enum class CaptureNotice { DICTATION_UNAVAILABLE, MICROPHONE_DENIED, CAMERA_DENIED }
+enum class CaptureNotice { DICTATION_UNAVAILABLE, MICROPHONE_DENIED, CAMERA_DENIED, SAVED_FOR_REVIEW }
 
 /** Por qué no se pudo confirmar un borrador. */
 sealed interface ConfirmProblem {
@@ -61,6 +61,8 @@ data class CaptureState(
     val reading: Set<String> = emptySet(),
     /** "Son el mismo" dejó un cambio pendiente sobre un confirmado: se abre el formulario de corrección. */
     val correction: FormMode.Correct? = null,
+    /** Lo recién capturado es un paquete abierto: la pantalla abre su página de contexto. */
+    val contextBundle: String? = null,
 )
 
 /**
@@ -95,7 +97,7 @@ class CapturePresenter(
                 outcome.text
                     .trim()
                     .takeIf { it.isNotEmpty() }
-                    ?.let { capture(Evidence(EvidenceSource.VOICE, it)) }
+                    ?.let { captureWithContext(Evidence(EvidenceSource.VOICE, it)) }
             DictationOutcome.NothingHeard -> Unit
             DictationOutcome.Unavailable -> mutableState.update { it.copy(notice = CaptureNotice.DICTATION_UNAVAILABLE) }
         }
@@ -107,7 +109,32 @@ class CapturePresenter(
     suspend fun photo(
         bytes: ByteArray,
         mimeType: String,
-    ) = captureFile(bytes, mimeType)
+    ) {
+        if (quick == null) return captureFile(bytes, mimeType)
+        val ref = container.attachments.save(bytes, mimeType)
+        captureWithContext(Evidence(EvidenceSource.PHOTO, attachmentRef = ref, fingerprint = sha256Hex(bytes)))
+    }
+
+    /** La pantalla ya abrió la página de contexto del paquete. */
+    fun contextOpened() = mutableState.update { it.copy(contextBundle = null) }
+
+    /**
+     * La página de contexto se cerró (Listo, Atrás o salir de la app), así que el paquete ya está
+     * cerrado. Se manda a la cola y se muestra lo que se entendió de todo junto; si todavía hay
+     * algo por leer, se avisa que aparece en Revisar.
+     */
+    suspend fun contextClosed(bundleId: String) {
+        queue?.kick()
+        val bundle = container.bundles.load(bundleId)
+        val drafts = bundle?.let { container.bundles.draftsOf(it) }.orEmpty()
+        mutableState.update {
+            if (drafts.isEmpty()) {
+                it.copy(contextBundle = null, notice = CaptureNotice.SAVED_FOR_REVIEW)
+            } else {
+                it.copy(contextBundle = null, result = CaptureResult(cards.of(drafts)))
+            }
+        }
+    }
 
     suspend fun shared(content: SharedContent) {
         when (content) {
@@ -215,6 +242,16 @@ class CapturePresenter(
                 reading = if (pending && !needsModel) state.reading else state.reading - draftId,
             )
         }
+    }
+
+    /**
+     * Lo capturado en la app pasa por la página de contexto: queda como paquete abierto y la
+     * pantalla la muestra. Sin cola (pruebas viejas, plataformas sin segundo plano) se interpreta
+     * suelto, como siempre.
+     */
+    private suspend fun captureWithContext(evidence: Evidence) {
+        val bundleId = quick?.capturedBundle(evidence) ?: return capture(evidence)
+        mutableState.update { it.copy(contextBundle = bundleId, result = null) }
     }
 
     private suspend fun capture(evidence: Evidence) {

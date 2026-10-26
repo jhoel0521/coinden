@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,6 +31,8 @@ import com.coinden.app.capture.CaptureNoticeCard
 import com.coinden.app.capture.CapturePresenter
 import com.coinden.app.capture.CaptureResultSheet
 import com.coinden.app.capture.FormMode
+import com.coinden.app.capture.LastPendingHint
+import com.coinden.app.capture.ReopenContext
 import com.coinden.app.home.HomePresenter
 import com.coinden.app.home.HomeScreen
 import com.coinden.app.inbox.ReviewInboxPresenter
@@ -79,6 +82,7 @@ fun MainScreen(
     onWrite: () -> Unit,
     openForm: (FormMode) -> Unit,
     openEvidence: (String) -> Unit,
+    onAddContext: (draftId: String) -> Unit,
     onSettings: () -> Unit,
     onCategories: () -> Unit,
     onPrivacy: () -> Unit,
@@ -158,6 +162,8 @@ fun MainScreen(
         )
     }
     if (choosingCapture) {
+        // "Agregar al último" solo si hay algo pendiente; no muestra montos, así que vale bloqueada.
+        val last by produceState<LastPendingHint?>(null) { value = ReopenContext(container).lastPending() }
         CdSheet(onDismiss = { choosingCapture = false }, title = stringResource(Res.string.capture_sheet_title)) {
             CaptureBar(
                 listening = captureState.listening,
@@ -173,6 +179,13 @@ fun MainScreen(
                     choosingCapture = false
                     onWrite()
                 },
+                onAddToLast =
+                    last?.let { hint ->
+                        {
+                            choosingCapture = false
+                            onAddContext(hint.draftId)
+                        }
+                    },
             )
         }
     }
@@ -187,6 +200,10 @@ fun MainScreen(
             onDone = capture::dismissResult,
             reading = captureState.reading,
             onVoiceModels = onVoiceModels,
+            onAddContext = { draftId ->
+                capture.dismissResult()
+                onAddContext(draftId)
+            },
         )
     }
 }

@@ -524,8 +524,26 @@ object TemplateReader {
             )
         return listOf(
             when (template.kind) {
-                TemplateKind.EXPENSE -> MovementProposal.Expense(amount.proposed, wallet, occurredAt, note, origins, reference = reference)
-                TemplateKind.INCOME -> MovementProposal.Income(amount.proposed, wallet, occurredAt, note, origins, reference = reference)
+                TemplateKind.EXPENSE ->
+                    MovementProposal.Expense(
+                        amount.proposed,
+                        wallet,
+                        occurredAt,
+                        note,
+                        origins,
+                        reference = reference,
+                        paymentMethod = template.method,
+                    )
+                TemplateKind.INCOME ->
+                    MovementProposal.Income(
+                        amount.proposed,
+                        wallet,
+                        occurredAt,
+                        note,
+                        origins,
+                        reference = reference,
+                        paymentMethod = template.method,
+                    )
                 TemplateKind.WITHDRAWAL -> {
                     val default = defaultWallet(ctx.directory)
                     MovementProposal.Transfer(

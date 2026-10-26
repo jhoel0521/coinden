@@ -90,9 +90,20 @@ la ubicación ni permite comprar bienes digitales. Resultado esperado: apta para
     usa el identificador del dispositivo).
 - Nada más: sin ubicación, contactos, datos financieros, fotos, audio ni mensajes fuera del teléfono.
 
-**Funciones financieras:** la app solo lleva un registro personal de gastos. No ofrece préstamos, pagos,
-transferencias, banca, inversiones ni criptomonedas. Si la lista no tiene una opción de "presupuesto o
-seguimiento de gastos", marca "Mi app no ofrece ninguna de estas funciones financieras".
+**Funciones financieras:** marca **solo "Otro"**. **No** marques "Mi app no ofrece ninguna función
+financiera": Google lo rechazó por impreciso, porque la app está en la categoría Finanzas y la ficha habla
+de billeteras, saldos, tasas y cripto. Tampoco marques "Pagos móviles y billeteras digitales" ni
+"Billetera de criptomonedas": la app no hace eso, y marcarlas pediría licencias que no aplican.
+En la descripción de "Otro" va:
+
+> CoinDen es un registro personal de gastos e ingresos (una libreta de presupuesto). La persona anota a
+> mano, por voz o con la foto de un comprobante lo que ya pagó, y ve sus saldos por "billetera", que es
+> solo una etiqueta de registro (efectivo, cuenta bancaria, tarjeta o cripto) que la persona crea y escribe
+> a mano. La app NO mueve dinero, NO hace pagos ni transferencias, NO guarda fondos ni criptomonedas, NO se
+> conecta a bancos ni a exchanges, NO ofrece préstamos, crédito, inversiones ni asesoramiento financiero.
+> Todos los datos quedan cifrados en el teléfono; no hay cuentas ni servidores.
+
+En el paso "Documentación", Google indicó que por ahora no hace falta adjuntar nada.
 
 **App gubernamental, de salud, de noticias:** No.
 

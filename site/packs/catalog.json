@@ -1,0 +1,54 @@
+{
+    "formatVersion": 1,
+    "entries": [
+        {
+            "id": "en",
+            "kind": "LANGUAGE",
+            "url": "https://jhoel0521.github.io/coinden/packs/en.json",
+            "sha256": "b22d7364b64ba42e33bdb4b202889e5ef87a344de467bba4dbe3ef33c01ced0e",
+            "sizeBytes": 4429
+        },
+        {
+            "id": "es",
+            "kind": "LANGUAGE",
+            "url": "https://jhoel0521.github.io/coinden/packs/es.json",
+            "sha256": "0a72f961e30b4c34b76d10d6d16fe3dcdf36a1b56e08ec8feacb4c25fc8264fb",
+            "sizeBytes": 5081
+        },
+        {
+            "id": "pt",
+            "kind": "LANGUAGE",
+            "url": "https://jhoel0521.github.io/coinden/packs/pt.json",
+            "sha256": "a3352e6da3d4df0667d5b3ef8aa7f6b8c4b111f9ca5a84c80e7c1eeb64fbdb5b",
+            "sizeBytes": 4227
+        },
+        {
+            "id": "template-bo-be-cash-withdrawal",
+            "kind": "TEMPLATE",
+            "url": "https://jhoel0521.github.io/coinden/packs/template-bo-be-cash-withdrawal.json",
+            "sha256": "092ce616507997dd07fe813e2f249e89e8aff6b37a99ec7faa1d66adea14d661",
+            "sizeBytes": 259
+        },
+        {
+            "id": "template-bo-be-ecommerce-debit",
+            "kind": "TEMPLATE",
+            "url": "https://jhoel0521.github.io/coinden/packs/template-bo-be-ecommerce-debit.json",
+            "sha256": "ab57187c97dff3dbd370941584ba5083f4d167dc24b0bfc67d9a21c65040774b",
+            "sizeBytes": 276
+        },
+        {
+            "id": "template-bo-be-qr-payment",
+            "kind": "TEMPLATE",
+            "url": "https://jhoel0521.github.io/coinden/packs/template-bo-be-qr-payment.json",
+            "sha256": "977d317173d81335c95dbe3da030cd799a04003666066a5ccc454463de086c4c",
+            "sizeBytes": 310
+        },
+        {
+            "id": "template-bo-yape-payment",
+            "kind": "TEMPLATE",
+            "url": "https://jhoel0521.github.io/coinden/packs/template-bo-yape-payment.json",
+            "sha256": "96c51632649c1a36013ed59a06e1a81e007cada0e706f0d321f77f300bb45143",
+            "sizeBytes": 244
+        }
+    ]
+}

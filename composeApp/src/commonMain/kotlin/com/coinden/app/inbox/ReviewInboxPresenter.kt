@@ -8,6 +8,7 @@ import com.coinden.app.capture.FormMode
 import com.coinden.app.capture.MovementKindView
 import com.coinden.app.ui.ScreenLoad
 import com.coinden.core.domain.model.Money
+import com.coinden.core.domain.model.bundle.ReviewReason
 import com.coinden.core.domain.model.draft.CaptureCoach
 import com.coinden.core.domain.model.draft.CaptureStats
 import com.coinden.core.domain.model.draft.CaptureTip
@@ -48,6 +49,24 @@ data class InboxItem(
 /** Por qué un pendiente está en "Para revisar", como dato (la pantalla lo traduce). */
 enum class InboxReason {
     PENDING_CHANGE,
+
+    /** Lo dicho contradice el comprobante: se muestran las dos versiones y elige la persona. */
+    CONTRADICTION,
+
+    /** El modelo de lenguaje y las reglas entendieron cosas distintas. */
+    MODEL_DISAGREES,
+
+    /** El modelo propuso algo que la verificación no pudo respaldar. */
+    UNVERIFIED,
+
+    /** Varios comprobantes del mismo monto: se asignaron por la hora. */
+    ASSIGNED_BY_ORDER,
+
+    /** Lo que se dijo puede ser de cualquiera de los pagos del paquete. */
+    CONTEXT_FOR_SEVERAL,
+
+    /** Un pago que solo sale de lo dicho, sin comprobante que lo respalde. */
+    WITHOUT_RECEIPT,
     SAME_QUESTION,
     UNREAD,
     NOT_A_MOVEMENT,
@@ -65,6 +84,8 @@ internal fun reasonOf(
     val tips = CaptureCoach.tipsFor(draft)
     return when {
         draft.header.correctionTarget != null -> InboxReason.PENDING_CHANGE
+        // Los motivos del paquete explican mejor que "revisá los datos": dicen qué pasó.
+        bundleReasonOf(draft) != null -> bundleReasonOf(draft)
         card.question != null -> InboxReason.SAME_QUESTION
         draft is Draft.Captured && draft.header.evidence.attachmentRef != null -> InboxReason.UNREAD
         draft is Draft.Unsupported -> InboxReason.NOT_A_MOVEMENT
@@ -72,6 +93,23 @@ internal fun reasonOf(
         CaptureTip.SAY_WALLET in tips && card.walletName == null -> InboxReason.MISSING_WALLET
         CaptureTip.SAY_WALLET in tips -> InboxReason.SUGGESTED_WALLET
         draft !is Draft.Ready || draft.confidence != Confidence.HIGH -> InboxReason.CHECK_DATA
+        else -> null
+    }
+}
+
+/**
+ * El motivo que dejó la interpretación del paquete, del más concreto al más general. Son códigos
+ * del dominio: la pantalla los traduce, acá solo se ordenan por cuál le dice más a la persona.
+ */
+internal fun bundleReasonOf(draft: Draft): InboxReason? {
+    val reasons = draft.header.reviewReasons
+    return when {
+        reasons.any { it is ReviewReason.Contradiction } -> InboxReason.CONTRADICTION
+        reasons.any { it is ReviewReason.ModelDisagrees } -> InboxReason.MODEL_DISAGREES
+        ReviewReason.UnverifiedProposal in reasons -> InboxReason.UNVERIFIED
+        ReviewReason.AssignedByOrder in reasons -> InboxReason.ASSIGNED_BY_ORDER
+        ReviewReason.ContextForSeveral in reasons -> InboxReason.CONTEXT_FOR_SEVERAL
+        ReviewReason.PaymentWithoutReceipt in reasons -> InboxReason.WITHOUT_RECEIPT
         else -> null
     }
 }

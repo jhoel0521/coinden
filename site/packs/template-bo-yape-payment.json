@@ -1,0 +1,12 @@
+{
+    "formatVersion": 1,
+    "id": "bo-yape-payment",
+    "markers": [
+        "yapeaste"
+    ],
+    "kind": "EXPENSE",
+    "issuerWalletHint": "yape",
+    "counterpartyAfterAmount": true,
+    "referenceLabel": "nro de transaccion",
+    "method": "TRANSFER"
+}

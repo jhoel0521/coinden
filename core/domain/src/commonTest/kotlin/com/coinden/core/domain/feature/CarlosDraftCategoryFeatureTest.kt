@@ -7,11 +7,10 @@ import com.coinden.core.domain.model.category.CategoryRef
 import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.Evidence
 import com.coinden.core.domain.model.draft.EvidenceSource
-import com.coinden.core.domain.model.interpret.LanguagePacks
-import com.coinden.core.domain.model.interpret.ReceiptTemplates
 import com.coinden.core.domain.model.interpret.TextDraftInterpreter
 import com.coinden.core.domain.model.wallet.WalletOperationResult
 import com.coinden.core.domain.model.wallet.WalletType
+import com.coinden.core.domain.support.TestPacks
 import com.coinden.core.domain.usecase.category.CategorizationContext
 import com.coinden.core.domain.usecase.draft.CaptureDraftUseCase
 import com.coinden.core.domain.usecase.draft.ConfirmDraftUseCase
@@ -37,7 +36,7 @@ class CarlosDraftCategoryFeatureTest {
     private val ids = SequentialIdGenerator("carlos")
     private val clock = FixedClock()
     private val device = FixedDevice("celular-carlos")
-    private val packs = FakeInstalledPacks(listOf(LanguagePacks.SPANISH), ReceiptTemplates.all)
+    private val packs = FakeInstalledPacks(listOf(TestPacks.spanish), TestPacks.templates)
     private val ledger = LedgerContext(wallets, ids, clock, device)
     private val categories = CategorizationContext(InMemoryCategorizationRepository(), wallets, packs, ids, clock, device)
     private val ctx = DraftContext(InMemoryDraftRepository(), wallets, InMemoryWalletAliasRepository(), ids, clock, device, categories)

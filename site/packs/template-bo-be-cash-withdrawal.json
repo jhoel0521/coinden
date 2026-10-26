@@ -1,0 +1,12 @@
+{
+    "formatVersion": 1,
+    "id": "bo-be-cash-withdrawal",
+    "markers": [
+        "retiro de efectivo"
+    ],
+    "kind": "WITHDRAWAL",
+    "amountLabel": "monto",
+    "accountLabel": "cuenta origen",
+    "referenceLabel": "nro de transaccion",
+    "method": "CASH"
+}

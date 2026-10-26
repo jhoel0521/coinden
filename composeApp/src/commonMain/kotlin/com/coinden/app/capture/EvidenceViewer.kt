@@ -3,6 +3,7 @@ package com.coinden.app.capture
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.coinden.app.AppContainer
+import com.coinden.core.domain.model.draft.Draft
 import com.coinden.core.domain.model.draft.Evidence
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -59,9 +60,20 @@ class EvidencePresenter(
     private val mutableState = MutableStateFlow(EvidenceState())
     val state: StateFlow<EvidenceState> = mutableState.asStateFlow()
 
+    /**
+     * Todo lo que se mandó junto, con Quitar y Separar; null si el borrador no vino en un paquete
+     * o ya no está pendiente (lo confirmado se corrige como movimiento, no reabriendo el paquete).
+     */
+    var bundle: BundleEvidenceViewer? = null
+        private set
+
     suspend fun load() {
         val draft = container.drafts.load(draftId) ?: return
-        mutableState.value = EvidenceState(items = listOf(draft.header.evidence) + draft.header.extraEvidence)
+        val pending = draft !is Draft.Confirmed && draft !is Draft.Discarded
+        val captured = draft.header.bundleId?.let { container.bundles.load(it) }
+        bundle = captured?.takeIf { pending }?.let { BundleEvidenceViewer(container, it.id) }
+        val items = captured?.evidences?.map { it.evidence } ?: (listOf(draft.header.evidence) + draft.header.extraEvidence)
+        mutableState.value = EvidenceState(items = items)
         show(0)
     }
 

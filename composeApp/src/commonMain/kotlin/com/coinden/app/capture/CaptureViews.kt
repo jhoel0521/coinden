@@ -17,10 +17,13 @@ import coinden.composeapp.generated.resources.bar_dictate
 import coinden.composeapp.generated.resources.bar_listening
 import coinden.composeapp.generated.resources.bar_photo
 import coinden.composeapp.generated.resources.bar_write
+import coinden.composeapp.generated.resources.capture_add_context
+import coinden.composeapp.generated.resources.capture_add_to_last
 import coinden.composeapp.generated.resources.notice_camera_denied
 import coinden.composeapp.generated.resources.notice_dictation_unavailable
 import coinden.composeapp.generated.resources.notice_dismiss
 import coinden.composeapp.generated.resources.notice_microphone_denied
+import coinden.composeapp.generated.resources.notice_saved_for_review
 import coinden.composeapp.generated.resources.result_confirm
 import coinden.composeapp.generated.resources.result_confirmed
 import coinden.composeapp.generated.resources.result_done
@@ -63,6 +66,7 @@ fun CaptureBar(
     onDictate: () -> Unit,
     onPhoto: () -> Unit,
     onWrite: () -> Unit,
+    onAddToLast: (() -> Unit)? = null,
 ) {
     val actions =
         if (listening) {
@@ -72,7 +76,7 @@ fun CaptureBar(
                 CdActionSpec(stringResource(Res.string.bar_dictate), onDictate, ActionRole.Primary, icon = CoinDenIcon.MIC.vector),
                 CdActionSpec(stringResource(Res.string.bar_photo), onPhoto, ActionRole.Primary, icon = CoinDenIcon.CAMERA.vector),
                 CdActionSpec(stringResource(Res.string.bar_write), onWrite, ActionRole.Secondary, icon = CoinDenIcon.PENCIL.vector),
-            )
+            ) + listOfNotNull(onAddToLast?.let { CdActionSpec(stringResource(Res.string.capture_add_to_last), it, ActionRole.Tertiary) })
         }
     CdToolbar(actions, Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
 }
@@ -105,6 +109,7 @@ fun CaptureResultSheet(
     onDone: () -> Unit,
     reading: Set<String> = emptySet(),
     onVoiceModels: () -> Unit = {},
+    onAddContext: ((draftId: String) -> Unit)? = null,
 ) {
     CdSheet(onDismiss = onDone) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -132,8 +137,14 @@ fun CaptureResultSheet(
                 confirmed -> CdNotice(NoticeKind.Success, stringResource(Res.string.result_confirmed))
                 else -> result.problems[card.draftId]?.let { CdNotice(NoticeKind.Error, problemText(it, locale)) }
             }
-            if (!confirmed && card.status == DraftStatusView.READY) {
-                CdActions(listOf(CdActionSpec(stringResource(Res.string.result_confirm), { onConfirm(card.draftId) }, ActionRole.Primary)))
+            if (!confirmed) {
+                CdActions(
+                    listOfNotNull(
+                        onAddContext?.let { CdActionSpec(stringResource(Res.string.capture_add_context), { it(card.draftId) }) },
+                        CdActionSpec(stringResource(Res.string.result_confirm), { onConfirm(card.draftId) }, ActionRole.Primary)
+                            .takeIf { card.status == DraftStatusView.READY },
+                    ),
+                )
             }
         }
         CdActions(listOf(CdActionSpec(stringResource(Res.string.result_done), onDone)), Modifier.padding(bottom = 8.dp))
@@ -199,4 +210,5 @@ private fun CaptureNotice.label(): StringResource =
         CaptureNotice.DICTATION_UNAVAILABLE -> Res.string.notice_dictation_unavailable
         CaptureNotice.MICROPHONE_DENIED -> Res.string.notice_microphone_denied
         CaptureNotice.CAMERA_DENIED -> Res.string.notice_camera_denied
+        CaptureNotice.SAVED_FOR_REVIEW -> Res.string.notice_saved_for_review
     }
