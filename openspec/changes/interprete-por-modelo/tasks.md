@@ -33,6 +33,10 @@
 - [ ] 4.3 Descarga del modelo sobre el mismo mecanismo que los de voz, sin duplicarlo.
 - [ ] 4.4 Pantalla del modelo de lenguaje: qué hace, que corre en el teléfono, que no envía datos, que solo propone, su tamaño y el botón de borrar.
 - [ ] 4.5 Textos en es, en y pt.
+- [ ] 4.6 Decidir si la librería de LiteRT-LM va como **módulo bajo demanda** de Play en lugar de
+  dentro del APK. Hoy `liblitertlm_jni.so` suma unos 21 MB por persona (arm64) aunque nunca descargue
+  el modelo, y el AAB pasó de 41,6 MB en la 0.1.0 a 81 MB. Quien no use el modelo no debería pagar ese
+  peso. Anotar la decisión y su motivo.
 
 ## 5. Medición en teléfono real (criterio de aceptación)
 

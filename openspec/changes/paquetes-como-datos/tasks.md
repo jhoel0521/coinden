@@ -34,7 +34,7 @@
 ## 6. Cierre
 
 - [x] 6.1 `npm test`, `npm run lint`, `npm run build:android`, `bundleRelease` y `openspec validate --all` en verde.
-- [ ] 6.2 Emulador: instalar la 0.1.0 con datos, **actualizar sin desinstalar** y comprobar que las capturas siguen interpretándose igual (las palabras no están en la base, pero se verifica de punta a punta).
+- [x] 6.2 Emulador: instalar la 0.1.0 con datos, **actualizar sin desinstalar** y comprobar que las capturas siguen interpretándose igual (las palabras no están en la base, pero se verifica de punta a punta). Hecho el 26-oct-2026 en Android 14: dos actualizaciones sin desinstalar, saldos intactos (2.690,00 BOB) y los comprobantes compartidos se interpretaron con las plantillas del paquete (25,00 / 60,00 / 10,00 BOB). La carpeta `files/packs` del teléfono está vacía: se usaron los paquetes incluidos en el APK.
 
 ## Workflow follow-up
 

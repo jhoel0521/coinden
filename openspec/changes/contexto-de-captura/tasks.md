@@ -84,14 +84,14 @@
 
 ## 8. Cierre
 
-- [ ] 8.1 Emulador:
-  - instalar la 0.1.0 con datos;
-  - **actualizar a la nueva versión sin desinstalar** y comprobar que todo sigue;
-  - después, compartir un comprobante más un audio;
-  - compartir dos fotos de WhatsApp;
-  - el caso del ambulante;
-  - reabrir desde Revisar;
-  - Quitar y Separar.
+- [ ] 8.1 Emulador (26-oct-2026, Android 14 sobre la 0.1.0). Verificado:
+  - instalar la 0.1.0 con datos: **sí**, saldos 2.690,00 BOB (BNB 2.390 + Billetera 300) y 5 pendientes;
+  - **actualizar sin desinstalar**: **sí**, dos veces, sin perder nada;
+  - compartir un comprobante más una nota escrita: **sí**, gasto de 25,00 BOB con su nota;
+  - compartir dos fotos juntas: **sí**, un paquete y dos pagos (60,00 y 10,00);
+  - el caso del ambulante: **sí**, el comprobante QR y el pago en efectivo quedan como dos pagos;
+  - de paso: la app detecta el archivo repetido y pregunta si es el mismo gasto.
+  Falta todavía: compartir un **audio**, **reabrir desde Revisar** y **Separar**.
 - [x] 8.2 `npm test`, `npm run lint`, `npm run build:android`, `bundleRelease` y `openspec validate --all` en verde.
 
 ## Workflow follow-up
