@@ -45,13 +45,15 @@ planilla de Excel.
 
 **Evidencia que pueden comprobar en el APK:**
 
-1. **Tres permisos en total:** cámara (fotografiar un comprobante), micrófono (dictar un
-   gasto) e internet. No pide SMS, contactos, ubicación ni teléfono — permisos que una app
-   que de verdad mueve dinero o presta necesitaría.
+1. **Permisos acotados, sin ninguno sensible de finanzas.** Cámara (fotografiar un
+   comprobante), micrófono (dictar un gasto) e internet. Además, huella o PIN para el bloqueo
+   opcional, y los de segundo plano para leer fotos y audios sin bloquear la pantalla (servicio
+   en primer plano, reinicio, mantener activo y estado de red). No pide SMS, contactos,
+   ubicación ni teléfono — permisos que una app que de verdad mueve dinero o presta necesitaría.
 2. **No hay cuentas ni servidores.** CoinDen no tiene backend. No hay registro, ni inicio
    de sesión, ni servidor al que subir datos. La app funciona completa en modo avión.
 3. **El uso de internet es acotado y declarado:** las cotizaciones públicas de tipo de
-   cambio que la persona configura, la descarga de paquetes de idioma opcionales, y las
+   cambio que la persona configura, la descarga de paquetes de idioma y modelos de voz opcionales, y las
    métricas técnicas que el SDK de reconocimiento de texto de Google (ML Kit) envía por su
    cuenta —versión, rendimiento e identificador por instalación—, que es exactamente lo que
    declaré en la sección de seguridad de los datos. Los montos, los textos y las fotos de la
@@ -105,13 +107,15 @@ transfer anything. It is the same concept as a column in a spreadsheet.
 
 **Evidence you can verify in the APK:**
 
-1. **Three permissions in total:** camera (photograph a receipt), microphone (dictate an
-   expense) and internet. It requests no SMS, contacts, location or phone permissions —
-   the permissions an app that genuinely moves money or lends would require.
+1. **Narrow permissions, none of them finance-sensitive.** Camera (photograph a receipt),
+   microphone (dictate an expense) and internet. Also fingerprint or PIN for the optional lock,
+   and background ones so photos and audio are read without blocking the screen (foreground
+   service, boot, wake lock and network state). It requests no SMS, contacts, location or phone
+   permissions — the permissions an app that genuinely moves money or lends would require.
 2. **There are no accounts and no servers.** CoinDen has no backend of its own. There is no
    sign-up, no login, and no server to upload data to. The app works fully in airplane mode.
 3. **Internet use is narrow and disclosed:** the public exchange-rate quotes the user
-   configures, optional language pack downloads, and the technical metrics that Google's
+   configures, optional language pack and voice model downloads, and the technical metrics that Google's
    text recognition SDK (ML Kit) sends on its own — version, performance and a per-install
    identifier — which is exactly what I declared in the Data Safety section. The user's
    amounts, text and photos are never sent anywhere.
