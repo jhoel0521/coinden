@@ -4,7 +4,7 @@ Se pegan en Play Console → Presencia en la tienda → Ficha principal (españo
 (Agregar traducciones: inglés y portugués de Brasil). Límites de Play: nombre 30 caracteres,
 descripción breve 80 y descripción completa 4000.
 
-- **Categoría:** Finanzas
+- **Categoría:** Productividad (Aplicación). Se cambió desde Finanzas: la app solo anota gastos, no ofrece servicios financieros.
 - **Etiquetas sugeridas:** presupuesto, gastos
 - **Sitio web:** https://jhoel0521.github.io/coinden/
 - **Política de privacidad:** https://jhoel0521.github.io/coinden/privacidad/
@@ -26,6 +26,8 @@ Anota gastos por voz o foto. Sin cuenta ni servidores, cifrado en tu teléfono.
 
 CoinDen es una libreta de gastos que vive solo en tu teléfono. Sin cuenta, sin servidores, sin publicidad.
 
+CoinDen no mueve dinero: solo anota lo que ya gastaste.
+
 Registrar te toma segundos:
 • Dícelo: "gasté 25 en almuerzo con bnb" y queda anotado como borrador.
 • Fotografía o comparte el comprobante de tu banco o billetera digital: CoinDen lee el monto, la fecha y la nota.
@@ -34,7 +36,7 @@ Registrar te toma segundos:
 Nada cambia tus saldos hasta que lo confirmas. Los borradores seguros esperan en "Listos" para confirmarlos de una vez; los dudosos van a "Para revisar" con lo que falta.
 
 Hecho para quien maneja varias monedas:
-• Billeteras en bolivianos, dólares, pesos, reales y más.
+• Separa tu dinero por billeteras (efectivo, banco, tarjeta) para ver en cuál gastaste, en bolivianos, dólares, pesos, reales y más.
 • La tasa que tú usas de verdad (paralela, de tu casa de cambio o manual), no solo la oficial.
 • Montos exactos, sin redondeos raros.
 
@@ -59,6 +61,8 @@ Log expenses by voice or photo. No account, no servers, encrypted on your phone.
 
 CoinDen is an expense notebook that lives only on your phone. No account, no servers, no ads.
 
+CoinDen does not move money: it only records what you have already spent.
+
 Logging takes seconds:
 • Say it: "spent 25 on lunch with my card" and it's saved as a draft.
 • Snap or share a receipt from your bank or digital wallet: CoinDen reads the amount, date and note.
@@ -67,7 +71,7 @@ Logging takes seconds:
 Nothing touches your balances until you confirm it. Clear drafts wait in "Ready" so you can confirm them all at once; unclear ones go to "To review" with what's missing.
 
 Built for people who handle several currencies:
-• Wallets in dollars, bolivianos, pesos, reais and more.
+• Split your money into wallets (cash, bank, card) to see where you spent it, in dollars, bolivianos, pesos, reais and more.
 • The rate you actually use (parallel, your exchange house, or manual), not just the official one.
 • Exact amounts, no odd rounding.
 
@@ -92,6 +96,8 @@ Anote gastos por voz ou foto. Sem conta, sem servidores, cifrado no celular.
 
 O CoinDen é um caderno de gastos que vive só no seu celular. Sem conta, sem servidores, sem anúncios.
 
+O CoinDen não movimenta dinheiro: ele só anota o que você já gastou.
+
 Registrar leva segundos:
 • Fale: "gastei 25 no almoço com o cartão" e fica salvo como rascunho.
 • Fotografe ou compartilhe o comprovante do seu banco ou carteira digital: o CoinDen lê o valor, a data e a nota.
@@ -100,7 +106,7 @@ Registrar leva segundos:
 Nada altera seus saldos até você confirmar. Os rascunhos claros esperam em "Prontos" para confirmar de uma vez; os duvidosos vão para "Para revisar" com o que falta.
 
 Feito para quem lida com várias moedas:
-• Carteiras em reais, dólares, pesos, bolivianos e mais.
+• Separe seu dinheiro por carteiras (dinheiro, banco, cartão) para ver em qual você gastou, em reais, dólares, pesos, bolivianos e mais.
 • A cotação que você usa de verdade (paralela, da sua casa de câmbio ou manual), não só a oficial.
 • Valores exatos, sem arredondamentos estranhos.
 
