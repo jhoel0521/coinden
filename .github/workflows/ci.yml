@@ -2,90 +2,87 @@ name: CI Pipeline
 
 # Solo en pull requests (y a mano): la regla de main exige la rama al día, así que el PR ya
 # probó el mismo código que queda al unir. Correrlo otra vez en el push a main no aporta nada.
+#
+# Los cuatro jobs son checks obligatorios de main (.github/rulesets/main.json). Por eso nunca se
+# filtra el workflow entero con `paths-ignore`: un PR sin checks quedaría bloqueado. En su lugar,
+# el job `changes` decide si hay código y los demás se saltan (un job saltado cuenta como aprobado).
 on:
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "main" ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+# Un push nuevo cancela la corrida vieja del mismo PR. Las corridas a mano no se cancelan entre sí.
 concurrency:
-  group: ${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  changes:
+    name: Detectar cambios de código
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    outputs:
+      code: ${{ steps.filtro.outputs.code }}
+    steps:
+      # Solo documentación, specs, diseño y el sitio estático no necesitan compilar la app.
+      - name: Revisar los archivos del PR
+        id: filtro
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -z "$PR" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          archivos=$(gh api "repos/${{ github.repository }}/pulls/$PR/files" --paginate --jq '.[].filename')
+          if echo "$archivos" | grep -Ev '(\.md$|^docs/|^openspec/|^site/|^design/|^\.github/FUNDING\.yml$)' | grep -q .; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+            echo "Solo documentación: se salta la compilación." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   lint:
     name: Lint & Format Check
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
-
-      - name: Install Android NDK and CMake (whisper.cpp)
-        run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;30.0.15729638" "cmake;3.22.1" > /dev/null
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/preparar-android
       - name: Run ktlint check
         run: ./gradlew ktlintCheck
 
   unit:
     name: Unit & Feature Tests
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
-
-      - name: Install Android NDK and CMake (whisper.cpp)
-        run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;30.0.15729638" "cmake;3.22.1" > /dev/null
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/preparar-android
       - name: Run test suite
         run: ./gradlew :core:domain:jvmTest :core:data-memory:jvmTest :core:data-local:jvmTest :core:data-local:verifySqlDelightMigration :composeApp:testDebugUnitTest
 
   build:
     name: Build Artifacts Check
-    needs: [lint, unit]
+    needs: [changes, lint, unit]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
-
-      # Gradle configura también :composeApp, que declara el NDK de whisper.cpp: sin esto falla por licencias.
-      - name: Install Android NDK and CMake (whisper.cpp)
-        run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;30.0.15729638" "cmake;3.22.1" > /dev/null
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/preparar-android
       # Solo los módulos core: la app de depuración la compila el job "Android APK" y la release
       # (R8 + whisper.cpp nativo, lenta) la arma release.yml con cada etiqueta vX.Y.Z.
       - name: Build core modules
@@ -93,32 +90,18 @@ jobs:
 
   android:
     name: Android APK
-    needs: [lint, unit]
+    needs: [changes, lint, unit]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
-
-      - name: Install Android NDK and CMake (whisper.cpp)
-        run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;30.0.15729638" "cmake;3.22.1" > /dev/null
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/preparar-android
       - name: Build debug APK
         run: ./gradlew :composeApp:assembleDebug
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: coinden-debug-apk
           path: composeApp/build/outputs/apk/debug/*.apk
+          retention-days: 7
