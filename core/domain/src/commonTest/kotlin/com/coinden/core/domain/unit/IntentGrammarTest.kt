@@ -61,6 +61,14 @@ class IntentGrammarTest {
     }
 
     @Test
+    fun `el monto tiene un tope de digitos para que el modelo no escriba ceros sin fin`() {
+        val regla = grammar().lineSequence().first { it.contains("\"amount\"") }
+
+        // Medido con un modelo real: sin tope, un modelo chico escribió un 1 seguido de cientos de ceros.
+        assertTrue(regla.contains("{1,9}"), "como mucho 9 digitos enteros")
+    }
+
+    @Test
     fun `el esquema declara los pagos y no admite nada mas`() {
         val g = grammar()
 

@@ -36,7 +36,7 @@ object IntentGrammar {
                     "type": "object",
                     "properties": {
                       "kind": ${enumOf(listOf("EXPENSE", "INCOME", "TRANSFER"), nullable = false)},
-                      "amount": { "type": "string", "pattern": "^[0-9]+(\\\\.[0-9]{1,2})?${'$'}" },
+                      "amount": { "type": "string", "pattern": "^[0-9]{1,9}(\\\\.[0-9]{1,2})?${'$'}" },
                       "currency": ${enumOf(currencies)},
                       "wallet": ${enumOf(walletIds)},
                       "category": ${enumOf(categories.sorted())},
