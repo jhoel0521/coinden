@@ -15,7 +15,7 @@
 - [x] 2.4 Adaptador Android sobre **LiteRT-LM**, con `ResponseFormat.json(...)` y el *speculative
   decoding* apagado. Enchufado: la app usa el modelo si está descargado y el respaldo si no.
   **Falta** descargar un modelo real y probarlo en un teléfono (va con la 2.5).
-- [ ] 2.5 Prueba de determinismo: la misma captura dos veces da la misma propuesta.
+- [x] 2.5 Prueba de determinismo: la misma captura dos veces da la misma propuesta. _(Emulador Gama_baja_4GB, Qwen 3 0.6B real: 3 corridas idénticas de la misma captura, `LanguageModelDeviceTest#b_determinismoYTiempos`.)_
 
 ## 3. Los dos caminos y el desacuerdo
 
@@ -24,6 +24,7 @@
 - [x] 3.3 Motivos nuevos de revisión, como enum sin textos, traducidos en la presentación.
 
 - [ ] 3.4 Los escenarios de `contexto-de-captura` que piden entender lenguaje, con el modelo:
+  Con el modelo real (`LanguageModelDeviceTest#c_frasesDeContexto`), solo el modelo, sin el validador: **ambulante** 3 pagos (25, 60 y 25 en efectivo) ✓; **taxi entre varios** 25, 60 y 15 "taxi" ✓; **comida y somó** devuelve 2 de 4 pagos (pierde un 10) ✗; **comprobante equivocado** inventa "2500" donde el comprobante dice 25.00 — el validador lo rechaza porque no está en el texto, y el borrador va a revisar ✓ (es justo para lo que está el validador). **No se marca**: falta correr estos casos de punta a punta (modelo + reglas + paquete) y ver el resultado en pantalla; el modelo de 0,6B solo no basta en el caso del somó.
   ambulante; comida y somó; modelo y reglas no coinciden; varias frases en un audio.
 
 ## 4. Descarga, verificación y pantalla
@@ -41,10 +42,11 @@
 
 ## 5. Medición en teléfono real (criterio de aceptación)
 
-- [ ] 5.0 Crear un emulador de gama baja (4 GB de RAM, 4 núcleos, imagen `android-34` x86_64) y otro de 2 GB; verificar en el de 2 GB que el modelo **no se ofrece** y que la app funciona con el respaldo. No hay teléfono físico disponible: la medición en teléfono real queda como verificación pendiente de la persona.
+- [x] 5.0 Crear un emulador de gama baja (4 GB de RAM, 4 núcleos, imagen `android-34` x86_64) y otro de 2 GB; verificar en el de 2 GB que el modelo **no se ofrece** y que la app funciona con el respaldo. No hay teléfono físico disponible: la medición en teléfono real queda como verificación pendiente de la persona. _(Gama_baja_4GB: x86_64, 4 GB, 4 núcleos, API 34. El de 2 GB (`Android14_API34`) muestra "Tu teléfono no tiene memoria suficiente para este modelo" y la app sigue con el respaldo.)_
 - [ ] 5.1 Medir en el emulador de 4 GB (perfil de gama baja; el teléfono de referencia real es arm64 tipo Galaxy A15 o Redmi 13C): una captura típica se interpreta en **menos de 5 s**, sin cierres por memoria. Anotar el modelo exacto, su tamaño y los tiempos.
-- [ ] 5.3 Confirmar en ejecución que interpretar no genera tráfico de red (el motor es de Google y el Manifiesto prohíbe la telemetría); mirar el tráfico del emulador mientras interpreta y anotar el resultado.
-- [ ] 5.4 Probar el APK **release minificado** con el modelo: `proguard-rules.pro` solo protege `WhisperNative`; agregar las reglas `-keep` que LiteRT-LM necesite (JNI, gson, kotlin-reflect).
+  **Medido, NO cumple**: en el emulador de 4 GB (x86_64), Qwen 3 0.6B tarda **~6 s** un pago ("almuerzo 45 en efectivo"), **~8 s** dos pagos ("almuerzo 45 y micro 3") y **11–13 s** un paquete de 2 comprobantes más audio; la primera carga del modelo, ~12 s. Memoria nativa ~1,07 GB, sin cierres. Es un emulador x86_64, no el teléfono de referencia arm64: el número real puede ser mejor o peor. Hallazgos al medir: sin tope de dígitos en el monto el modelo escribió un 1 seguido de cientos de ceros (corregido: tope de 9 dígitos, con prueba en `IntentGrammarTest`); un prompt más corto dio peor resultado ("page 3 bs para trasmporte" → monto 0).
+- [ ] 5.3 Confirmar en ejecución que interpretar no genera tráfico de red (el motor es de Google y el Manifiesto prohíbe la telemetría); mirar el tráfico del emulador mientras interpreta y anotar el resultado. _(Se comprobó que interpretar **funciona sin red** (wifi y datos apagados, `ping` inalcanzable, la prueba pasa). **No se pudo medir** el conteo de bytes del proceso con `dumpsys netstats` desde adb: queda pendiente la captura de tráfico.)_
+- [ ] 5.4 Probar el APK **release minificado** con el modelo: `proguard-rules.pro` solo protege `WhisperNative`; agregar las reglas `-keep` que LiteRT-LM necesite (JNI, gson, kotlin-reflect). _(Reglas `-keep` para `com.google.ai.edge.litertlm.**` en `proguard-rules.pro`. Verificado en el mapeo de R8: sin ellas `Engine` se renombra a `ja.e`; con ellas conserva su nombre. **No se probó el APK release en ejecución con el modelo** (la prueba instrumentada apunta al APK debug).)_
 - [ ] 5.2 Si no se cumple, bajar de modelo o recortar el prompt y volver a medir. No se acepta sin el número.
 
 ## 6. El respaldo mínimo determinista
