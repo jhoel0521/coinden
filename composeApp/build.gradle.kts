@@ -33,6 +33,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.core.splashscreen)
             implementation(libs.androidx.biometric)
+            implementation(libs.mlkit.genai.prompt)
             implementation(libs.androidx.lifecycle.process)
             implementation(libs.androidx.camera.camera2)
             implementation(libs.androidx.camera.lifecycle)
