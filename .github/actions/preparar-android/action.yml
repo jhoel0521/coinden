@@ -14,7 +14,8 @@ runs:
     - name: Instalar NDK y CMake
       shell: bash
       run: |
-        yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+        # Con `shell: bash` GitHub activa pipefail: `yes | ...` falla por "Broken pipe", así que se lee de una sustitución.
+        "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses < <(yes) > /dev/null
         "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;30.0.15729638" "cmake;3.22.1" > /dev/null
 
     - name: Permiso de ejecución para gradlew
