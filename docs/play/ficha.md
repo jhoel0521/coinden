@@ -36,7 +36,7 @@ Registrar te toma segundos:
 Nada cambia tus saldos hasta que lo confirmas. Los borradores seguros esperan en "Listos" para confirmarlos de una vez; los dudosos van a "Para revisar" con lo que falta.
 
 Hecho para quien maneja varias monedas:
-• Separa tu dinero por billeteras (efectivo, banco, tarjeta) para ver en cuál gastaste, en bolivianos, dólares, pesos, reales y más.
+• Separa tu dinero por billeteras (efectivo, cuenta, tarjeta) para ver en cuál gastaste, en bolivianos, dólares, pesos, reales y más.
 • La tasa que tú usas de verdad (paralela, de tu casa de cambio o manual), no solo la oficial.
 • Montos exactos, sin redondeos raros.
 
@@ -44,7 +44,8 @@ Tus datos son tuyos:
 • Todo se guarda cifrado en el teléfono.
 • La voz y las fotos se procesan en el teléfono.
 • Bloqueo opcional con tu huella o el PIN del teléfono para ver saldos; puedes registrar sin desbloquear.
-• Lo único que sale a internet son las cotizaciones públicas que elijas y las descargas opcionales (modelos de voz).
+• Borra todos tus datos cuando quieras desde Perfil → Borrar mis datos. Solo afecta a este teléfono.
+• Lo único que sale a internet son las descargas opcionales que pidas (modelos de voz) y, cuando las configures, las cotizaciones públicas que elijas.
 
 CoinDen es software libre (MPL-2.0) y gratis. Se sostiene con donaciones desde su sitio web.
 
@@ -71,7 +72,7 @@ Logging takes seconds:
 Nothing touches your balances until you confirm it. Clear drafts wait in "Ready" so you can confirm them all at once; unclear ones go to "To review" with what's missing.
 
 Built for people who handle several currencies:
-• Split your money into wallets (cash, bank, card) to see where you spent it, in dollars, bolivianos, pesos, reais and more.
+• Split your money into wallets (cash, account, card) to see where you spent it, in dollars, bolivianos, pesos, reais and more.
 • The rate you actually use (parallel, your exchange house, or manual), not just the official one.
 • Exact amounts, no odd rounding.
 
@@ -79,7 +80,8 @@ Your data is yours:
 • Everything is stored encrypted on the phone.
 • Voice and photos are processed on the phone.
 • Optional lock with your fingerprint or phone PIN to see balances; you can still log without unlocking.
-• The only things that go online are the public exchange rates you choose and optional downloads (voice models).
+• Erase all your data whenever you want from Profile → Erase my data. It only affects this phone.
+• The only things that go online are the optional downloads you ask for (voice models) and, once you set them up, the public exchange rates you choose.
 
 CoinDen is free and open source (MPL-2.0). It is supported by donations through its website.
 
@@ -106,7 +108,7 @@ Registrar leva segundos:
 Nada altera seus saldos até você confirmar. Os rascunhos claros esperam em "Prontos" para confirmar de uma vez; os duvidosos vão para "Para revisar" com o que falta.
 
 Feito para quem lida com várias moedas:
-• Separe seu dinheiro por carteiras (dinheiro, banco, cartão) para ver em qual você gastou, em reais, dólares, pesos, bolivianos e mais.
+• Separe seu dinheiro por carteiras (dinheiro, conta, cartão) para ver em qual você gastou, em reais, dólares, pesos, bolivianos e mais.
 • A cotação que você usa de verdade (paralela, da sua casa de câmbio ou manual), não só a oficial.
 • Valores exatos, sem arredondamentos estranhos.
 
@@ -114,6 +116,7 @@ Seus dados são seus:
 • Tudo fica salvo criptografado no celular.
 • A voz e as fotos são processadas no celular.
 • Bloqueio opcional com sua digital ou o PIN do celular para ver os saldos; você pode registrar sem desbloquear.
-• O que vai para a internet são só as cotações públicas que você escolher e os downloads opcionais (modelos de voz).
+• Apague todos os seus dados quando quiser em Perfil → Apagar meus dados. Só afeta este celular.
+• O que vai para a internet são só os downloads opcionais que você pedir (modelos de voz) e, quando você configurar, as cotações públicas que escolher.
 
 O CoinDen é software livre (MPL-2.0) e gratuito. É mantido por doações pelo site.

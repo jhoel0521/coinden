@@ -79,10 +79,14 @@ la ubicación ni permite comprar bienes digitales. Resultado esperado: apta para
 
 - ¿Recopila o comparte datos del usuario? **Sí**, solo por el lector de comprobantes de Google (ML Kit),
   que manda métricas técnicas a Google. CoinDen no envía nada propio: los movimientos, montos, fotos,
-  audio y textos se quedan cifrados en el teléfono. Las cotizaciones y los modelos de voz se descargan
-  sin enviar datos de la persona.
+  audio y textos se quedan cifrados en el teléfono. Los modelos de voz y los paquetes se descargan sin
+  enviar datos de la persona; la app todavía no consulta cotizaciones.
 - ¿Los datos se encriptan en tránsito? **Sí** (HTTPS).
-- ¿Se pueden borrar? No hay cuenta ni servidores de CoinDen; borrar la app borra todo.
+- ¿Se pueden borrar? Dentro de la app, **sí**: Perfil → Borrar mis datos elimina de ese teléfono la base,
+  su llave, las fotos, PDF y audios, la cola y las preferencias (con huella o PIN si el bloqueo está
+  activo), y la app vuelve a la bienvenida. Desinstalar también borra todo. No hay cuenta ni servidores de
+  CoinDen, así que no hay copia que borrar fuera del teléfono. Las métricas técnicas que Google ya recibió
+  por el lector opcional no las guarda CoinDen: se rigen por las condiciones de ML Kit.
 - Tipos de datos a declarar (según la [divulgación de ML Kit](https://developers.google.com/ml-kit/android-data-disclosure)),
   todos **recopilados, no compartidos**, para **Estadísticas** (diagnóstico), **opcionales** para la persona:
   - Información y rendimiento de la app → **Diagnóstico** (latencia, errores, tamaño de entrada y salida, versión).
@@ -110,7 +114,15 @@ En el paso "Documentación", Google indicó que por ahora no hace falta adjuntar
 **Permisos:** cámara (fotografiar comprobantes) y micrófono (dictar gastos), ambos solo cuando la persona
 toca el botón. Ninguno requiere declaración especial.
 
-## 5. Antes de cada versión
+## 5. Nombres visibles en la app
+
+Desde la 0.2.1, los tipos de billetera se muestran con nombres de registro, no de producto financiero:
+Efectivo, Cuenta, Digital, Personalizada y Tarjeta (en inglés Cash, Account, Digital, Custom y Card; en
+portugués Dinheiro, Conta, Digital, Personalizada y Cartão). El movimiento entre billeteras propias se
+llama Traspaso (Move, Repasse). El medio de pago "Transferencia o QR" no cambia: describe cómo pagó la
+persona, como lo dice su comprobante. La ficha, el sitio y las capturas deben usar estos mismos nombres.
+
+## 6. Antes de cada versión
 
 - `npm test`, `npm run lint` y `bundleRelease` en verde.
 - Instalar la release en un teléfono y probar el onboarding, una captura por voz, una foto de comprobante

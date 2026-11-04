@@ -45,6 +45,14 @@ class FacundoCreditCardFeatureTest {
         ).wallet
 
     @Test
+    fun `Facundo abre su tarjeta con una deuda inicial exacta de -25,00 ARS`() =
+        runTest {
+            val visa = wallet("Visa Galicia", ars(-2_500), WalletType.CREDIT)
+            assertEquals(WalletType.CREDIT, visa.type)
+            assertEquals(ars(-2_500), status(visa.id)!!.balance)
+        }
+
+    @Test
     fun `Facundo usa la tarjeta, queda en negativo y la paga desde el banco`() =
         runTest {
             val visa = wallet("Visa Galicia", ars(0), WalletType.CREDIT)

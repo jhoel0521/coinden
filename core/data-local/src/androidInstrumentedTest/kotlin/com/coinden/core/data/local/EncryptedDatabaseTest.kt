@@ -24,8 +24,7 @@ class EncryptedDatabaseTest {
 
     @After
     fun cleanUp() {
-        context.deleteDatabase(name)
-        context.filesDir.resolve("$name.key").delete()
+        AndroidDatabase.destroy(context, name)
     }
 
     @Test

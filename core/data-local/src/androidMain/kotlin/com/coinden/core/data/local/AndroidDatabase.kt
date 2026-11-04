@@ -19,8 +19,8 @@ import javax.crypto.spec.GCMParameterSpec
  * Base local cifrada en Android: SQLite con SQLCipher (AES-256 de todo el archivo).
  *
  * La passphrase son 32 bytes aleatorios generados en el primer inicio. Se guardan cifrados con
- * una llave AES-GCM no exportable del Android Keystore, en el almacenamiento privado de la app.
- * No se pide cuenta ni contraseña; el PIN opcional es un cambio aparte.
+ * una llave AES-GCM no exportable del Android Keystore (su alias es el nombre de la base), en el
+ * almacenamiento privado de la app. No se pide cuenta ni contraseña; el PIN opcional es un cambio aparte.
  */
 class AndroidDatabase private constructor(
     val driver: SqlDriver,
@@ -32,7 +32,6 @@ class AndroidDatabase private constructor(
     companion object {
         const val DEFAULT_NAME = "coinden.db"
         private const val KEYSTORE = "AndroidKeyStore"
-        private const val KEY_ALIAS = "coinden.db"
         private const val TRANSFORMATION = "AES/GCM/NoPadding"
         private const val IV_SIZE = 12
         private const val TAG_BITS = 128
@@ -45,15 +44,38 @@ class AndroidDatabase private constructor(
             context: Context,
             name: String = DEFAULT_NAME,
         ): AndroidDatabase {
-            val passphrase = passphrase(File(context.filesDir, "$name.key"))
+            val passphrase = passphrase(keyFile(context, name), alias = name)
             // La fábrica limpia la passphrase de memoria después de abrir la base.
             val driver = AndroidSqliteDriver(CoinDenDatabase.Schema, context, name, factory = SupportOpenHelperFactory(passphrase))
             return AndroidDatabase(driver)
         }
 
+        /**
+         * Borrado total por decisión de la persona: la base con sus archivos (-wal, -shm, -journal),
+         * su passphrase y la entrada del Keystore, juntas. Sin esa llave, una copia que haya quedado
+         * no se puede descifrar, y la próxima apertura crea una base y una llave nuevas. La base
+         * debe estar cerrada. Borrar lo que ya no existe no falla.
+         */
+        fun destroy(
+            context: Context,
+            name: String = DEFAULT_NAME,
+        ) {
+            context.deleteDatabase(name)
+            keyFile(context, name).delete()
+            KeyStore.getInstance(KEYSTORE).apply { load(null) }.deleteEntry(name)
+        }
+
+        private fun keyFile(
+            context: Context,
+            name: String,
+        ) = File(context.filesDir, "$name.key")
+
         /** Lee la passphrase guardada o crea una nueva; solo la llave del Keystore puede descifrarla. */
-        private fun passphrase(file: File): ByteArray {
-            val key = keystoreKey()
+        private fun passphrase(
+            file: File,
+            alias: String,
+        ): ByteArray {
+            val key = keystoreKey(alias)
             if (file.exists()) {
                 val stored = file.readBytes()
                 val cipher = Cipher.getInstance(TRANSFORMATION)
@@ -67,13 +89,13 @@ class AndroidDatabase private constructor(
             return passphrase
         }
 
-        private fun keystoreKey(): SecretKey {
+        private fun keystoreKey(alias: String): SecretKey {
             val keyStore = KeyStore.getInstance(KEYSTORE).apply { load(null) }
-            (keyStore.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry)?.let { return it.secretKey }
+            (keyStore.getEntry(alias, null) as? KeyStore.SecretKeyEntry)?.let { return it.secretKey }
             val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE)
             generator.init(
                 KeyGenParameterSpec
-                    .Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                    .Builder(alias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
                     .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                     .setKeySize(256)

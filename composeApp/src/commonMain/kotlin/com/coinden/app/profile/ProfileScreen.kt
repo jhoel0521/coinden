@@ -18,14 +18,11 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import coinden.composeapp.generated.resources.Res
-import coinden.composeapp.generated.resources.categories_title
 import coinden.composeapp.generated.resources.home_language
-import coinden.composeapp.generated.resources.home_privacy
 import coinden.composeapp.generated.resources.language_en
 import coinden.composeapp.generated.resources.language_es
 import coinden.composeapp.generated.resources.language_pt
 import coinden.composeapp.generated.resources.licenses_title
-import coinden.composeapp.generated.resources.models_title
 import coinden.composeapp.generated.resources.profile_about
 import coinden.composeapp.generated.resources.profile_about_text
 import coinden.composeapp.generated.resources.profile_credits
@@ -33,7 +30,6 @@ import coinden.composeapp.generated.resources.profile_security
 import coinden.composeapp.generated.resources.profile_settings
 import coinden.composeapp.generated.resources.profile_site
 import coinden.composeapp.generated.resources.profile_title
-import coinden.composeapp.generated.resources.settings_title
 import com.coinden.app.lock.AppLockController
 import com.coinden.app.lock.LockSwitch
 import com.coinden.app.ui.components.CdCard
@@ -57,6 +53,7 @@ fun ProfileScreen(
     onCategories: () -> Unit,
     onPrivacy: () -> Unit,
     onVoiceModels: () -> Unit,
+    onEraseData: () -> Unit,
     onLicenses: () -> Unit,
 ) {
     val lockState by lock.state.collectAsState()
@@ -92,10 +89,17 @@ fun ProfileScreen(
         }
         item {
             CdSection(stringResource(Res.string.profile_settings)) {
-                CdListOption(stringResource(Res.string.settings_title), onWallets)
-                CdListOption(stringResource(Res.string.categories_title), onCategories)
-                CdListOption(stringResource(Res.string.home_privacy), onPrivacy)
-                CdListOption(stringResource(Res.string.models_title), onVoiceModels)
+                ProfileOption.entries.forEach { option ->
+                    val open =
+                        when (option) {
+                            ProfileOption.WALLETS -> onWallets
+                            ProfileOption.CATEGORIES -> onCategories
+                            ProfileOption.PRIVACY -> onPrivacy
+                            ProfileOption.VOICE_MODELS -> onVoiceModels
+                            ProfileOption.ERASE_DATA -> onEraseData
+                        }
+                    CdListOption(stringResource(option.label()), open)
+                }
             }
         }
         item {

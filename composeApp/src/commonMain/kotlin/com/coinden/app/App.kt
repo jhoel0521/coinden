@@ -31,8 +31,12 @@ import com.coinden.app.capture.EvidenceScreen
 import com.coinden.app.capture.FormMode
 import com.coinden.app.capture.ReopenContext
 import com.coinden.app.capture.SharedContent
+import com.coinden.app.erase.DataEraser
+import com.coinden.app.erase.EraseDataPresenter
+import com.coinden.app.erase.EraseDataScreen
 import com.coinden.app.i18n.ProvideAppLocale
 import com.coinden.app.lock.AppLockController
+import com.coinden.app.lock.DeviceAuth
 import com.coinden.app.lock.LockedPanel
 import com.coinden.app.lock.NoDeviceAuth
 import com.coinden.app.onboarding.CurrenciesScreen
@@ -68,6 +72,7 @@ private object Routes {
     const val SETTINGS = "settings"
     const val CATEGORIES = "categories"
     const val LICENSES = "licenses"
+    const val ERASE = "erase"
     const val REVIEW = "review/{draftId}"
     const val CORRECT = "correct/{draftId}/{source}"
     const val EVIDENCE = "evidence/{draftId}"
@@ -109,6 +114,9 @@ fun App(
     appVersion: String = "",
     foreground: ForegroundSignal = remember { ForegroundSignal() },
     forms: FormPresenters = remember { FormPresenters() },
+    /** "Borrar mis datos" de este dispositivo; sin borrador (otras plataformas), la pantalla no borra. */
+    eraser: DataEraser? = null,
+    deviceAuth: DeviceAuth = NoDeviceAuth,
 ) {
     val language by container.language.collectAsState()
     CoinDenTheme {
@@ -140,6 +148,8 @@ fun App(
                             appVersion,
                             foreground,
                             forms,
+                            eraser,
+                            deviceAuth,
                         )
                     }
                 }
@@ -162,6 +172,8 @@ private fun AppNavHost(
     appVersion: String,
     foreground: ForegroundSignal,
     forms: FormPresenters,
+    eraser: DataEraser?,
+    deviceAuth: DeviceAuth,
 ) {
     val nav = rememberNavController()
     val onboarding = remember { OnboardingPresenter(container, deviceLanguage, deviceCountry) }
@@ -203,6 +215,13 @@ private fun AppNavHost(
         }
         // Sin saldos: se abre aunque la app esté bloqueada.
         composable(Routes.LICENSES) { LicensesScreen(onBack = { nav.popBackStack() }) }
+        // Sin saldos: se abre aunque la app esté bloqueada; con el bloqueo activo, borrar pide autenticarse.
+        composable(Routes.ERASE) {
+            eraser?.let {
+                val erase = remember { EraseDataPresenter(it, deviceAuth) { lock.state.value.enabled } }
+                EraseDataScreen(erase, onBack = { nav.popBackStack() })
+            }
+        }
         composable(Routes.VOICE_MODELS) {
             val models = remember { VoiceModelsPresenter(platform.voiceModels) }
             VoiceModelsScreen(models, onBack = { nav.popBackStack() })
@@ -272,6 +291,7 @@ private fun AppNavHost(
                 onCategories = { nav.navigate(Routes.CATEGORIES) },
                 onPrivacy = { nav.navigate(Routes.PRIVACY) },
                 onVoiceModels = { nav.navigate(Routes.VOICE_MODELS) },
+                onEraseData = { nav.navigate(Routes.ERASE) },
                 onLicenses = { nav.navigate(Routes.LICENSES) },
             )
         }

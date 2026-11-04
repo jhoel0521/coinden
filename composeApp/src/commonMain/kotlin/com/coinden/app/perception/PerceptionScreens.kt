@@ -42,6 +42,7 @@ import coinden.composeapp.generated.resources.models_system
 import coinden.composeapp.generated.resources.models_title
 import coinden.composeapp.generated.resources.privacy_continue
 import coinden.composeapp.generated.resources.privacy_downloads
+import coinden.composeapp.generated.resources.privacy_erase
 import coinden.composeapp.generated.resources.privacy_google
 import coinden.composeapp.generated.resources.privacy_google_choose_no
 import coinden.composeapp.generated.resources.privacy_google_choose_yes
@@ -72,6 +73,18 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+/** Lo que explica la pantalla de privacidad antes del lector de Google, en orden. */
+object PrivacyPoints {
+    val all: List<Pair<CoinDenIcon, StringResource>> =
+        listOf(
+            CoinDenIcon.LOCK to Res.string.privacy_stays,
+            CoinDenIcon.BANK to Res.string.privacy_public,
+            CoinDenIcon.SHIELD to Res.string.privacy_downloads,
+            // Borrar todo desde Perfil; solo afecta a este teléfono.
+            CoinDenIcon.USER to Res.string.privacy_erase,
+        )
+}
+
 /** La lista que publica Google de lo que recoge su lector: la persona lo comprueba en la fuente. */
 private const val GOOGLE_DATA_URL = "https://developers.google.com/ml-kit/android-data-disclosure"
 
@@ -97,9 +110,7 @@ fun PrivacyScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Text(stringResource(Res.string.privacy_title), style = MaterialTheme.typography.headlineSmall)
-            Point(CoinDenIcon.LOCK, Res.string.privacy_stays)
-            Point(CoinDenIcon.BANK, Res.string.privacy_public)
-            Point(CoinDenIcon.SHIELD, Res.string.privacy_downloads)
+            PrivacyPoints.all.forEach { (icon, text) -> Point(icon, text) }
             CdCard(tone = CardTone.Raised) {
                 // Quien ya eligió lo cambia con el interruptor de siempre. Quien todavía no,
                 // elige abajo: un interruptor no distingue "lo dejó apagado" de "no lo miró".

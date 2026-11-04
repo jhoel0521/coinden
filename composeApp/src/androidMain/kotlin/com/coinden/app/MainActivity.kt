@@ -54,6 +54,8 @@ class MainActivity : FragmentActivity() {
                 appVersion = version,
                 foreground = app.foreground,
                 forms = app.forms,
+                eraser = app.eraser,
+                deviceAuth = app.deviceAuth,
             )
         }
     }

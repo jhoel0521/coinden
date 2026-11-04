@@ -11,7 +11,7 @@
     <string name="evidence_quote">“%1$s”</string>
     <string name="kind_expense">Expense</string>
     <string name="kind_income">Income</string>
-    <string name="kind_transfer">Transfer</string>
+    <string name="kind_transfer">Move</string>
     <string name="kind_adjustment">Balance adjustment</string>
     <string name="kind_not_a_movement">Not a movement</string>
     <string name="kind_unknown">Undefined type</string>
@@ -63,7 +63,7 @@
     <string name="currencies_main">Your main currency</string>
     <string name="currencies_others">Use others? Tap the ones you use</string>
     <string name="currencies_search">Search currency by name or code</string>
-    <string name="currencies_add_custom">Add your own currency or crypto</string>
+    <string name="currencies_add_custom">Add another currency</string>
     <string name="custom_code">Code (3 to 6 letters)</string>
     <string name="custom_name">Name</string>
     <string name="custom_symbol">Symbol</string>
@@ -85,10 +85,10 @@
     <string name="wallet_add">Add wallet</string>
     <string name="wallet_remove">Remove %1$s</string>
     <string name="wallet_type_cash">Cash</string>
-    <string name="wallet_type_bank">Bank</string>
+    <string name="wallet_type_bank">Account</string>
     <string name="wallet_type_digital">Digital</string>
-    <string name="wallet_type_crypto">Crypto</string>
-    <string name="wallet_type_credit">Credit card</string>
+    <string name="wallet_type_crypto">Custom</string>
+    <string name="wallet_type_credit">Card</string>
     <string name="wallets_hint">To dictate, one word of the name is enough: “lunch 12 chase”.</string>
     <string name="error_invalid_wallet">Check the name and the balance</string>
     <string name="error_no_wallets">Create at least one wallet</string>
@@ -365,4 +365,17 @@
     <string name="inbox_reason_assigned_by_order">Two payments of the same amount: assigned by time</string>
     <string name="inbox_reason_context_for_several">What you said could be about any of the payments</string>
     <string name="inbox_reason_without_receipt">This payment has no receipt</string>
+    <!-- Erase my data -->
+    <string name="erase_title">Erase my data</string>
+    <string name="erase_what">Your wallets, movements, drafts, photos, audio and preferences are erased from this phone.</string>
+    <string name="erase_undo">This cannot be undone: there is no copy on any server or in the cloud.</string>
+    <string name="erase_device">Only this phone is erased. Nothing is sent anywhere.</string>
+    <string name="erase_kept">Downloaded voice models and language packs are kept: they are public data, not yours.</string>
+    <string name="erase_confirm">Erase everything</string>
+    <string name="erase_authenticating">Confirm with your fingerprint or PIN to erase.</string>
+    <string name="erase_erasing">Erasing your data…</string>
+    <string name="erase_failed">Erasing did not finish. Your data will not be shown until it is complete.</string>
+    <string name="erase_retry">Retry erasing</string>
+    <string name="erase_done">Done. CoinDen starts over as if freshly installed.</string>
+    <string name="privacy_erase">You can erase all your data at any time from Profile, in Erase my data. It only affects this phone.</string>
 </resources>

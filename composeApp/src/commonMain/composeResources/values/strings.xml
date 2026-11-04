@@ -11,7 +11,7 @@
     <string name="evidence_quote">«%1$s»</string>
     <string name="kind_expense">Gasto</string>
     <string name="kind_income">Ingreso</string>
-    <string name="kind_transfer">Transferencia</string>
+    <string name="kind_transfer">Traspaso</string>
     <string name="kind_adjustment">Ajuste de saldo</string>
     <string name="kind_not_a_movement">No es un movimiento</string>
     <string name="kind_unknown">Tipo sin definir</string>
@@ -63,7 +63,7 @@
     <string name="currencies_main">Tu moneda principal</string>
     <string name="currencies_others">¿Usas otras? Toca las que uses</string>
     <string name="currencies_search">Buscar moneda por nombre o código</string>
-    <string name="currencies_add_custom">Agregar moneda propia o cripto</string>
+    <string name="currencies_add_custom">Agregar otra moneda</string>
     <string name="custom_code">Código (3 a 6 letras)</string>
     <string name="custom_name">Nombre</string>
     <string name="custom_symbol">Símbolo</string>
@@ -85,10 +85,10 @@
     <string name="wallet_add">Agregar billetera</string>
     <string name="wallet_remove">Quitar %1$s</string>
     <string name="wallet_type_cash">Efectivo</string>
-    <string name="wallet_type_bank">Banco</string>
+    <string name="wallet_type_bank">Cuenta</string>
     <string name="wallet_type_digital">Digital</string>
-    <string name="wallet_type_crypto">Cripto</string>
-    <string name="wallet_type_credit">Tarjeta de crédito</string>
+    <string name="wallet_type_crypto">Personalizada</string>
+    <string name="wallet_type_credit">Tarjeta</string>
     <string name="wallets_hint">Para dictar basta con una palabra del nombre: «almuerzo 45 bnb».</string>
     <string name="error_invalid_wallet">Revisa el nombre y el saldo</string>
     <string name="error_no_wallets">Crea al menos una billetera</string>
@@ -365,4 +365,17 @@
     <string name="inbox_reason_assigned_by_order">Dos pagos del mismo monto: se asignaron por la hora</string>
     <string name="inbox_reason_context_for_several">Lo que dijiste puede ser de cualquiera de los pagos</string>
     <string name="inbox_reason_without_receipt">Este pago no tiene comprobante</string>
+    <!-- Borrar mis datos -->
+    <string name="erase_title">Borrar mis datos</string>
+    <string name="erase_what">Se borran de este teléfono tus billeteras, movimientos, borradores, fotos, audios y preferencias.</string>
+    <string name="erase_undo">No se puede deshacer: no hay ninguna copia en un servidor ni en la nube.</string>
+    <string name="erase_device">Solo se borra este teléfono. No se envía nada a ningún lado.</string>
+    <string name="erase_kept">Los modelos de voz y los paquetes de idioma descargados se conservan: son datos públicos, no tuyos.</string>
+    <string name="erase_confirm">Borrar todo</string>
+    <string name="erase_authenticating">Confirma con tu huella o PIN para borrar.</string>
+    <string name="erase_erasing">Borrando tus datos…</string>
+    <string name="erase_failed">El borrado no terminó. Tus datos no se mostrarán hasta completarlo.</string>
+    <string name="erase_retry">Reintentar el borrado</string>
+    <string name="erase_done">Listo. CoinDen vuelve a empezar como recién instalada.</string>
+    <string name="privacy_erase">Puedes borrar todos tus datos cuando quieras desde Perfil, en Borrar mis datos. Solo afecta a este teléfono.</string>
 </resources>
