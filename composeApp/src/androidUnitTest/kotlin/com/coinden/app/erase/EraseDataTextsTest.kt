@@ -20,7 +20,7 @@ class EraseDataTextsTest {
     @Test
     fun `Carlos ve en Perfil Borrar mis datos despues de Modelos de voz y antes de Acerca de`() {
         assertEquals(
-            listOf("Billeteras y tasas", "Categorías propias", "Privacidad", "Modelos de voz", "Borrar mis datos"),
+            listOf("Fuentes y equivalencias", "Categorías propias", "Privacidad", "Modelos de voz", "Borrar mis datos"),
             ProfileOption.entries.map { es.getValue(it.label().key) },
         )
     }
@@ -28,7 +28,7 @@ class EraseDataTextsTest {
     @Test
     fun `la confirmacion explica que se borra, que no se deshace y que solo afecta este telefono`() {
         val confirmation = EraseTexts.confirmation.map { es.getValue(it.key) }
-        assertTrue(confirmation.any { "billeteras, movimientos, borradores, fotos, audios y preferencias" in it })
+        assertTrue(confirmation.any { "fuentes, movimientos, borradores, fotos, audios y preferencias" in it })
         assertTrue(confirmation.any { "No se puede deshacer" in it })
         assertTrue(confirmation.any { "Solo se borra este teléfono" in it && "No se envía nada a ningún lado" in it })
         assertEquals("Borrar todo", es.getValue("erase_confirm"))

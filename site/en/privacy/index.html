@@ -25,7 +25,7 @@
 <p>CoinDen is a spending notebook: it records what you already spent and does not move money. There is no account, no CoinDen servers, no ads and no analytics of our own. What you record is stored encrypted only on your phone, is never sent anywhere, and you can erase all of it whenever you want from the app.</p>
 
 <h2 id="datos">What data the app keeps</h2>
-<p>Your wallets (the name you give them, their type, currency and balance), your movements, drafts, categories, rates and notes, and the text you dictate or type.</p>
+<p>Your sources (the name you give them, their type, currency and total), your movements, drafts, categories, equivalences and notes, and the text you dictate or type.</p>
 <p>The photos, PDFs and audio of receipts you take or share with CoinDen. <strong>A receipt may include account numbers, names and transaction numbers.</strong> CoinDen keeps it as received so you can review it later, and never sends it anywhere.</p>
 <p>Your preferences (language, lock and Google reader) and a randomly generated identifier for this installation, which never leaves the phone either.</p>
 
@@ -33,7 +33,7 @@
 <p>Only on your phone, in the app's private storage, which other apps cannot read.</p>
 <p>The whole database is encrypted with SQLCipher (AES-256). Its key is a random value that is itself encrypted with a key from Android's secure store (Android Keystore), which cannot be taken off the phone.</p>
 <p>Photos, PDFs and audio are stored in separate files, each encrypted with AES-256-GCM using another key from the secure store, different from the database key. The temporary files needed to read a PDF or record audio are deleted when done.</p>
-<p>You can protect the app with your phone's fingerprint or PIN. With the lock on, neither screenshots nor the recent apps view show your balances.</p>
+<p>You can protect the app with your phone's fingerprint or PIN. With the lock on, neither screenshots nor the recent apps view show your totals.</p>
 
 <h2 id="respaldo">No copies in the cloud</h2>
 <p>The app turns off Android backup: Android does not upload CoinDen's data to your Google account, and CoinDen has no backup of its own. If Android moves your apps to a new phone and copies CoinDen files, they arrive encrypted and cannot be opened, because the key stays in the old phone's secure store.</p>
@@ -42,7 +42,7 @@
 <p>Only this, and always because you ask for it. Your movements, photos, text and amounts are never sent.</p>
 <p><strong>Voice models:</strong> if you download them, the app requests them from Hugging Face (huggingface.co). It is a public download: nothing of yours is sent, although, as with any website visit, that server sees your IP address.</p>
 <p><strong>Language packs and receipt templates:</strong> downloaded only when you ask, from CoinDen's site (jhoel0521.github.io, on GitHub Pages). They are public data and nothing of yours is sent.</p>
-<p><strong>Public exchange rates:</strong> today the app does not query any. When you can set up a rate source, the app will request only that public rate, without sending anything of yours.</p>
+<p><strong>Public equivalences:</strong> today the app does not query any. When you can choose where to get them, the app will request only that public equivalence, without sending anything of yours.</p>
 <p><strong>Links:</strong> the site, the repository and the licenses you open from Profile open in your browser.</p>
 
 <h2 id="google">Google receipt reader</h2>
@@ -63,7 +63,7 @@
 <p>We do not sell, rent or share data. We do not show ads. There are no trackers.</p>
 
 <h2 id="cambios">Future changes</h2>
-<p>If CoinDen adds features that use the network in the future (for example, public exchange rates or an encrypted backup to your own cloud), they will be optional, explained in the app before they are turned on, and this policy will be updated first.</p>
+<p>If CoinDen adds features that use the network in the future (for example, public equivalences or an encrypted backup to your own cloud), they will be optional, explained in the app before they are turned on, and this policy will be updated first.</p>
 
 <h2 id="menores">Children</h2>
 <p>CoinDen is not directed at children under 13.</p>

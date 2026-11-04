@@ -80,7 +80,7 @@ la ubicación ni permite comprar bienes digitales. Resultado esperado: apta para
 - ¿Recopila o comparte datos del usuario? **Sí**, solo por el lector de comprobantes de Google (ML Kit),
   que manda métricas técnicas a Google. CoinDen no envía nada propio: los movimientos, montos, fotos,
   audio y textos se quedan cifrados en el teléfono. Los modelos de voz y los paquetes se descargan sin
-  enviar datos de la persona; la app todavía no consulta cotizaciones.
+  enviar datos de la persona; la app todavía no consulta equivalencias.
 - ¿Los datos se encriptan en tránsito? **Sí** (HTTPS).
 - ¿Se pueden borrar? Dentro de la app, **sí**: Perfil → Borrar mis datos elimina de ese teléfono la base,
   su llave, las fotos, PDF y audios, la cola y las preferencias (con huella o PIN si el bloqueo está
@@ -94,18 +94,22 @@ la ubicación ni permite comprar bienes digitales. Resultado esperado: apta para
     usa el identificador del dispositivo).
 - Nada más: sin ubicación, contactos, datos financieros, fotos, audio ni mensajes fuera del teléfono.
 
-**Funciones financieras:** marca **solo "Otro"**. **No** marques "Mi app no ofrece ninguna función
-financiera": Google lo rechazó por impreciso, porque la app está en la categoría Finanzas y la ficha habla
-de billeteras, saldos, tasas y cripto. Tampoco marques "Pagos móviles y billeteras digitales" ni
-"Billetera de criptomonedas": la app no hace eso, y marcarlas pediría licencias que no aplican.
-En la descripción de "Otro" va:
+**Funciones financieras:** marca **"Mi app no ofrece ninguna función financiera"** y deja la categoría en
+**Productividad**. CoinDen solo anota lo que la persona ya gastó: no mueve dinero, no guarda fondos, no se
+conecta a bancos y no presta ni asesora. Google rechazó la revisión con cada combinación probada
+(ninguna función u "Otro", con categoría Finanzas o Productividad) sin decir qué fallaba; por eso la app,
+el sitio y la ficha usan el vocabulario de una libreta de gastos (sección 5) y no hablan de billeteras,
+saldos, tasas ni cripto. No marques "Pagos móviles y billeteras digitales" ni "Billetera de
+criptomonedas": la app no hace eso, y marcarlas pediría licencias que no aplican.
 
-> CoinDen es un registro personal de gastos e ingresos (una libreta de presupuesto). La persona anota a
-> mano, por voz o con la foto de un comprobante lo que ya pagó, y ve sus saldos por "billetera", que es
-> solo una etiqueta de registro (efectivo, cuenta bancaria, tarjeta o cripto) que la persona crea y escribe
-> a mano. La app NO mueve dinero, NO hace pagos ni transferencias, NO guarda fondos ni criptomonedas, NO se
-> conecta a bancos ni a exchanges, NO ofrece préstamos, crédito, inversiones ni asesoramiento financiero.
-> Todos los datos quedan cifrados en el teléfono; no hay cuentas ni servidores.
+Si Play pide describir la función, el texto de respaldo es:
+
+> CoinDen es un registro personal de gastos (una libreta). La persona anota a mano, por voz o con la foto
+> de un comprobante lo que ya gastó, y ve un total anotado por "fuente", que es solo una etiqueta de
+> registro (efectivo, cuenta o tarjeta) que la persona crea y escribe a mano. La app NO mueve dinero, NO
+> hace pagos ni transferencias, NO guarda fondos, NO se conecta a bancos, NO ofrece préstamos, crédito,
+> inversiones ni asesoramiento financiero. Todos los datos quedan cifrados en el teléfono; no hay cuentas
+> ni servidores.
 
 En el paso "Documentación", Google indicó que por ahora no hace falta adjuntar nada.
 
@@ -116,11 +120,22 @@ toca el botón. Ninguno requiere declaración especial.
 
 ## 5. Nombres visibles en la app
 
-Desde la 0.2.1, los tipos de billetera se muestran con nombres de registro, no de producto financiero:
-Efectivo, Cuenta, Digital, Personalizada y Tarjeta (en inglés Cash, Account, Digital, Custom y Card; en
-portugués Dinheiro, Conta, Digital, Personalizada y Cartão). El movimiento entre billeteras propias se
-llama Traspaso (Move, Repasse). El medio de pago "Transferencia o QR" no cambia: describe cómo pagó la
-persona, como lo dice su comprobante. La ficha, el sitio y las capturas deben usar estos mismos nombres.
+Desde la 0.2.1, la app, el sitio y la ficha usan el vocabulario de una libreta de gastos, no el de un
+servicio financiero:
+
+| Antes | Ahora (es · en · pt) |
+|---|---|
+| billetera | fuente · source · fonte |
+| patrimonio, saldo | total anotado, total · recorded total, total · total anotado, total |
+| tasa, cotización | equivalencia · equivalence · equivalência |
+| pago | gasto · expense · gasto |
+| Banco, Cripto, Tarjeta de crédito (tipos) | Cuenta, Personalizada, Tarjeta · Account, Custom, Card · Conta, Personalizada, Cartão |
+| Transferencia (entre fuentes) | Traspaso · Move · Repasse |
+
+El medio de pago "Transferencia o QR" no cambia: describe cómo pagó la persona, como lo dice su
+comprobante. Los nombres que escribe la persona y los alias del dictado no son texto de la app. Una prueba
+(`VisibleVocabularyTest`) falla si alguna palabra retirada vuelve a un `strings.xml`. La ficha, el sitio y las
+capturas deben usar estos mismos nombres.
 
 ## 6. Antes de cada versión
 

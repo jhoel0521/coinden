@@ -73,7 +73,57 @@ Una prueba recorre todos los valores de `WalletType` y de `MovementType` y falla
 *Alternativa descartada:* redirigir por país con un servicio de geolocalización: exige una consulta externa y contradice el principio de no enviar datos a terceros.
 
 ### 8. Documentación y Play
-`docs/play/ficha.md` y `docs/play/README.md` se actualizan (nombres, declaración de datos y el borrado). Las capturas de la ficha se vuelven a tomar con los nombres nuevos, porque las actuales muestran "Banco" y "Cripto".
+`docs/play/ficha.md` y `docs/play/README.md` se actualizan (nombres, declaración de datos y el borrado). Las capturas de la ficha se vuelven a tomar con los nombres nuevos, porque las actuales muestran "Banco" y "Cripto" (el plan por captura está en la decisión 9).
+
+### 9. Vocabulario visible sin términos financieros
+La app dice lo que es: una libreta de gastos. Se retiran los términos que suenan a producto financiero, solo en el texto que ve la persona (`strings.xml` es/en/pt, `site/`, `docs/play/`). Los nombres internos no cambian: clases, enums, claves de recursos, paquetes y alias del intérprete.
+
+**Qué cambia**
+
+| Concepto | es | en | pt |
+|---|---|---|---|
+| billetera / billeteras | **fuente / fuentes** | **source / sources** | **fonte / fontes** |
+| Patrimonio total / parcial | **Total anotado** / **Total anotado parcial** | **Recorded total** / **Partial recorded total** | **Total anotado** / **Total anotado parcial** |
+| saldo, saldo de hoy, ajuste de saldo | **total**, **total de hoy**, **ajuste** | **total**, **today's total**, **adjustment** | **total**, **total de hoje**, **ajuste** |
+| tasa, cotización, "cambio" de moneda | **equivalencia(s)** | **equivalence(s)** | **equivalência(s)** |
+| Billeteras y tasas (Perfil) | **Fuentes y equivalencias** | **Sources and equivalences** | **Fontes e equivalências** |
+| ¿Dónde guardas tu dinero? (paso 3) | **¿De dónde salen tus gastos?** | **Where do your expenses come from?** | **De onde saem seus gastos?** |
+| Crea una billetera por cada lugar y pon cuánto tiene hoy | **Crea una fuente por cada lugar y anota con cuánto empiezas** | **Create a source for each place and note what you start with** | **Crie uma fonte para cada lugar e anote com quanto começa** |
+| pago, pagos (¿De qué fue este pago?, Dos pagos…, Este pago no tiene comprobante) | **gasto, gastos** | **expense, expenses** | **gasto, gastos** |
+| Pistas de nombre "BNB Bs, Billetera, Yape…" | **Mi efectivo, Mi cuenta…** | **My cash, My account…** | **Meu dinheiro, Minha conta…** |
+| "Cotizaciones públicas" (privacidad, ficha, sitio) | **equivalencias públicas** | **public equivalences** | **equivalências públicas** |
+
+Los textos largos que contienen esas palabras ("No cambia tus saldos hasta que lo confirmes", "Desbloquea para ver tus saldos", "No alcanza el saldo…", "Ya cuenta en tu saldo") se reescriben con la misma regla: saldo → total, billetera → fuente.
+
+**Qué NO cambia, y por qué**
+
+| Se queda | Motivo |
+|---|---|
+| Medio de pago "Transferencia o QR" (`method_transfer`), "Efectivo", "Tarjeta" y "Digital" | Describen cómo pagó la persona, como lo dice su comprobante; no son un servicio de CoinDen. Decisión de la persona. |
+| Tipos "Cuenta", "Personalizada", "Tarjeta" y el movimiento "Traspaso" | Ya decididos en el grupo 1. |
+| "Monto", "Gasto", "Ingreso", "Confirmar", "Borrador" | Son el vocabulario de la libreta, no de un servicio financiero. |
+| Códigos de moneda (BOB, USD, ARS…) | La app sirve a quien usa varias monedas; son datos del mundo real. |
+| "Comprobante" y "evidencia" | Describen la foto o el PDF que la persona adjunta. |
+| Nombres que escribe la persona ("Mi efectivo", "BNB Bs") y alias del intérprete ("bnb", "yape", "meru") | Son datos de la persona o de los paquetes de idioma, no texto de la app. |
+| "Sin cuenta, sin registro" | "Cuenta" aquí significa que no hay inicio de sesión: es parte de la promesa de privacidad. |
+| Clases, enums, claves de recursos y paquetes del código | No los ve la persona; renombrarlos solo agrega riesgo y ruido. |
+
+**Guarda contra regresiones.** La prueba de nombres neutros se amplía: lee todos los `strings.xml` (es, en, pt) y falla si algún texto contiene una palabra retirada (billetera/wallet/carteira, patrimonio/net worth/patrimônio, saldo/balance, tasa/rate/taxa, cotiza/quote/cotação, pago/payment/pagamento, "guardas tu dinero"), salvo una lista corta y explicada de excepciones (por ejemplo `method_transfer`).
+
+**Capturas de la ficha.** Se vuelven a tomar las que muestran texto cambiado, con la app 0.2.1 recién instalada, en 1080x1920 (9:16; Play no admite más de 2:1):
+
+| Captura | Qué muestra | ¿Se retoma? |
+|---|---|---|
+| 01 bienvenida | Idioma y "Sin cuenta, sin registro" | No cambia: se revisa que no tenga palabras retiradas |
+| 02 privacidad | Qué sale del teléfono, con la línea de borrar y "equivalencias" | **Sí** |
+| 03 contexto | "Lo que mandaste" con una nota "Gasto hormiga…" y la pregunta "¿De qué fue este gasto?" | **Sí** |
+| 04 fuentes | Paso 3: "¿De dónde salen tus gastos?", tipos y las fuentes creadas | **Sí** |
+| 05 escribir | Formulario con "Fuente" y los medios | **Sí** |
+| 06 borrador listo | Resultado con "Fuente" y el aviso "No cambia tus totales…" | **Sí** |
+| 07 inicio | "Total anotado" y "Fuentes" | **Sí** |
+| 08 movimientos | Historial | No cambia: se revisa que no tenga palabras retiradas |
+
+Google Play admite hasta 8 capturas de teléfono por idioma, así que el conjunto queda en 8.
 
 ## Risks / Trade-offs
 
@@ -92,4 +142,6 @@ Una prueba recorre todos los valores de `WalletType` y de `MovementType` y falla
 ## Open Questions
 
 - ¿Los nombres de la tabla de la decisión 6 están bien, o prefieres otros (por ejemplo "Activo" o "Otra" en lugar de "Personalizada")? Se pueden ajustar antes de aplicar sin cambiar specs ni tareas.
-- ¿Se mantiene el medio de pago "Transferencia o QR" tal cual? Es lo que dice el comprobante; cambiarlo afecta lo que el usuario reconoce al capturar.
+- Resuelta: el medio de pago "Transferencia o QR" se mantiene tal cual (decisión de la persona).
+- Resuelta: "billetera" pasa a "fuente" (en "source", pt "fonte"). Si más adelante se prefiere otra palabra, es un solo cambio de tabla en la decisión 9 y de textos.
+- Resuelta: los specs principales no se reescriben; se agregó `openspec/glosario.md`, que traduce los términos del spec y del dominio al vocabulario visible, y `AGENTS.md` lo enlaza.

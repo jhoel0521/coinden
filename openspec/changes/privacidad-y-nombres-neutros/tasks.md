@@ -39,6 +39,15 @@
 - [ ] 5.4 Compilar el AAB de la 0.2.1 (`bundleRelease`, código de versión 201) y probar con la persona el camino feliz en el emulador: crear una billetera "Cuenta", capturar un gasto, borrar todos los datos y volver a la bienvenida; verificar que no se ve ningún dato anterior
 - [ ] 5.5 Revisar con `openspec validate privacidad-y-nombres-neutros` y `openspec status` que todo está completo antes de archivar; verificar la salida
 
+## 6. Vocabulario visible sin términos financieros (wallet-settings)
+
+- [x] 6.1 Escribir primero la prueba de vocabulario: lee los `strings.xml` de es, en y pt y falla si algún texto contiene una palabra retirada (billetera/wallet/carteira, patrimonio/net worth/patrimônio, saldo/balance, tasa/rate/taxa, cotiza/quote/cotação, pago/payment/pagamento, "guardas tu dinero"), con la lista corta de excepciones del diseño; verificar que falla antes del cambio
+- [x] 6.2 Aplicar la tabla de la decisión 9 a todas las claves de `values`, `values-en` y `values-pt` (billetera→fuente, patrimonio y saldo→total anotado o total, tasa y cotización→equivalencia, pago→gasto, pistas sin BNB ni Yape, paso 3 y Perfil); verificar que la prueba de 6.1 pasa y que `method_transfer` no cambió
+- [x] 6.3 Ajustar las pruebas de presentadores, formato y feature que comparan los textos viejos; verificar con `:composeApp:testDebugUnitTest` en verde y que los totales de Carlos, Facundo y John no cambian (escenario "El comportamiento no cambia")
+- [x] 6.4 Actualizar el sitio (portada, privacidad y apoyo en es, en y pt), `docs/play/ficha.md` y `docs/play/README.md` con el mismo vocabulario; verificar con `grep` que no queda ninguna palabra retirada en `site/` ni en `docs/play/`
+- [x] 6.5 Volver a tomar las capturas 02 a 07 de la ficha con la app 0.2.1 recién instalada, en 1080x1920, y revisar que 01 y 08 no tengan palabras retiradas; verificar que ninguna muestra billetera, patrimonio, saldo, tasa ni pago
+- [x] 6.6 Decidir y aplicar el barrido de los specs principales que dicen "billetera" y "saldo" (actualizar escenarios visibles o agregar un glosario); verificar con `openspec validate privacidad-y-nombres-neutros --strict`
+
 ## Workflow follow-up
 
 - Subir el AAB de la 0.2.1 a la prueba cerrada Alpha como actualización de la 0.2.0, mantener "Mi app no ofrece ninguna función financiera" y reenviar a revisión (lo hace la persona o se pide aprobación explícita).

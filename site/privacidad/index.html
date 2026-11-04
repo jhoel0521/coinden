@@ -25,7 +25,7 @@
 <p>CoinDen es una libreta de gastos: anota lo que ya gastaste y no mueve dinero. No hay cuenta, ni servidores de CoinDen, ni publicidad, ni analítica propia. Lo que registras se guarda cifrado solo en tu teléfono, no se envía a ningún lado y lo puedes borrar todo cuando quieras desde la app.</p>
 
 <h2 id="datos">Qué datos guarda la app</h2>
-<p>Tus billeteras (el nombre que les pones, su tipo, su moneda y su saldo), tus movimientos, borradores, categorías, tasas y notas, y los textos que dictas o escribes.</p>
+<p>Tus fuentes (el nombre que les pones, su tipo, su moneda y su total), tus movimientos, borradores, categorías, equivalencias y notas, y los textos que dictas o escribes.</p>
 <p>Las fotos, PDF y audios de comprobantes que tomas o compartes con CoinDen. <strong>Un comprobante puede traer números de cuenta, nombres y números de transacción.</strong> CoinDen lo guarda tal como lo recibe, para que puedas revisarlo después, y nunca lo envía a ningún lado.</p>
 <p>Tus preferencias (idioma, bloqueo y lector de Google) y un identificador de esta instalación generado al azar, que tampoco sale del teléfono.</p>
 
@@ -33,7 +33,7 @@
 <p>Solo en tu teléfono, en el almacenamiento privado de la app, que otras apps no pueden leer.</p>
 <p>La base de datos está cifrada completa con SQLCipher (AES-256). Su llave es un valor aleatorio que a su vez va cifrado con una llave del almacén seguro de Android (Android Keystore), que no se puede sacar del teléfono.</p>
 <p>Las fotos, PDF y audios se guardan en archivos aparte, cada uno cifrado con AES-256-GCM y con otra llave del almacén seguro, distinta de la de la base. Los archivos temporales que hacen falta para leer un PDF o grabar un audio se borran al terminar.</p>
-<p>Puedes proteger la app con la huella o el PIN de tu teléfono. Con el bloqueo activo, ni las capturas de pantalla ni la vista de apps recientes muestran tus saldos.</p>
+<p>Puedes proteger la app con la huella o el PIN de tu teléfono. Con el bloqueo activo, ni las capturas de pantalla ni la vista de apps recientes muestran tus totales.</p>
 
 <h2 id="respaldo">Sin copias en la nube</h2>
 <p>La app desactiva la copia de seguridad de Android: Android no sube los datos de CoinDen a tu cuenta de Google, y CoinDen no tiene ningún respaldo propio. Si Android pasa tus apps a un teléfono nuevo y copia archivos de CoinDen, llegan cifrados y no se pueden abrir, porque la llave se queda en el almacén seguro del teléfono anterior.</p>
@@ -42,7 +42,7 @@
 <p>Solo esto, y siempre porque tú lo pides. En ningún caso se envían tus movimientos, fotos, textos ni montos.</p>
 <p><strong>Modelos de voz:</strong> si los descargas, la app los pide a Hugging Face (huggingface.co). Es una descarga pública: no se envía nada tuyo, aunque, como en cualquier visita a un sitio web, ese servidor ve tu dirección IP.</p>
 <p><strong>Paquetes de idioma y plantillas de comprobantes:</strong> se descargan solo cuando los pides, desde el sitio de CoinDen (jhoel0521.github.io, en GitHub Pages). Son datos públicos y no se envía nada tuyo.</p>
-<p><strong>Cotizaciones públicas:</strong> hoy la app no consulta ninguna. Cuando puedas configurar una fuente de cotización, la app pedirá solo esa cotización pública, sin enviar nada tuyo.</p>
+<p><strong>Equivalencias públicas:</strong> hoy la app no consulta ninguna. Cuando puedas elegir de dónde sacarlas, la app pedirá solo esa equivalencia pública, sin enviar nada tuyo.</p>
 <p><strong>Enlaces:</strong> el sitio, el repositorio y las licencias que abres desde Perfil se abren en tu navegador.</p>
 
 <h2 id="google">Lector de comprobantes de Google</h2>
@@ -63,7 +63,7 @@
 <p>No vendemos, alquilamos ni compartimos datos. No mostramos publicidad. No hay rastreadores.</p>
 
 <h2 id="cambios">Cambios futuros</h2>
-<p>Si en el futuro CoinDen suma funciones que usen la red (por ejemplo, cotizaciones públicas o un respaldo cifrado en tu propia nube), serán opcionales, se explicarán en la app antes de activarse y esta política se actualizará primero.</p>
+<p>Si en el futuro CoinDen suma funciones que usen la red (por ejemplo, equivalencias públicas o un respaldo cifrado en tu propia nube), serán opcionales, se explicarán en la app antes de activarse y esta política se actualizará primero.</p>
 
 <h2 id="menores">Menores</h2>
 <p>CoinDen no está dirigida a menores de 13 años.</p>
