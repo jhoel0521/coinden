@@ -11,7 +11,7 @@ descripción breve 80 y descripción completa 4000.
 - **Correo de contacto:** el que la persona quiera mostrar públicamente.
 - **Gráficos:** [ícono de 512](graphics/icon-512.png) y gráfico destacado por idioma
   ([es](graphics/feature-graphic-es.png), [en](graphics/feature-graphic-en.png), [pt](graphics/feature-graphic-pt.png)).
-- **Capturas de teléfono:** [screenshots/](screenshots/) (de 2 a 8 por idioma).
+- **Capturas de teléfono:** [screenshots/](screenshots/): una carpeta por idioma de la ficha (`es-419`, `en-US`, `pt-BR`), de 2 a 8 capturas de 1080x1920 cada una; los archivos llevan el código del idioma al final (`-es`, `-en`, `-pt`) para no confundirlos en la biblioteca de Play, que comparte los recursos entre idiomas; si un idioma no tiene capturas propias, Play usa las del idioma predeterminado.
 
 ---
 
@@ -47,7 +47,7 @@ Tus datos son tuyos:
 • Borra todos tus datos cuando quieras desde Perfil → Borrar mis datos. Solo afecta a este teléfono.
 • Lo único que sale a internet son las descargas opcionales que pidas (modelos de voz) y, cuando las configures, las equivalencias públicas que elijas.
 
-CoinDen es software libre (MPL-2.0) y gratis. Se sostiene con donaciones desde su sitio web.
+CoinDen es software libre (MPL-2.0) y gratis.
 
 ---
 
@@ -65,7 +65,7 @@ CoinDen is an expense notebook that lives only on your phone. No account, no ser
 CoinDen does not move money: it only records what you have already spent.
 
 Logging takes seconds:
-• Say it: "spent 25 on lunch with my card" and it's saved as a draft.
+• Say it: "spent 25 on lunch with cash" and it's saved as a draft.
 • Snap or share a receipt: CoinDen reads the amount, date and note.
 • Or type it by hand.
 
@@ -83,7 +83,7 @@ Your data is yours:
 • Erase all your data whenever you want from Profile → Erase my data. It only affects this phone.
 • The only things that go online are the optional downloads you ask for (voice models) and, once you set them up, the public equivalences you choose.
 
-CoinDen is free and open source (MPL-2.0). It is supported by donations through its website.
+CoinDen is free and open source (MPL-2.0).
 
 ---
 
@@ -101,7 +101,7 @@ O CoinDen é um caderno de gastos que vive só no seu celular. Sem conta, sem se
 O CoinDen não movimenta dinheiro: ele só anota o que você já gastou.
 
 Registrar leva segundos:
-• Fale: "gastei 25 no almoço com o cartão" e fica salvo como rascunho.
+• Fale: "gastei 25 no almoço com dinheiro" e fica salvo como rascunho.
 • Fotografe ou compartilhe um comprovante: o CoinDen lê o valor, a data e a nota.
 • Ou digite à mão.
 
@@ -119,4 +119,4 @@ Seus dados são seus:
 • Apague todos os seus dados quando quiser em Perfil → Apagar meus dados. Só afeta este celular.
 • O que vai para a internet são só os downloads opcionais que você pedir (modelos de voz) e, quando você configurar, as equivalências públicas que escolher.
 
-O CoinDen é software livre (MPL-2.0) e gratuito. É mantido por doações pelo site.
+O CoinDen é software livre (MPL-2.0) e gratuito.
