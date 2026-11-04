@@ -1,0 +1,22 @@
+name: Preparar JDK y Android NDK
+description: JDK 21, NDK y CMake de whisper.cpp, y permiso de ejecución para gradlew.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: 'gradle'
+
+    # Gradle configura también :composeApp, que declara el NDK de whisper.cpp: sin esto falla por licencias.
+    - name: Instalar NDK y CMake
+      shell: bash
+      run: |
+        yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+        "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;30.0.15729638" "cmake;3.22.1" > /dev/null
+
+    - name: Permiso de ejecución para gradlew
+      shell: bash
+      run: chmod +x gradlew
