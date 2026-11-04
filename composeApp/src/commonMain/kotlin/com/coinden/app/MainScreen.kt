@@ -87,6 +87,7 @@ fun MainScreen(
     onCategories: () -> Unit,
     onPrivacy: () -> Unit,
     onVoiceModels: () -> Unit,
+    onEraseData: () -> Unit,
     onLicenses: () -> Unit,
 ) {
     var tab by rememberSaveable { mutableStateOf(NavTab.HOME) }
@@ -136,6 +137,7 @@ fun MainScreen(
                             onCategories = onCategories,
                             onPrivacy = onPrivacy,
                             onVoiceModels = onVoiceModels,
+                            onEraseData = onEraseData,
                             onLicenses = onLicenses,
                         )
                 }

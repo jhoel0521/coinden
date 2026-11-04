@@ -29,22 +29,23 @@ CoinDen es una libreta de gastos que vive solo en tu teléfono. Sin cuenta, sin 
 CoinDen no mueve dinero: solo anota lo que ya gastaste.
 
 Registrar te toma segundos:
-• Dícelo: "gasté 25 en almuerzo con bnb" y queda anotado como borrador.
-• Fotografía o comparte el comprobante de tu banco o billetera digital: CoinDen lee el monto, la fecha y la nota.
+• Dícelo: "gasté 25 en almuerzo con efectivo" y queda anotado como borrador.
+• Fotografía o comparte un comprobante: CoinDen lee el monto, la fecha y la nota.
 • O escríbelo a mano.
 
-Nada cambia tus saldos hasta que lo confirmas. Los borradores seguros esperan en "Listos" para confirmarlos de una vez; los dudosos van a "Para revisar" con lo que falta.
+Nada cambia tus totales hasta que lo confirmas. Los borradores seguros esperan en "Listos" para confirmarlos de una vez; los dudosos van a "Para revisar" con lo que falta.
 
 Hecho para quien maneja varias monedas:
-• Separa tu dinero por billeteras (efectivo, banco, tarjeta) para ver en cuál gastaste, en bolivianos, dólares, pesos, reales y más.
-• La tasa que tú usas de verdad (paralela, de tu casa de cambio o manual), no solo la oficial.
+• Anota de qué fuente salió cada gasto (efectivo, cuenta, tarjeta), en bolivianos, dólares, pesos, reales y más.
+• La equivalencia entre monedas que tú eliges, no solo la oficial.
 • Montos exactos, sin redondeos raros.
 
 Tus datos son tuyos:
 • Todo se guarda cifrado en el teléfono.
 • La voz y las fotos se procesan en el teléfono.
-• Bloqueo opcional con tu huella o el PIN del teléfono para ver saldos; puedes registrar sin desbloquear.
-• Lo único que sale a internet son las cotizaciones públicas que elijas y las descargas opcionales (modelos de voz).
+• Bloqueo opcional con tu huella o el PIN del teléfono para ver los totales; puedes registrar sin desbloquear.
+• Borra todos tus datos cuando quieras desde Perfil → Borrar mis datos. Solo afecta a este teléfono.
+• Lo único que sale a internet son las descargas opcionales que pidas (modelos de voz) y, cuando las configures, las equivalencias públicas que elijas.
 
 CoinDen es software libre (MPL-2.0) y gratis. Se sostiene con donaciones desde su sitio web.
 
@@ -65,21 +66,22 @@ CoinDen does not move money: it only records what you have already spent.
 
 Logging takes seconds:
 • Say it: "spent 25 on lunch with my card" and it's saved as a draft.
-• Snap or share a receipt from your bank or digital wallet: CoinDen reads the amount, date and note.
+• Snap or share a receipt: CoinDen reads the amount, date and note.
 • Or type it by hand.
 
-Nothing touches your balances until you confirm it. Clear drafts wait in "Ready" so you can confirm them all at once; unclear ones go to "To review" with what's missing.
+Nothing touches your totals until you confirm it. Clear drafts wait in "Ready" so you can confirm them all at once; unclear ones go to "To review" with what's missing.
 
 Built for people who handle several currencies:
-• Split your money into wallets (cash, bank, card) to see where you spent it, in dollars, bolivianos, pesos, reais and more.
-• The rate you actually use (parallel, your exchange house, or manual), not just the official one.
+• Note which source each expense came from (cash, account, card), in dollars, bolivianos, pesos, reais and more.
+• The equivalence between currencies that you choose, not just the official one.
 • Exact amounts, no odd rounding.
 
 Your data is yours:
 • Everything is stored encrypted on the phone.
 • Voice and photos are processed on the phone.
-• Optional lock with your fingerprint or phone PIN to see balances; you can still log without unlocking.
-• The only things that go online are the public exchange rates you choose and optional downloads (voice models).
+• Optional lock with your fingerprint or phone PIN to see totals; you can still log without unlocking.
+• Erase all your data whenever you want from Profile → Erase my data. It only affects this phone.
+• The only things that go online are the optional downloads you ask for (voice models) and, once you set them up, the public equivalences you choose.
 
 CoinDen is free and open source (MPL-2.0). It is supported by donations through its website.
 
@@ -100,20 +102,21 @@ O CoinDen não movimenta dinheiro: ele só anota o que você já gastou.
 
 Registrar leva segundos:
 • Fale: "gastei 25 no almoço com o cartão" e fica salvo como rascunho.
-• Fotografe ou compartilhe o comprovante do seu banco ou carteira digital: o CoinDen lê o valor, a data e a nota.
+• Fotografe ou compartilhe um comprovante: o CoinDen lê o valor, a data e a nota.
 • Ou digite à mão.
 
-Nada altera seus saldos até você confirmar. Os rascunhos claros esperam em "Prontos" para confirmar de uma vez; os duvidosos vão para "Para revisar" com o que falta.
+Nada altera seus totais até você confirmar. Os rascunhos claros esperam em "Prontos" para confirmar de uma vez; os duvidosos vão para "Para revisar" com o que falta.
 
 Feito para quem lida com várias moedas:
-• Separe seu dinheiro por carteiras (dinheiro, banco, cartão) para ver em qual você gastou, em reais, dólares, pesos, bolivianos e mais.
-• A cotação que você usa de verdade (paralela, da sua casa de câmbio ou manual), não só a oficial.
+• Anote de qual fonte saiu cada gasto (dinheiro, conta, cartão), em reais, dólares, pesos, bolivianos e mais.
+• A equivalência entre moedas que você escolhe, não só a oficial.
 • Valores exatos, sem arredondamentos estranhos.
 
 Seus dados são seus:
 • Tudo fica salvo criptografado no celular.
 • A voz e as fotos são processadas no celular.
-• Bloqueio opcional com sua digital ou o PIN do celular para ver os saldos; você pode registrar sem desbloquear.
-• O que vai para a internet são só as cotações públicas que você escolher e os downloads opcionais (modelos de voz).
+• Bloqueio opcional com sua digital ou o PIN do celular para ver os totais; você pode registrar sem desbloquear.
+• Apague todos os seus dados quando quiser em Perfil → Apagar meus dados. Só afeta este celular.
+• O que vai para a internet são só os downloads opcionais que você pedir (modelos de voz) e, quando você configurar, as equivalências públicas que escolher.
 
 O CoinDen é software livre (MPL-2.0) e gratuito. É mantido por doações pelo site.

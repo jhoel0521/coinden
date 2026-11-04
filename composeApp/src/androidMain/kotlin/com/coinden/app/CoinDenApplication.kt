@@ -6,6 +6,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.coinden.app.capture.EncryptedAttachmentStore
 import com.coinden.app.currency.CurrencyNames
+import com.coinden.app.erase.AndroidDataEraser
 import com.coinden.app.i18n.AppLanguage
 import com.coinden.app.intent.AndroidLocalModel
 import com.coinden.app.intent.LiteRtModelEngine
@@ -67,6 +68,10 @@ class CoinDenApplication : Application() {
     lateinit var lock: AppLockController
         private set
 
+    /** "Borrar mis datos": cierra la base abierta por este proceso, borra todo y reinicia. */
+    lateinit var eraser: AndroidDataEraser
+        private set
+
     /** Cada vuelta al frente: las pantallas recargan lo compartido mientras la app estaba atrás. */
     val foreground = ForegroundSignal()
 
@@ -88,7 +93,12 @@ class CoinDenApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        val db = AndroidDatabase.open(this).database
+        lateinit var database: AndroidDatabase
+        eraser = AndroidDataEraser(this, closeDatabase = { runCatching { database.close() } })
+        // Un borrado que se cortó a mitad se termina antes de abrir nada: nunca se ven datos parciales.
+        eraser.finishPending()
+        database = AndroidDatabase.open(this)
+        val db = database.database
         val identity = LocalIdentity(db) { UuidIdGenerator().newId() }
         val io = Dispatchers.IO
         val storage =

@@ -4,22 +4,72 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Política de privacidade · CoinDen</title>
-<meta name="description" content="Anote em segundos o que você gasta, em qualquer moeda, e revise com calma à noite. Sem conta, sem servidores, sem anúncios: seus dados ficam criptografados no seu telefone.">
+<meta name="description" content="Quais dados o CoinDen guarda, como os protege, o que pode sair do celular e como apagar tudo. Sem conta, sem servidores, sem anúncios.">
 <link rel="alternate" hreflang="es" href="https://jhoel0521.github.io/coinden/privacidad/"><link rel="alternate" hreflang="en" href="https://jhoel0521.github.io/coinden/en/privacy/"><link rel="alternate" hreflang="pt" href="https://jhoel0521.github.io/coinden/pt/privacidade/">
 <link rel="icon" href="/coinden/img/coinden-icon.png">
 <link rel="stylesheet" href="/coinden/estilo.css">
+<script src="/coinden/idioma.js" defer></script>
 </head>
 <body>
 <header>
 <img src="/coinden/img/coinden-logo.webp" alt="">
-<div><div class="brand">Coin<b>Den</b></div><div class="muted">Seu covil de moedas</div></div>
-<div class="langs"><a href="/coinden/privacidad/" hreflang="es">ES</a><a href="/coinden/en/privacy/" hreflang="en">EN</a></div>
+<div><div class="brand">Coin<b>Den</b></div><div class="muted">Sua toca de moedas</div></div>
+<div class="langs"><a href="/coinden/privacidad/" hreflang="es">ES</a><a href="/coinden/en/privacy/" hreflang="en">EN</a><a href="/coinden/pt/privacidade/" hreflang="pt" aria-current="page">PT</a></div>
 <nav><a href="/coinden/pt/">Início</a><a href="/coinden/pt/privacidade/" aria-current="page">Privacidade</a><a href="/coinden/pt/apoiar/">Apoiar</a><a href="https://github.com/jhoel0521/coinden">Código</a></nav>
 </header>
 <main>
 <h1>Política de privacidade</h1>
-<p class="muted">Vigente desde 26 de outubro de 2026</p>
-<h2>Resumo</h2><p>O CoinDen não coleta seus dados. Não há conta, nem servidores do CoinDen, nem anúncios, nem análise própria. O que você registra fica criptografado no seu telefone e não é enviado a lugar nenhum.</p><h2>Quais dados o app usa e onde ficam</h2><p>Suas carteiras, movimentos, rascunhos, categorias, taxas e notas, e as fotos, PDFs e áudios dos seus comprovantes, ficam só no seu telefone, em um banco criptografado (AES-256) cuja chave é protegida pelo armazenamento seguro do Android.</p><p>O app não faz cópias de segurança automáticas na nuvem. Se você apagar os dados do app ou desinstalá-lo, tudo é apagado.</p><h2>Permissões</h2><p>Câmera: só quando você toca em Foto, para fotografar um comprovante.</p><p>Microfone: só enquanto você dita. A voz vira texto dentro do telefone.</p><p>Internet: só para baixar os modelos de voz quando você pede.</p><p>Bloqueio com digital ou PIN: é verificado pelo sistema do telefone. O CoinDen nunca recebe nem guarda sua digital ou PIN.</p><h2>O que pode sair do telefone</h2><p>Modelos de voz: se você os baixar, o app os pede ao Hugging Face (huggingface.co). É um download público: nada seu é enviado, embora, como em qualquer visita a um site, esse servidor veja seu endereço IP.</p><p>Leitor aprimorado do Google (opcional, desligado por padrão): se você ativar, as fotos também são lidas com o ML Kit do Google dentro do telefone, e o Google recebe só dados técnicos de uso (modelo e sistema do telefone, versão do app, um identificador desta instalação, tempos, tamanhos, eventos e erros). Nunca recebe suas fotos, textos ou valores. Você pode desligar quando quiser em Perfil → Privacidade. Você pode ver a lista completa do que ele recebe em <a href="https://developers.google.com/ml-kit/android-data-disclosure">os dados que o ML Kit coleta</a>, publicada pelo Google, e o resto nos seus <a href="https://developers.google.com/ml-kit/terms">termos</a>.</p><p>O que você compartilha com o CoinDen de outros apps fica no seu telefone, como todo o resto.</p><h2>O que nunca fazemos</h2><p>Não vendemos, alugamos nem compartilhamos dados. Não mostramos anúncios. Não há rastreadores.</p><h2>Mudanças futuras</h2><p>Se o CoinDen ganhar funções que usem a rede (cotações públicas ou um backup criptografado na sua própria nuvem), elas serão opcionais, explicadas no app antes de serem ativadas, e esta política será atualizada antes.</p><h2>Crianças</h2><p>O CoinDen não é dirigido a menores de 13 anos.</p><h2>Contato</h2><p>Para dúvidas ou pedidos sobre privacidade, abra uma issue no <a href="https://github.com/jhoel0521/coinden/issues">repositório do CoinDen</a>.</p>
+<p class="muted">Em vigor desde 30 de outubro de 2026</p>
+
+<h2 id="resumen">Resumo</h2>
+<p>O CoinDen é um caderno de gastos: anota o que você já gastou e não movimenta dinheiro. Não há conta, nem servidores do CoinDen, nem anúncios, nem análise própria. O que você registra fica criptografado só no seu celular, nunca é enviado para lugar nenhum, e você pode apagar tudo quando quiser pelo app.</p>
+
+<h2 id="datos">Quais dados o app guarda</h2>
+<p>Suas fontes (o nome que você dá, o tipo, a moeda e o total), seus movimentos, rascunhos, categorias, equivalências e notas, e os textos que você dita ou escreve.</p>
+<p>As fotos, PDFs e áudios de comprovantes que você tira ou compartilha com o CoinDen. <strong>Um comprovante pode trazer números de conta, nomes e números de transação.</strong> O CoinDen o guarda como recebeu, para você revisar depois, e nunca o envia para lugar nenhum.</p>
+<p>Suas preferências (idioma, bloqueio e leitor do Google) e um identificador desta instalação gerado ao acaso, que também não sai do celular.</p>
+
+<h2 id="proteccion">Onde ficam e como são protegidos</h2>
+<p>Só no seu celular, no armazenamento privado do app, que outros apps não conseguem ler.</p>
+<p>O banco de dados inteiro é criptografado com SQLCipher (AES-256). A chave dele é um valor aleatório que, por sua vez, é criptografado com uma chave do armazenamento seguro do Android (Android Keystore), que não pode ser tirada do celular.</p>
+<p>Fotos, PDFs e áudios ficam em arquivos separados, cada um criptografado com AES-256-GCM e com outra chave do armazenamento seguro, diferente da do banco. Os arquivos temporários necessários para ler um PDF ou gravar um áudio são apagados ao terminar.</p>
+<p>Você pode proteger o app com a digital ou o PIN do celular. Com o bloqueio ativo, nem as capturas de tela nem a tela de apps recentes mostram seus totais.</p>
+
+<h2 id="respaldo">Sem cópias na nuvem</h2>
+<p>O app desativa o backup do Android: o Android não envia os dados do CoinDen para a sua conta Google, e o CoinDen não tem nenhum backup próprio. Se o Android passar seus apps para um celular novo e copiar arquivos do CoinDen, eles chegam criptografados e não podem ser abertos, porque a chave fica no armazenamento seguro do celular anterior.</p>
+
+<h2 id="salidas">O que pode sair do celular</h2>
+<p>Só isto, e sempre porque você pede. Seus movimentos, fotos, textos e valores nunca são enviados.</p>
+<p><strong>Modelos de voz:</strong> se você os baixar, o app os pede ao Hugging Face (huggingface.co). É um download público: nada seu é enviado, embora, como em qualquer visita a um site, esse servidor veja seu endereço IP.</p>
+<p><strong>Pacotes de idioma e modelos de comprovantes:</strong> são baixados só quando você pede, do site do CoinDen (jhoel0521.github.io, no GitHub Pages). São dados públicos e nada seu é enviado.</p>
+<p><strong>Equivalências públicas:</strong> hoje o app não consulta nenhuma. Quando você puder escolher de onde obtê-las, o app pedirá só essa equivalência pública, sem enviar nada seu.</p>
+<p><strong>Links:</strong> o site, o repositório e as licenças que você abre pelo Perfil abrem no seu navegador.</p>
+
+<h2 id="google">Leitor de comprovantes do Google</h2>
+<p>É opcional e fica <strong>desligado por padrão</strong>. Se você ativá-lo, as fotos difíceis também são lidas com o ML Kit do Google, dentro do celular. O Google recebe só métricas técnicas de uso: modelo e sistema do celular, versão do app, um identificador desta instalação, tempos, tamanhos, eventos e erros. <strong>Nunca recebe suas fotos, textos nem valores.</strong> Sem ele, o app lê com um leitor livre que não envia nada. Você pode desligá-lo quando quiser em Perfil → Privacidade. A lista completa do que ele recebe está em <a href="https://developers.google.com/ml-kit/android-data-disclosure">os dados que o ML Kit coleta</a>, publicada pelo Google, e o resto nos <a href="https://developers.google.com/ml-kit/terms">termos</a>.</p>
+
+<h2 id="permisos">Permissões</h2>
+<p>Câmera: só quando você toca em Foto, para fotografar um comprovante.</p>
+<p>Microfone: só enquanto você dita ou grava contexto. A voz vira texto dentro do celular.</p>
+<p>Internet: só para os downloads que você pede e, se você ativar, o leitor do Google.</p>
+<p>Bloqueio com digital ou PIN: quem verifica é o sistema do seu celular. O CoinDen nunca recebe nem guarda sua digital nem seu PIN.</p>
+
+<h2 id="borrar">Como apagar seus dados e seus direitos</h2>
+<p>No app: <strong>Perfil → Apagar meus dados → Apagar tudo</strong>. Se o bloqueio estiver ativo, ele pede sua digital ou PIN. O banco, a chave dele, as fotos, PDFs e áudios, a fila de processamento e suas preferências são removidos deste celular, e o app volta às boas-vindas como recém-instalado. Os modelos de voz e os pacotes baixados são mantidos, porque são dados públicos. Só é apagado o celular onde você confirma.</p>
+<p>Desinstalar o app, ou limpar o armazenamento dele nas configurações do Android, também remove todos os dados.</p>
+<p>Como o CoinDen não tem seus dados em nenhum servidor, não existe nenhuma cópia que também precise ser apagada nem dados que possamos entregar. O acesso, a correção e a exclusão são feitos por você mesmo no seu celular: você vê e corrige seus movimentos no app e apaga tudo pelo Perfil.</p>
+
+<h2 id="nunca">O que nunca fazemos</h2>
+<p>Não vendemos, alugamos nem compartilhamos dados. Não mostramos anúncios. Não há rastreadores.</p>
+
+<h2 id="cambios">Mudanças futuras</h2>
+<p>Se no futuro o CoinDen ganhar funções que usem a rede (por exemplo, equivalências públicas ou um backup criptografado na sua própria nuvem), elas serão opcionais, explicadas no app antes de serem ativadas, e esta política será atualizada primeiro.</p>
+
+<h2 id="menores">Menores</h2>
+<p>O CoinDen não é direcionado a menores de 13 anos.</p>
+
+<h2 id="contacto">Contato</h2>
+<p>Para dúvidas ou pedidos sobre privacidade, abra uma issue no <a href="https://github.com/jhoel0521/coinden/issues">repositório do CoinDen</a>.</p>
 </main>
 <footer class="muted">CoinDen · MPL-2.0 · <a href="https://github.com/jhoel0521/coinden">GitHub</a></footer>
 </body>

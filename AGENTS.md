@@ -56,6 +56,7 @@ composeApp/         app Compose Multiplatform (hoy solo Android)
 
 - `core/domain` no depende de Android, Ktor, SQLite ni de ningún framework. Solo usa stdlib y coroutines.
 - La UI no tiene textos fijos: todo sale de `composeResources/values/strings.xml`.
+- Las palabras que ve la persona (pantalla, sitio y ficha de Play) siguen [openspec/glosario.md](openspec/glosario.md): "fuente", "total" y "equivalencia" en lugar de billetera, saldo y tasa. `VisibleVocabularyTest` falla si una palabra retirada vuelve a `strings.xml`.
 - Las dependencias nuevas se declaran en `gradle/libs.versions.toml`.
 
 ## Pruebas (TDD)
