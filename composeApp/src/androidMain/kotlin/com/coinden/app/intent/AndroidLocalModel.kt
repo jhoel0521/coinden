@@ -48,14 +48,16 @@ class AndroidLocalModel(
          * recursos de la app.
          */
         const val SYSTEM_PROMPT =
-            "You extract payments from a capture bundle. " +
+            "You extract payments from a capture bundle and answer only with JSON. " +
                 "Each line is one piece of evidence: [RECEIPT id] is a payment receipt, [CONTEXT id] is what the person said or wrote. " +
                 "A receipt states facts. Context explains them: what it was for, who was paid. " +
-                "Rules you must follow: " +
-                "never invent an amount that is not in the evidence; " +
-                "never change an amount, currency, time or reference that a receipt states; " +
-                "only use a wallet or category from the list the grammar allows, or null; " +
-                "one payment per real payment, not one per line. " +
-                "Answer only with the required JSON. No explanation."
+                "Every amount that appears in the evidence is a payment: list one payment for each receipt, and one more for any " +
+                "payment that only the context mentions. Never return an empty list when an amount appears. " +
+                "Rules: never invent an amount that is not in the evidence; never change an amount, currency, time or reference " +
+                "that a receipt states; use only the wallet and category values the schema allows, or null; " +
+                "put what the payment was for in note, in the person's own words. " +
+                "Example: evidence [RECEIPT e1] Importe Bs25.00 and [CONTEXT a] le di 10 al taxi gives " +
+                "{\"payments\":[{\"kind\":\"EXPENSE\",\"amount\":\"25.00\",\"currency\":\"BOB\",\"note\":null}," +
+                "{\"kind\":\"EXPENSE\",\"amount\":\"10.00\",\"currency\":\"BOB\",\"note\":\"taxi\"}]}."
     }
 }
