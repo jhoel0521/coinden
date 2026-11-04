@@ -1,7 +1,9 @@
 package com.coinden.app.capture
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,6 +49,7 @@ import com.coinden.app.format.TimeFormatter
 import com.coinden.app.theme.CoinDenIcon
 import com.coinden.app.ui.components.ActionRole
 import com.coinden.app.ui.components.CardTone
+import com.coinden.app.ui.components.CdAction
 import com.coinden.app.ui.components.CdActionSpec
 import com.coinden.app.ui.components.CdActions
 import com.coinden.app.ui.components.CdCard
@@ -78,7 +81,24 @@ fun CaptureBar(
                 CdActionSpec(stringResource(Res.string.bar_write), onWrite, ActionRole.Secondary, icon = CoinDenIcon.PENCIL.vector),
             ) + listOfNotNull(onAddToLast?.let { CdActionSpec(stringResource(Res.string.capture_add_to_last), it, ActionRole.Tertiary) })
         }
-    CdToolbar(actions, Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        CaptureBarLayout.rows(actions).forEachIndexed { index, row ->
+            if (index == 0) CdToolbar(row) else row.forEach { CdAction(it, Modifier.fillMaxWidth()) }
+        }
+    }
+}
+
+/** La barra reparte como mucho tres botones por fila: con más, el texto se corta; lo extra va debajo, solo. */
+object CaptureBarLayout {
+    const val PER_ROW = 3
+
+    fun <T> rows(actions: List<T>): List<List<T>> =
+        if (actions.isEmpty()) {
+            emptyList()
+        } else {
+            listOf(actions.take(PER_ROW)) +
+                actions.drop(PER_ROW).map { listOf(it) }
+        }
 }
 
 /** Aviso de captura (dictado no disponible, permiso negado) con el porqué. */

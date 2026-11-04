@@ -59,6 +59,16 @@ class VisibleVocabularyTest {
     }
 
     @Test
+    fun `ningun texto lleva barra invertida antes del apostrofe`() {
+        val backslash = 92.toChar()
+        val found =
+            listOf("values", "values-en", "values-pt").flatMap { folder ->
+                resources(folder).filterValues { "$backslash'" in it }.map { "$folder/${it.key}: ${it.value}" }
+            }
+        assertTrue(found.isEmpty(), "Textos con barra invertida visible:\n" + found.joinToString("\n"))
+    }
+
+    @Test
     fun `el medio Transferencia o QR se mantiene`() {
         assertTrue(resources("values").getValue("method_transfer").contains("Transferencia"))
     }
