@@ -201,7 +201,7 @@ El borrador DEBE (MUST) conservar el número de transacción opcional de su prop
 - **THEN** el borrador se lee igual, sin referencia
 
 ### Requirement: Lectura Posterior de la Evidencia
-Un borrador Capturado DEBE (MUST) poder recibir después el texto leído de su foto, PDF o audio como un evento nuevo de su historial, con el lector que lo produjo y sin perder la evidencia original. Ese texto pasa por el intérprete como cualquier captura. Un borrador que la persona ya completó, confirmó o descartó no cambia.
+Cada evidencia de un paquete DEBE (MUST) poder recibir después el texto leído de su foto, PDF o audio como un evento nuevo del historial, con el lector que lo produjo y sin perder el archivo original. Ese texto entra a la interpretación del paquete junto con el resto. Lo que la persona ya completó a mano, confirmó o descartó no cambia.
 
 #### Scenario: Comprobante con dos pagos
 - **WHEN** la lectura de una foto encuentra dos gastos

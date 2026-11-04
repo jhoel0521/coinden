@@ -17,6 +17,7 @@
   pantalla, en los dos modos, y usa el mismo `LocalUriHandler` que ya abre enlaces en Licencias y
   Perfil; **falta abrirlo de verdad en el emulador**, que quedó trabado tras una prueba con un
   usuario secundario.
+  - No verificado por adb: compartir imagen/audio con ShareActivity no creó borrador (posible limitación de MediaStore con adb); pendiente de prueba manual en un teléfono real.
 
 ## 3. Los textos
 
@@ -36,6 +37,7 @@
   Android limpio aparece Bienvenida → Privacidad con las dos acciones, volver no deja avanzar, y al
   elegir "Seguir sin él" pasa al paso de monedas.
 - [ ] 5.2 Emulador: elegir seguir sin el lector y comprobar que, al escanear un comprobante, no se encola ningún evento nuevo en `com.google.android.datatransport.events` (hoy hay 20 con el lector activo).
+  - No verificado por adb: compartir imagen/audio con ShareActivity no creó borrador (posible limitación de MediaStore con adb); pendiente de prueba manual en un teléfono real.
 - [x] 5.3 `npm test` (864 pruebas, 0 fallos), `npm run lint`, `npm run build:android`, `bundleRelease` y
   `openspec validate --all` (25/25) en verde el 26-oct-2026.
 

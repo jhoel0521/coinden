@@ -17,7 +17,7 @@ Lo pendiente de cada captura DEBE (MUST) procesarse en segundo plano aunque la p
 - **THEN** después del reinicio la cola los transcribe sin que Carlos abra la app
 
 ### Requirement: Lo Pendiente Sale de los Datos
-La cola DEBE (MUST) procesar los borradores Capturados con archivo que todavía no se leyeron, sin una lista aparte. Un borrador ya leído, completado, confirmado o descartado no se vuelve a procesar.
+La cola DEBE (MUST) procesar los paquetes cerrados que tienen evidencias con archivo sin leer, sin una lista aparte: lee cada evidencia de a una y, cuando no queda ninguna por leer (o ninguna se puede leer), interpreta el paquete. Un paquete abierto no se procesa. Una evidencia ya leída o quitada no se vuelve a leer, y un paquete cuyos borradores ya están todos confirmados o descartados no se vuelve a interpretar.
 
 #### Scenario: Cola cortada a mitad
 - **WHEN** el sistema corta la cola después de leer la primera de tres fotos
@@ -34,6 +34,14 @@ La cola DEBE (MUST) procesar los borradores Capturados con archivo que todavía 
 #### Scenario: Audios que esperaban un modelo de voz
 - **WHEN** Carlos tenía una nota de voz sin transcribir y descarga un modelo de voz
 - **THEN** la cola la transcribe sola
+
+#### Scenario: Paquete abierto
+- **WHEN** Carlos tiene abierta la página de contexto con una foto y un audio
+- **THEN** la cola no lee ni interpreta ese paquete hasta que se cierre
+
+#### Scenario: Interpretar al terminar de leer
+- **WHEN** un paquete cerrado tiene una foto y un audio sin leer
+- **THEN** la cola lee la foto, transcribe el audio y recién entonces interpreta el paquete una sola vez
 
 ### Requirement: Un Trabajo a la Vez
 La cola DEBE (MUST) procesar un borrador por vez y nunca tener dos modelos trabajando al mismo tiempo.
