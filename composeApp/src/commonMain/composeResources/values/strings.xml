@@ -179,6 +179,14 @@
     <string name="model_small">Mediano</string>
     <string name="model_large">Más preciso</string>
     <string name="models_size">%1$s · %2$d MB</string>
+    <string name="lm_title">Modelo de lenguaje</string>
+    <string name="lm_intro">Entiende mejor lo que escribes o dices. Se descarga una vez, corre en tu teléfono, sin internet y sin enviar nada tuyo. Solo propone: tú confirmas cada gasto. Si no lo descargas, CoinDen funciona igual con sus reglas.</string>
+    <string name="lm_none_memory">Tu teléfono no tiene memoria suficiente para este modelo. CoinDen sigue funcionando con sus reglas.</string>
+    <string name="lm_none_cpu">Este teléfono no es de 64 bits y no puede correr este modelo. CoinDen sigue funcionando con sus reglas.</string>
+    <string name="lm_none_storage">No hay espacio libre para descargarlo. CoinDen sigue funcionando con sus reglas.</string>
+    <string name="lm_load_failed">El modelo no se pudo cargar. Se siguen usando las reglas; puedes borrarlo y descargarlo de nuevo.</string>
+    <string name="lm_name_small">Pequeño</string>
+    <string name="lm_name_medium">Mediano</string>
     <string name="evidence_unread">Todavía sin leer.</string>
     <string name="evidence_read">Leído en el teléfono:</string>
     <string name="share_saved">Guardado en CoinDen</string>

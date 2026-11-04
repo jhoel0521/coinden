@@ -44,6 +44,7 @@ import com.coinden.app.onboarding.OnboardingPresenter
 import com.coinden.app.onboarding.OnboardingStep
 import com.coinden.app.onboarding.WalletsScreen
 import com.coinden.app.onboarding.WelcomeScreen
+import com.coinden.app.perception.LanguageModelPresenter
 import com.coinden.app.perception.PerceptionService
 import com.coinden.app.perception.PrivacyPresenter
 import com.coinden.app.perception.PrivacyScreen
@@ -224,7 +225,8 @@ private fun AppNavHost(
         }
         composable(Routes.VOICE_MODELS) {
             val models = remember { VoiceModelsPresenter(platform.voiceModels) }
-            VoiceModelsScreen(models, onBack = { nav.popBackStack() })
+            val languageModel = remember { LanguageModelPresenter(platform.languageModels) }
+            VoiceModelsScreen(models, onBack = { nav.popBackStack() }, languageModel = languageModel)
         }
         composable(Routes.CURRENCIES) {
             LaunchedEffect(Unit) { onboarding.show(OnboardingStep.CURRENCIES) }

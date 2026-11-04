@@ -28,18 +28,24 @@ class VoiceModelStore(
         fileOf(model).delete()
     }
 
-    fun deviceProfile(): DeviceProfile {
-        val memory = ActivityManager.MemoryInfo().also { (appContext.getSystemService(ActivityManager::class.java)).getMemoryInfo(it) }
-        return DeviceProfile(
-            totalMemoryBytes = memory.totalMem,
-            is64Bit = Build.SUPPORTED_64_BIT_ABIS.isNotEmpty(),
-            freeStorageBytes = StatFs(dir.absolutePath).availableBytes,
-        )
-    }
+    fun deviceProfile(): DeviceProfile = readDeviceProfile(appContext, dir)
 
     suspend fun download(
         model: VoiceModel,
         onProgress: (downloaded: Long, total: Long) -> Unit = { _, _ -> },
         url: String = model.url,
     ): DownloadResult = VerifiedDownload.to(fileOf(model), url, model.sha256, model.sizeBytes, onProgress)
+}
+
+/** Cómo es el teléfono (memoria, 64 bits y espacio libre en [dir]) para recomendar un modelo. */
+fun readDeviceProfile(
+    context: Context,
+    dir: File,
+): DeviceProfile {
+    val memory = ActivityManager.MemoryInfo().also { context.getSystemService(ActivityManager::class.java).getMemoryInfo(it) }
+    return DeviceProfile(
+        totalMemoryBytes = memory.totalMem,
+        is64Bit = Build.SUPPORTED_64_BIT_ABIS.isNotEmpty(),
+        freeStorageBytes = StatFs(dir.absolutePath).availableBytes,
+    )
 }
