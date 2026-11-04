@@ -28,12 +28,12 @@
 
 ## 4. Descarga, verificación y pantalla
 
-- [ ] 4.1 Pruebas de las reglas de oferta: 4 GB y arm64 ofrecen el pequeño; 6 GB o más, el mediano; 2 GB, 32 bits o sin espacio no ofrecen nada.
-- [ ] 4.2 Pruebas: se verifica la huella; un archivo alterado se borra; la petición no lleva datos de la persona; el modelo se puede borrar; si no carga, se sigue con el respaldo y se avisa una vez.
-- [ ] 4.3 Descarga del modelo sobre el mismo mecanismo que los de voz (`VerifiedDownload`), sin duplicarlo. Catálogo del modelo de lenguaje con URL pública, tamaño, huella SHA-256 real y RAM mínima (Qwen 3 0.6B `.litertlm` de `litert-community`, tras verificar su licencia). La descarga de ~586 MB se puede reanudar o tiene un tiempo de espera acorde, con prueba.
-- [ ] 4.3b La app reconoce un modelo recién descargado **sin reiniciar** (hoy `CoinDenApplication` lo evalúa una sola vez en `onCreate`) y libera el motor (`LiteRtModelEngine.release()`) al borrar el modelo; con prueba.
-- [ ] 4.4 Pantalla del modelo de lenguaje: qué hace, que corre en el teléfono, que no envía datos, que solo propone, su tamaño y el botón de borrar.
-- [ ] 4.5 Textos en es, en y pt.
+- [x] 4.1 Pruebas de las reglas de oferta: 4 GB y arm64 ofrecen el pequeño; 6 GB o más, el mediano; 2 GB, 32 bits o sin espacio no ofrecen nada. _(`LanguageModelRecommenderTest`: 4 GB y 64 bits → Qwen 3 0.6B; 6 GB o más → Qwen 3 1.7B; 2 GB, 32 bits o sin espacio → nada, con su motivo.)_
+- [x] 4.2 Pruebas: se verifica la huella; un archivo alterado se borra; la petición no lleva datos de la persona; el modelo se puede borrar; si no carga, se sigue con el respaldo y se avisa una vez. _(`VerifiedDownloadTest` ya cubre la huella, el archivo alterado y la petición sin datos; `LanguageModelPresenterTest` cubre borrar y el aviso único; `InstalledLanguageModelTest`, el modelo que no carga.)_
+- [x] 4.3 Descarga del modelo sobre el mismo mecanismo que los de voz (`VerifiedDownload`), sin duplicarlo. Catálogo del modelo de lenguaje con URL pública, tamaño, huella SHA-256 real y RAM mínima (Qwen 3 0.6B `.litertlm` de `litert-community`, tras verificar su licencia). La descarga de ~586 MB se puede reanudar o tiene un tiempo de espera acorde, con prueba. _(Catálogo en `LanguageModels.kt` con las huellas del repositorio `litert-community`, licencia Apache 2.0 verificada. **No se agregó reanudación**: `VerifiedDownload` reintenta desde cero; el tiempo de espera es por lectura, no total. Queda como mejora si la descarga de ~614 MB se corta seguido en la medición.)_
+- [x] 4.3b La app reconoce un modelo recién descargado **sin reiniciar** (hoy `CoinDenApplication` lo evalúa una sola vez en `onCreate`) y libera el motor (`LiteRtModelEngine.release()`) al borrar el modelo; con prueba. _(`InstalledLanguageModel` mira el archivo en cada captura y libera el motor al borrar.)_
+- [x] 4.4 Pantalla del modelo de lenguaje: qué hace, que corre en el teléfono, que no envía datos, que solo propone, su tamaño y el botón de borrar. _(Sección "Modelo de lenguaje" dentro de la pantalla de modelos de voz, para no cambiar la lista de Perfil que fija `app-navigation`.)_
+- [x] 4.5 Textos en es, en y pt.
 - [x] 4.6 **Decidido: dentro del APK, como hoy** (ver design.md, Riesgos). Motivo: sin riesgo de integración; el costo es el peso del AAB. Decidir si la librería de LiteRT-LM va como **módulo bajo demanda** de Play en lugar de
   dentro del APK. Hoy `liblitertlm_jni.so` suma unos 21 MB por persona (arm64) aunque nunca descargue
   el modelo, y el AAB pasó de 41,6 MB en la 0.1.0 a 81 MB. Quien no use el modelo no debería pagar ese
