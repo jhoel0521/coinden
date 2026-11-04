@@ -8,15 +8,11 @@ import com.coinden.app.capture.EncryptedAttachmentStore
 import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.erase.AndroidDataEraser
 import com.coinden.app.i18n.AppLanguage
-import com.coinden.app.intent.InstalledLanguageModel
-import com.coinden.app.intent.LiteRtModelEngine
 import com.coinden.app.lock.AndroidDeviceAuth
 import com.coinden.app.lock.AppLockController
 import com.coinden.app.packs.PackStore
-import com.coinden.app.perception.AndroidLanguageModels
 import com.coinden.app.perception.AndroidPdfReader
 import com.coinden.app.perception.AppPerception
-import com.coinden.app.perception.LanguageModels
 import com.coinden.core.data.local.AndroidDatabase
 import com.coinden.core.data.local.LocalBundleRepository
 import com.coinden.core.data.local.LocalCategorizationRepository
@@ -32,14 +28,11 @@ import com.coinden.core.data.memory.StaticRegionalSettings
 import com.coinden.core.data.memory.SystemClock
 import com.coinden.core.data.memory.UuidIdGenerator
 import com.coinden.core.domain.model.Currency
-import com.coinden.core.domain.model.interpret.ModelIntentInterpreter
 import com.coinden.core.domain.model.interpret.RegionalSettings
 import com.coinden.core.domain.model.interpret.UserLocale
-import com.coinden.core.domain.port.output.IntentInterpreterPort
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.runBlocking
-import java.io.File
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 import java.util.TimeZone
@@ -81,22 +74,6 @@ class CoinDenApplication : Application() {
 
     /** Trabajo que no puede cortarse al cerrar una pantalla, como cerrar un paquete al salir. */
     val scope = MainScope()
-
-    /**
-     * El modelo de lenguaje que haya en el teléfono en cada momento: mira el archivo en cada
-     * captura, así que uno recién descargado se usa sin reiniciar y uno borrado libera su memoria.
-     */
-    val installedLanguageModel: InstalledLanguageModel by lazy {
-        InstalledLanguageModel(File(filesDir, "models/${LanguageModels.LOCAL_FILE_NAME}")) { LiteRtModelEngine(it) }
-    }
-
-    val languageModels: AndroidLanguageModels by lazy { AndroidLanguageModels(this, installedLanguageModel) }
-
-    /**
-     * El intérprete de intenciones, o null si no hay modelo descargado. Se arma una sola vez: el
-     * motor carga el modelo recién cuando hace falta interpretar algo.
-     */
-    private fun languageModel(): IntentInterpreterPort = ModelIntentInterpreter(installedLanguageModel)
 
     override fun onCreate() {
         super.onCreate()
@@ -146,9 +123,6 @@ class CoinDenApplication : Application() {
                 initialLanguage = savedLanguage ?: AppLanguage.proposedFor(device.language),
                 attachments = EncryptedAttachmentStore(filesDir.resolve("attachments")),
                 downloadedPacks = { packStore.downloadedTexts() },
-                // El modelo de lenguaje, si el teléfono lo tiene descargado. Sin él manda el
-                // respaldo determinista, que es el caso de la mayoría de los teléfonos.
-                model = languageModel(),
             )
 
         // Una versión anterior podía dejar un PDF descifrado en la caché si se cortaba la lectura.

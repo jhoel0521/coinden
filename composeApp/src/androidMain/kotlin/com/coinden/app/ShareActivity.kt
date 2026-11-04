@@ -52,7 +52,7 @@ class ShareActivity : ComponentActivity() {
                 finish()
                 return@launch
             }
-            val platform = AndroidCapturePlatform(this@ShareActivity, app.perception, app.container.attachments, app.languageModels)
+            val platform = AndroidCapturePlatform(this@ShareActivity, app.perception, app.container.attachments)
             setContent {
                 CoinDenTheme {
                     Surface(Modifier.fillMaxSize()) {

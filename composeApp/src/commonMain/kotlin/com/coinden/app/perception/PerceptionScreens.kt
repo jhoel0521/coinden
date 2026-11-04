@@ -27,14 +27,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import coinden.composeapp.generated.resources.Res
 import coinden.composeapp.generated.resources.back
-import coinden.composeapp.generated.resources.lm_intro
-import coinden.composeapp.generated.resources.lm_load_failed
-import coinden.composeapp.generated.resources.lm_name_medium
-import coinden.composeapp.generated.resources.lm_name_small
-import coinden.composeapp.generated.resources.lm_none_cpu
-import coinden.composeapp.generated.resources.lm_none_memory
-import coinden.composeapp.generated.resources.lm_none_storage
-import coinden.composeapp.generated.resources.lm_title
 import coinden.composeapp.generated.resources.model_base
 import coinden.composeapp.generated.resources.model_large
 import coinden.composeapp.generated.resources.model_small
@@ -201,12 +193,10 @@ private fun Point(
 fun VoiceModelsScreen(
     presenter: VoiceModelsPresenter,
     onBack: () -> Unit,
-    languageModel: LanguageModelPresenter? = null,
 ) {
     val state by presenter.state.collectAsState()
     val scope = rememberCoroutineScope()
     LaunchedEffect(presenter) { presenter.load() }
-    LaunchedEffect(languageModel) { languageModel?.load() }
 
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
         CdTopBar(stringResource(Res.string.models_title), stringResource(Res.string.back), onBack)
@@ -257,81 +247,9 @@ fun VoiceModelsScreen(
                     if (state.failed == row.model) CdErrorText(stringResource(Res.string.models_failed))
                 }
             }
-            languageModel?.let { LanguageModelSection(it) }
         }
     }
 }
-
-/** El modelo de lenguaje: qué hace, cuánto pesa, descargar y borrar. Si el teléfono no puede, lo dice. */
-@Composable
-private fun LanguageModelSection(presenter: LanguageModelPresenter) {
-    val state by presenter.state.collectAsState()
-    val scope = rememberCoroutineScope()
-    Text(stringResource(Res.string.lm_title), style = MaterialTheme.typography.titleLarge)
-    Text(stringResource(Res.string.lm_intro), style = MaterialTheme.typography.bodyMedium)
-    when (val offer = state.offer) {
-        is LanguageModelOffer.None ->
-            CdNotice(
-                NoticeKind.Info,
-                stringResource(
-                    when (offer.reason) {
-                        LanguageModelOffer.Reason.LOW_MEMORY -> Res.string.lm_none_memory
-                        LanguageModelOffer.Reason.UNSUPPORTED_CPU -> Res.string.lm_none_cpu
-                        LanguageModelOffer.Reason.LOW_STORAGE -> Res.string.lm_none_storage
-                    },
-                ),
-            )
-        is LanguageModelOffer.Download ->
-            CdCard {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        stringResource(
-                            Res.string.models_size,
-                            stringResource(offer.model.label()),
-                            (offer.model.sizeBytes / 1_000_000).toInt(),
-                        ),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f),
-                    )
-                    CdBadge(stringResource(Res.string.models_recommended), BadgeTone.Success)
-                }
-                when {
-                    state.downloading != null ->
-                        LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
-                    state.installed ->
-                        CdHeaderAction(
-                            stringResource(Res.string.models_installed),
-                            CdActionSpec(
-                                stringResource(Res.string.models_delete),
-                                { scope.launch { presenter.delete() } },
-                                ActionRole.Danger,
-                            ),
-                        )
-                    else ->
-                        CdActions(
-                            listOf(
-                                CdActionSpec(
-                                    stringResource(Res.string.models_download),
-                                    { scope.launch { presenter.download(offer.model) } },
-                                ),
-                            ),
-                        )
-                }
-                if (state.failed) CdErrorText(stringResource(Res.string.models_failed))
-                if (state.loadFailed) CdErrorText(stringResource(Res.string.lm_load_failed))
-            }
-        null -> Unit
-    }
-}
-
-private fun LanguageModel.label(): StringResource =
-    if (this ==
-        LanguageModels.SMALL
-    ) {
-        Res.string.lm_name_small
-    } else {
-        Res.string.lm_name_medium
-    }
 
 /** Nombre del modelo para la persona (el id técnico no se muestra). */
 private fun VoiceModel.label(): StringResource =

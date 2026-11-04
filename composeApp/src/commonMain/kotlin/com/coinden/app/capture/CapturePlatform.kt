@@ -1,7 +1,6 @@
 package com.coinden.app.capture
 
 import androidx.compose.runtime.Composable
-import com.coinden.app.perception.LanguageModelManager
 import com.coinden.app.perception.PerceptionReaders
 import com.coinden.app.perception.ProcessingQueue
 import com.coinden.app.perception.VoiceModelManager
@@ -18,9 +17,6 @@ interface CapturePlatform {
 
     /** Modelos de voz descargables. */
     val voiceModels: VoiceModelManager
-
-    /** Modelo de lenguaje descargable. */
-    val languageModels: LanguageModelManager
 
     /** Cola que procesa lo capturado en segundo plano. */
     val processingQueue: ProcessingQueue

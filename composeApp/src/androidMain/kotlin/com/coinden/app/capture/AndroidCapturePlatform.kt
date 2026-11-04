@@ -54,7 +54,6 @@ import coinden.composeapp.generated.resources.camera_gallery
 import coinden.composeapp.generated.resources.camera_shutter
 import com.coinden.app.download.DownloadResult
 import com.coinden.app.perception.AppPerception
-import com.coinden.app.perception.LanguageModelManager
 import com.coinden.app.perception.ProcessingQueue
 import com.coinden.app.perception.VoiceModel
 import com.coinden.app.perception.VoiceModelManager
@@ -72,7 +71,6 @@ class AndroidCapturePlatform(
     context: Context,
     private val perception: AppPerception,
     attachments: AttachmentStore,
-    override val languageModels: LanguageModelManager,
 ) : CapturePlatform {
     override val contextRecorder: ContextRecorder = AndroidContextRecorder(context, attachments)
 
