@@ -25,11 +25,11 @@ import java.io.File
  */
 class LiteRtModelEngine(
     private val modelFile: File,
-) : ModelEngine {
+) : LoadableEngine {
     private var engine: Engine? = null
 
     /** Carga el modelo. Devuelve false si no se pudo: el teléfono sigue con el respaldo. */
-    suspend fun load(): Boolean =
+    override suspend fun load(): Boolean =
         withContext(Dispatchers.IO) {
             if (engine != null) return@withContext true
             if (!modelFile.isFile) return@withContext false
@@ -71,7 +71,7 @@ class LiteRtModelEngine(
         }
 
     /** Libera el modelo: ocupa memoria y no hace falta entre capturas. */
-    fun release() {
+    override fun release() {
         runCatching { engine?.close() }
         engine = null
     }

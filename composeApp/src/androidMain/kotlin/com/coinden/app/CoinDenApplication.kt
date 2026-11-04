@@ -8,13 +8,15 @@ import com.coinden.app.capture.EncryptedAttachmentStore
 import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.erase.AndroidDataEraser
 import com.coinden.app.i18n.AppLanguage
-import com.coinden.app.intent.AndroidLocalModel
+import com.coinden.app.intent.InstalledLanguageModel
 import com.coinden.app.intent.LiteRtModelEngine
 import com.coinden.app.lock.AndroidDeviceAuth
 import com.coinden.app.lock.AppLockController
 import com.coinden.app.packs.PackStore
+import com.coinden.app.perception.AndroidLanguageModels
 import com.coinden.app.perception.AndroidPdfReader
 import com.coinden.app.perception.AppPerception
+import com.coinden.app.perception.LanguageModels
 import com.coinden.core.data.local.AndroidDatabase
 import com.coinden.core.data.local.LocalBundleRepository
 import com.coinden.core.data.local.LocalCategorizationRepository
@@ -43,7 +45,6 @@ import java.util.Locale
 import java.util.TimeZone
 
 /** Abre la base cifrada y arma el contenedor una sola vez por proceso (sobrevive a la rotación). */
-private const val LANGUAGE_MODEL_FILE = "coinden-intent.litertlm"
 
 class CoinDenApplication : Application() {
     lateinit var packStore: PackStore
@@ -82,14 +83,20 @@ class CoinDenApplication : Application() {
     val scope = MainScope()
 
     /**
+     * El modelo de lenguaje que haya en el teléfono en cada momento: mira el archivo en cada
+     * captura, así que uno recién descargado se usa sin reiniciar y uno borrado libera su memoria.
+     */
+    val installedLanguageModel: InstalledLanguageModel by lazy {
+        InstalledLanguageModel(File(filesDir, "models/${LanguageModels.LOCAL_FILE_NAME}")) { LiteRtModelEngine(it) }
+    }
+
+    val languageModels: AndroidLanguageModels by lazy { AndroidLanguageModels(this, installedLanguageModel) }
+
+    /**
      * El intérprete de intenciones, o null si no hay modelo descargado. Se arma una sola vez: el
      * motor carga el modelo recién cuando hace falta interpretar algo.
      */
-    private fun languageModel(): IntentInterpreterPort? {
-        val archivo = File(filesDir, "models/$LANGUAGE_MODEL_FILE")
-        if (!archivo.isFile) return null
-        return ModelIntentInterpreter(AndroidLocalModel(LiteRtModelEngine(archivo)))
-    }
+    private fun languageModel(): IntentInterpreterPort = ModelIntentInterpreter(installedLanguageModel)
 
     override fun onCreate() {
         super.onCreate()
