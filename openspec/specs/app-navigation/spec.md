@@ -35,11 +35,11 @@ La pestaña Movimientos DEBE (MUST) mostrar el historial de movimientos confirma
 - **THEN** ve el resumen del mes actual, y al elegir "Historial" vuelve a la lista de movimientos
 
 ### Requirement: Perfil de la Persona
-La pestaña Perfil DEBE (MUST) reunir la configuración de la persona: Seguridad (el bloqueo con huella o PIN), Idioma, Billeteras y tasas, Categorías propias, Privacidad, Modelos de voz y Acerca de (versión de la app, que no hay cuenta ni servidores, un enlace al sitio del proyecto con su política de privacidad en el idioma de la app, las licencias de código abierto con su texto completo, y en letra pequeña el crédito de quien hace CoinDen, con su usuario de GitHub y un enlace al repositorio). El enlace abre el navegador; la app no cobra ni pide donaciones. Cambiar el idioma desde Perfil cambia toda la app al momento.
+La pestaña Perfil DEBE (MUST) reunir la configuración de la persona: Seguridad (el bloqueo con huella o PIN), Idioma, Billeteras y tasas, Categorías propias, Privacidad, Modelos de voz, Borrar mis datos y Acerca de (versión de la app, que no hay cuenta ni servidores, un enlace al sitio del proyecto con su política de privacidad en el idioma de la app, las licencias de código abierto con su texto completo, y en letra pequeña el crédito de quien hace CoinDen, con su usuario de GitHub y un enlace al repositorio). El enlace abre el navegador; la app no cobra ni pide donaciones. Cambiar el idioma desde Perfil cambia toda la app al momento.
 
 #### Scenario: Lo que hay en Perfil
 - **WHEN** Carlos abre Perfil
-- **THEN** ve Seguridad, Idioma, Billeteras y tasas, Categorías propias, Privacidad, Modelos de voz y Acerca de
+- **THEN** ve Seguridad, Idioma, Billeteras y tasas, Categorías propias, Privacidad, Modelos de voz, Borrar mis datos y Acerca de
 
 #### Scenario: Cambiar el idioma
 - **WHEN** Carlos elige English en Perfil
@@ -64,3 +64,7 @@ La pestaña Perfil DEBE (MUST) reunir la configuración de la persona: Seguridad
 #### Scenario: Crédito del autor
 - **WHEN** Carlos abre Acerca de
 - **THEN** ve en letra pequeña "Hecho por @jhoel0521", y al tocarlo se abre el repositorio de CoinDen en GitHub en el navegador
+
+#### Scenario: Borrar mis datos desde Perfil
+- **WHEN** Carlos toca "Borrar mis datos" en Perfil
+- **THEN** la app abre la confirmación de borrado y no borra nada hasta que él la confirma

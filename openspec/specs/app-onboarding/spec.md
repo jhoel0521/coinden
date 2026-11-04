@@ -58,10 +58,10 @@ Por cada moneda marcada que no es la principal, el paso DEBE (MUST) ofrecer escr
 - **THEN** su perfil incluye reales sin tasa de referencia
 
 ### Requirement: Billeteras Iniciales sin Configurar Apodos
-El tercer paso DEBE (MUST) permitir crear una o más billeteras, cada una con nombre, tipo (efectivo, banco, digital, cripto o tarjeta), una de las monedas elegidas y saldo de hoy, y no puede terminar sin al menos una. No pide apodos ni billetera por defecto: al terminar, la billetera por defecto es el efectivo en la moneda local o, si no hay, la primera billetera creada.
+El tercer paso DEBE (MUST) permitir crear una o más billeteras, cada una con nombre, tipo (efectivo, cuenta, digital, personalizada o tarjeta), una de las monedas elegidas y saldo de hoy, y no puede terminar sin al menos una. No pide apodos ni billetera por defecto: al terminar, la billetera por defecto es el efectivo en la moneda local o, si no hay, la primera billetera creada.
 
 #### Scenario: Carlos crea sus billeteras
-- **WHEN** Carlos crea "Billetera" (efectivo, 100 Bs), "BNB Bs" (banco, 500 Bs) y "Dólares colchón" (efectivo, 289 USD) y termina
+- **WHEN** Carlos crea "Billetera" (efectivo, 100 Bs), "BNB Bs" (cuenta, 500 Bs) y "Dólares colchón" (efectivo, 289 USD) y termina
 - **THEN** existen las tres billeteras con esos saldos y la billetera por defecto es "Billetera"
 
 #### Scenario: Sin billeteras no se termina
@@ -69,8 +69,12 @@ El tercer paso DEBE (MUST) permitir crear una o más billeteras, cada una con no
 - **THEN** la app no avanza y le pide crear al menos una
 
 #### Scenario: Sin efectivo en la moneda local
-- **WHEN** John solo crea "Chase" (banco, USD) y termina
+- **WHEN** John solo crea "Chase" (cuenta, USD) y termina
 - **THEN** la billetera por defecto es "Chase"
+
+#### Scenario: Tipos con nombres neutros
+- **WHEN** Carlos llega al tercer paso
+- **THEN** los tipos que se ofrecen son Efectivo, Cuenta, Digital, Personalizada y Tarjeta
 
 ### Requirement: Primer Inicio y Siguientes
 El onboarding DEBE (MUST) mostrarse mientras la persona no tenga perfil de moneda y al menos una billetera; una vez terminado, la app DEBE abrir directamente en Inicio. La app no crea billeteras de ejemplo.
@@ -115,12 +119,17 @@ persona puede verificarlo. Mientras la persona no haya elegido, la pantalla DEBE
 pedir una elección explícita sobre el lector de Google —seguir con él o seguir sin él— y no
 DEBE (MUST NOT) dejar avanzar sin que elija una de las dos. Las dos elecciones dejan la app
 completa: sin el lector de Google las fotos se leen con el lector libre. La misma pantalla
-ofrece, apagado, el bloqueo con huella o PIN del teléfono. Se puede volver a abrir desde
+ofrece, apagado, el bloqueo con huella o PIN del teléfono. También DEBE (MUST) decir que la persona puede borrar todos sus datos desde Perfil
+en cualquier momento. Se puede volver a abrir desde
 Perfil, donde la elección ya tomada se cambia cuando se quiera.
 
 #### Scenario: Lo que explica
 - **WHEN** Carlos lee la pantalla de privacidad
 - **THEN** ve que sus gastos, fotos, audios y textos nunca salen del teléfono; que las cotizaciones que configure y las descargas de paquetes, plantillas y modelos no envían nada suyo; y que el lector de Google, si lo activa, solo recibe datos técnicos de uso
+
+#### Scenario: Cómo borrar todo
+- **WHEN** Carlos lee la pantalla de privacidad
+- **THEN** ve que puede borrar todos sus datos desde Perfil y que esa acción solo afecta a este teléfono
 
 #### Scenario: Puede comprobarlo por su cuenta
 - **WHEN** Carlos quiere saber exactamente qué recibe Google y no conformarse con el resumen
