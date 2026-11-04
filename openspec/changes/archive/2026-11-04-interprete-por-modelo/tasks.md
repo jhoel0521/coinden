@@ -1,5 +1,20 @@
 # Tasks
 
+> **Cierre (4-nov-2026): archivado sin completar, a propósito.** Se construyó y probó la parte
+> que no depende de un modelo (grupos 1 y 3: contrato, validador, orquestador) y el adaptador a
+> LiteRT-LM con descarga y pantalla (grupo 2 y 4). Se midió con el modelo real en emuladores de
+> 4 y 6 GB (Qwen 3 0.6B y 1.7B, `.litertlm`, Apache 2.0): ~6 s un pago, ~8 s dos, 11 a 13 s un
+> paquete; el 0,6B acierta "ambulante" y "taxi" pero pierde pagos en "comida y somó" e inventa
+> montos; el 1,7B copió la nota del ejemplo del prompt y devolvió un solo pago. **No cumple el
+> criterio de 5 s ni entiende mejor que las reglas deterministas**, que hoy funcionan mejor.
+> Por eso el motor **salió del app y del AAB** (commit `cfe44df`; la versión con motor, descarga y
+> pantalla está en `60bbe6b`, `2c956ed`, `98558f8` y `023f884` por si se retoma). El respaldo
+> determinista **no se recorta** (grupo 6): las reglas siguen siendo la interpretación principal.
+> Lo que queda en `core/domain` (puerto `IntentInterpreterPort`, `ProposalValidator`,
+> `BundleInterpretation`, `IntentGrammar` con tope de 9 dígitos) sigue probado y es lo que usará el
+> siguiente cambio, `interprete-gemini-nano`. Los deltas de specs de este cambio **no se
+> sincronizaron**: describen un modelo activo que la app ya no incluye.
+
 ## 1. El contrato y el validador (sin modelo todavía)
 
 - [x] 1.1 Pruebas del validador con Carlos: un monto que no está en ningún texto se rechaza; una billetera fuera del directorio se rechaza; una categoría que no existe se rechaza; cambiar la moneda de un comprobante se rechaza; una propuesta respaldada pasa.

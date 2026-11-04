@@ -189,3 +189,10 @@ La interpretación corre en la cola, nunca mientras la persona escribe: capturar
 - **Telemetría del motor.** Es una librería de Google, y el Manifiesto prohíbe la telemetría. Revisión estática de `litertlm-android` 0.18.0: su manifiesto no pide permisos; la parte nativa no importa funciones de red (`connect`, `socket`, `getaddrinfo`, SSL, curl) y solo carga librerías del sistema y de gráficos; sus dependencias son gson, kotlin-reflect y coroutines; los enlaces que contiene son documentación dentro de mensajes de error. Falta confirmarlo en ejecución, mirando el tráfico del emulador mientras interpreta. Al subir de versión el motor, la revisión se repite.
 - **La app queda en dos velocidades** según el teléfono. Es el precio de no tener servidores, y es explícito: la pantalla del modelo dice qué cambia al instalarlo.
 - **Perder lo que hoy funciona.** Las listas que se borran hoy entienden "gasté 45 en almuerzo". Por eso el respaldo conserva monto, moneda, alias, medio, fecha y plantillas: sin modelo la app no vuelve a cero, vuelve a lo esencial.
+
+## Resultado y retiro (4-nov-2026)
+
+- **Medido en emulador** (x86_64, API 34; 4 GB con Qwen 3 0.6B y 6 GB con Qwen 3 1.7B): ver el cierre de `tasks.md`. Ninguno cumple los 5 s ni supera a las reglas.
+- **Decisión:** el motor LiteRT-LM sale del app y del AAB (el AAB baja de ~81 MB a lo de antes). La decisión 4.6 ("dentro del APK") queda reemplazada: no hay motor.
+- **Lo que se conserva** en el dominio: el puerto del modelo, el validador, el orquestador y el esquema. El siguiente intento (`interprete-gemini-nano`) usa el modelo del sistema (Gemini Nano por ML Kit) como adaptador opcional detrás del mismo puerto.
+- **Hallazgo de producto:** con modelos de ~1 B, el intérprete de texto plano y el OCR nativo rinden mejor que el LLM. El principio 4 del Manifiesto ("el modelo interpreta primero") queda sin ejercerse; no se cambia el Manifiesto sin decisión de la persona.
