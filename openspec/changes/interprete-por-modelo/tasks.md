@@ -30,17 +30,21 @@
 
 - [ ] 4.1 Pruebas de las reglas de oferta: 4 GB y arm64 ofrecen el pequeño; 6 GB o más, el mediano; 2 GB, 32 bits o sin espacio no ofrecen nada.
 - [ ] 4.2 Pruebas: se verifica la huella; un archivo alterado se borra; la petición no lleva datos de la persona; el modelo se puede borrar; si no carga, se sigue con el respaldo y se avisa una vez.
-- [ ] 4.3 Descarga del modelo sobre el mismo mecanismo que los de voz, sin duplicarlo.
+- [ ] 4.3 Descarga del modelo sobre el mismo mecanismo que los de voz (`VerifiedDownload`), sin duplicarlo. Catálogo del modelo de lenguaje con URL pública, tamaño, huella SHA-256 real y RAM mínima (Qwen 3 0.6B `.litertlm` de `litert-community`, tras verificar su licencia). La descarga de ~586 MB se puede reanudar o tiene un tiempo de espera acorde, con prueba.
+- [ ] 4.3b La app reconoce un modelo recién descargado **sin reiniciar** (hoy `CoinDenApplication` lo evalúa una sola vez en `onCreate`) y libera el motor (`LiteRtModelEngine.release()`) al borrar el modelo; con prueba.
 - [ ] 4.4 Pantalla del modelo de lenguaje: qué hace, que corre en el teléfono, que no envía datos, que solo propone, su tamaño y el botón de borrar.
 - [ ] 4.5 Textos en es, en y pt.
-- [ ] 4.6 Decidir si la librería de LiteRT-LM va como **módulo bajo demanda** de Play en lugar de
+- [x] 4.6 **Decidido: dentro del APK, como hoy** (ver design.md, Riesgos). Motivo: sin riesgo de integración; el costo es el peso del AAB. Decidir si la librería de LiteRT-LM va como **módulo bajo demanda** de Play en lugar de
   dentro del APK. Hoy `liblitertlm_jni.so` suma unos 21 MB por persona (arm64) aunque nunca descargue
   el modelo, y el AAB pasó de 41,6 MB en la 0.1.0 a 81 MB. Quien no use el modelo no debería pagar ese
   peso. Anotar la decisión y su motivo.
 
 ## 5. Medición en teléfono real (criterio de aceptación)
 
-- [ ] 5.1 Medir en el teléfono de referencia (4 GB, arm64, tipo Galaxy A15 o Redmi 13C): una captura típica se interpreta en **menos de 5 s**, sin cierres por memoria. Anotar el modelo exacto, su tamaño y los tiempos.
+- [ ] 5.0 Crear un emulador de gama baja (4 GB de RAM, 4 núcleos, imagen `android-34` x86_64) y otro de 2 GB; verificar en el de 2 GB que el modelo **no se ofrece** y que la app funciona con el respaldo. No hay teléfono físico disponible: la medición en teléfono real queda como verificación pendiente de la persona.
+- [ ] 5.1 Medir en el emulador de 4 GB (perfil de gama baja; el teléfono de referencia real es arm64 tipo Galaxy A15 o Redmi 13C): una captura típica se interpreta en **menos de 5 s**, sin cierres por memoria. Anotar el modelo exacto, su tamaño y los tiempos.
+- [ ] 5.3 Confirmar en ejecución que interpretar no genera tráfico de red (el motor es de Google y el Manifiesto prohíbe la telemetría); mirar el tráfico del emulador mientras interpreta y anotar el resultado.
+- [ ] 5.4 Probar el APK **release minificado** con el modelo: `proguard-rules.pro` solo protege `WhisperNative`; agregar las reglas `-keep` que LiteRT-LM necesite (JNI, gson, kotlin-reflect).
 - [ ] 5.2 Si no se cumple, bajar de modelo o recortar el prompt y volver a medir. No se acepta sin el número.
 
 ## 6. El respaldo mínimo determinista
@@ -65,6 +69,7 @@
 ## Workflow follow-up
 
 - Depende de `paquetes-como-datos`: primero las palabras salen a archivos, después se borran las que el modelo reemplaza.
-- El orden importa: el recorte del respaldo (7) va después de medir el modelo (6), nunca antes.
+- El orden importa: el recorte del respaldo (6) va después de medir el modelo (5), nunca antes.
+- El recorte (6.3 y 6.4) edita `core/domain` y los paquetes: se confirma con la persona al empezar esa fase.
 - Al terminar, actualizar `contexto-de-captura` para que su intérprete del paquete sea el modelo con reglas que validan.
 - Un solo PR.

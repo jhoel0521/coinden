@@ -3,11 +3,11 @@ package com.coinden.app.intent
 import com.coinden.core.domain.port.output.LocalModelPort
 
 /**
- * El motor que corre el modelo en el teléfono. Lo implementa `llama.cpp` por NDK, igual que
- * whisper.cpp para la voz.
+ * El motor que corre el modelo en el teléfono. Lo implementa LiteRT-LM (API en Kotlin, sin C++
+ * propio).
  *
- * [grammar] no es una sugerencia: el motor la aplica durante la decodificación, enmascarando los
- * tokens que la violarían, así que la respuesta no puede salirse del formato.
+ * [grammar] es un JSON Schema y no es una sugerencia: el motor lo aplica durante la decodificación,
+ * así que la respuesta no puede salirse del formato.
  */
 interface ModelEngine {
     suspend fun generate(
