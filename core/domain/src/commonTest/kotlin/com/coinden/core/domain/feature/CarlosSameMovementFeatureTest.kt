@@ -345,6 +345,24 @@ class CarlosSameMovementFeatureTest {
         }
 
     @Test
+    fun `lectura que nadie aprobo de 35 a 32 no mueve el saldo de BNB Bs`() =
+        runTest {
+            carlos()
+            val taxi = say("pagué 35 de taxi por qr", bolivia(15, 8))
+            assertIs<DraftResult.Ok>(confirm(taxi.id))
+            val receipt = share(qrReceipt("32.00", "15/Oct/2026 08:01:00", "400000778"), bolivia(15, 15))
+            assertEquals(bs("465"), balanceOf("BNB Bs"))
+
+            assertIs<DraftResult.Ok>(resolve(receipt.id, taxi.id, same = true))
+
+            val change = assertNotNull(pendingCorrection(receipt.id))
+            assertEquals(CorrectionField.AMOUNT, change.changes.first { it.field == CorrectionField.AMOUNT }.field)
+            // Carlos no resolvió el cambio: el gasto sigue contando 35.00 Bs
+            assertEquals(bs("465"), balanceOf("BNB Bs"))
+            assertEquals(listOf(receipt.id), pending())
+        }
+
+    @Test
     fun `una billetera distinta queda como un cambio mas para aprobar`() =
         runTest {
             carlos()
