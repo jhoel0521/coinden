@@ -1,7 +1,7 @@
 # Publicar CoinDen en Google Play
 
 Material de la ficha: [ficha.md](ficha.md) (textos en es, en y pt), [graphics/](graphics/) (ícono de 512
-y gráfico destacado, generados con `python scripts/brand/export_brand.py`) y [screenshots/](screenshots/).
+y gráfico destacado, generados con `python scripts/brand/export_brand.py`) y [screenshots/](screenshots/) (una carpeta por idioma: `es-419`, `en-US`, `pt-BR`).
 
 ## 1. La llave de subida (una sola vez, en tu computadora)
 

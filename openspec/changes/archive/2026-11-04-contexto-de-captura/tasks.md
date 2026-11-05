@@ -92,6 +92,7 @@
   - el caso del ambulante: **sí**, el comprobante QR y el pago en efectivo quedan como dos pagos;
   - de paso: la app detecta el archivo repetido y pregunta si es el mismo gasto.
   Falta todavía: compartir un **audio**, **reabrir desde Revisar** y **Separar**.
+  - No verificado por adb: compartir imagen/audio con ShareActivity no creó borrador (posible limitación de MediaStore con adb); pendiente de prueba manual en un teléfono real.
 - [x] 8.2 `npm test`, `npm run lint`, `npm run build:android`, `bundleRelease` y `openspec validate --all` en verde.
 
 ## Workflow follow-up

@@ -81,7 +81,7 @@
     <string name="wallets_subtitle">Create a source for each place and note what you start with.</string>
     <string name="wallet_name">Name</string>
     <string name="wallet_name_hint">My cash, My account…</string>
-    <string name="wallet_opening">Today\'s total</string>
+    <string name="wallet_opening">Today's total</string>
     <string name="wallet_add">Add source</string>
     <string name="wallet_remove">Remove %1$s</string>
     <string name="wallet_type_cash">Cash</string>
@@ -127,7 +127,7 @@
     <string name="form_kind">Type</string>
     <string name="form_amount">Amount</string>
     <string name="form_currency">Currency</string>
-    <string name="form_currency_wallet">The source\'s</string>
+    <string name="form_currency_wallet">The source's</string>
     <string name="form_none">Not set</string>
     <string name="form_date">Date</string>
     <string name="form_today">Today</string>
@@ -315,15 +315,15 @@
     <string name="profile_about">About</string>
     <string name="profile_about_text">CoinDen %1$s. No account and no servers: your data lives encrypted on this phone.</string>
     <string name="lock_switch">Lock with fingerprint or PIN</string>
-    <string name="lock_switch_note">Your totals show only after unlocking with your phone\'s screen lock. Recording expenses never asks for it.</string>
+    <string name="lock_switch_note">Your totals show only after unlocking with your phone's screen lock. Recording expenses never asks for it.</string>
     <string name="lock_no_screen_lock">Set up a screen lock on your phone (fingerprint, face, PIN or pattern) to use this option.</string>
-    <string name="lock_unsupported">This phone can\'t authenticate for CoinDen.</string>
+    <string name="lock_unsupported">This phone can't authenticate for CoinDen.</string>
     <string name="lock_lost">Your phone no longer has a screen lock, so CoinDen turned its lock off.</string>
     <string name="locked_title">Unlock to see your totals</string>
     <string name="locked_note">You can record expenses with Capture without unlocking.</string>
     <string name="locked_unlock">Unlock</string>
     <string name="lock_prompt_title">Unlock CoinDen</string>
-    <string name="lock_prompt_subtitle">Use your fingerprint or your phone\'s screen lock</string>
+    <string name="lock_prompt_subtitle">Use your fingerprint or your phone's screen lock</string>
     <string name="lock_open_settings">Set up screen lock</string>
     <string name="profile_site">Website and privacy policy</string>
     <string name="categories_title">Your categories</string>

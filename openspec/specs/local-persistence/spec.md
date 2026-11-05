@@ -35,7 +35,7 @@ La llave de cifrado DEBE (MUST) generarse al azar en el primer inicio, quedar pr
 - **THEN** la app abre la misma base con la misma llave y encuentra sus datos
 
 ### Requirement: Eventos de Solo Agregar en Disco
-Los eventos del libro, de los borradores y de las clasificaciones DEBEN (MUST) guardarse solo agregando: un evento con un id ya guardado se rechaza y el almacenamiento no ofrece forma de modificar ni borrar eventos. Las correcciones son eventos nuevos.
+Los eventos del libro, de los borradores y de las clasificaciones DEBEN (MUST) guardarse solo agregando: un evento con un id ya guardado se rechaza y el almacenamiento no ofrece forma de modificar ni borrar eventos individuales. Las correcciones son eventos nuevos. La única excepción es el borrado total de los datos del dispositivo, que la persona pide y confirma explícitamente: elimina la base completa y su llave, nunca un evento suelto.
 
 #### Scenario: Id repetido en el libro
 - **WHEN** se intenta guardar un evento del libro con un id que ya existe
@@ -44,6 +44,14 @@ Los eventos del libro, de los borradores y de las clasificaciones DEBEN (MUST) g
 #### Scenario: Orden de los eventos
 - **WHEN** se guardan varios eventos de un mismo borrador y luego se leen
 - **THEN** se devuelven todos, en el orden en que se guardaron
+
+#### Scenario: Ningún evento suelto se borra
+- **WHEN** se busca en el almacenamiento una operación para borrar o modificar un solo evento
+- **THEN** no existe: solo se puede agregar, y corregir es guardar un evento nuevo
+
+#### Scenario: Borrado total por decisión de la persona
+- **WHEN** Carlos confirma "Borrar mis datos"
+- **THEN** la base completa y su llave se eliminan juntas, y no queda ningún evento ni rastro de ellos en el almacenamiento de la app
 
 ### Requirement: Formato de Eventos Versionado y Exacto
 Cada evento guardado DEBE (MUST) registrar su tipo y la versión de su formato, y al leerlo debe obtenerse un evento igual al que se guardó, para todos los tipos de evento. Los montos y las tasas se guardan en forma exacta, sin flotantes: un monto o una tasa leídos tienen exactamente los mismos dígitos, decimales y moneda.
@@ -76,3 +84,18 @@ El almacenamiento persistente DEBE (MUST) cumplir los mismos contratos que el al
 #### Scenario: Batería de contrato compartida
 - **WHEN** se ejecuta la misma batería de pruebas de contrato de los repositorios contra el almacenamiento en memoria y contra el persistente
 - **THEN** ambos la pasan completa
+
+### Requirement: Actualizar sin Perder Datos
+Instalar una versión nueva de CoinDen sobre una anterior DEBE (MUST) conservar todos los datos de la persona: billeteras, movimientos, borradores con su evidencia cifrada, categorías, alias, configuración y la llave de cifrado. La base se migra en el lugar, nunca se borra ni se vuelve a crear, y lo guardado con el formato anterior se lee igual que antes. Un cambio de esquema siempre trae su migración y una prueba que abre una base creada por la versión anterior.
+
+#### Scenario: Actualizar de 0.1.0 a 0.2.0
+- **WHEN** Carlos tiene en la versión 0.1.0 tres billeteras, diez movimientos confirmados y dos borradores con foto, e instala la 0.2.0 desde Play
+- **THEN** al abrir la app ve las mismas billeteras, saldos, movimientos y borradores, con sus fotos
+
+#### Scenario: Borradores de antes en el formato nuevo
+- **WHEN** la 0.2.0 lee un borrador guardado por la 0.1.0, que no tiene paquete
+- **THEN** lo muestra como un paquete cerrado con su evidencia, sin cambiar sus datos
+
+#### Scenario: Base de una versión anterior en la prueba
+- **WHEN** la prueba abre una base creada con el esquema de la versión anterior
+- **THEN** la migración termina sin errores y todos los eventos se leen iguales

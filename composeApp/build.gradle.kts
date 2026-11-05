@@ -30,7 +30,6 @@ kotlin {
             implementation(libs.navigation.compose)
         }
         androidMain.dependencies {
-            implementation(libs.litertlm.android)
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.core.splashscreen)
             implementation(libs.androidx.biometric)

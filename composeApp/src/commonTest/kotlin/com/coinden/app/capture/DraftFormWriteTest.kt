@@ -85,6 +85,31 @@ class DraftFormWriteTest {
         }
 
     @Test
+    fun `Carlos sale durante el guardado y el progreso sigue hasta que termina la escritura`() =
+        runTest {
+            val (c, drafts) = fixture()
+            val p =
+                DraftFormPresenter(c).also {
+                    it.load()
+                    it.onAmountChange("12")
+                }
+            val gate = CompletableDeferred<Unit>()
+            drafts.gate = gate
+            val saving = launch { p.save() }
+            runCurrent()
+
+            assertEquals(FormExit.BLOCKED, p.requestExit())
+            kotlin.test.assertTrue(p.state.value.busy)
+
+            gate.complete(Unit)
+            saving.join()
+
+            kotlin.test.assertFalse(p.state.value.busy)
+            kotlin.test.assertTrue(p.state.value.completed)
+            assertEquals(1, drafts.draftIdsFor(c.ownerId).size)
+        }
+
+    @Test
     fun `Carlos reintenta revision fallida sobre la misma captura`() =
         runTest {
             val (c, drafts) = fixture()

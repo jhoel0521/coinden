@@ -17,7 +17,7 @@ El intérprete DEBE (MUST) producir propuestas únicamente a partir del texto de
 - **THEN** el intérprete no devuelve propuestas y el borrador queda Capturado
 
 ### Requirement: Paquetes de Idioma como Datos
-El intérprete DEBE (MUST) reconocer palabras clave (etiquetas de comprobante, verbos de movimiento, meses, conectores y preposiciones de nota) solo a través de paquetes de idioma definidos como datos. El paquete inglés está siempre disponible; los demás se usan solo si están instalados. Agregar un idioma no requiere cambiar código.
+El intérprete DEBE (MUST) reconocer palabras clave (etiquetas de comprobante, verbos de movimiento, meses, conectores y preposiciones de nota) solo a través de paquetes de idioma definidos como datos, que recibe ya cargados y **nunca trae en su propio código**. El paquete inglés viaja con la app y está siempre disponible; los demás se usan solo si están instalados. Agregar o corregir un idioma es cambiar un archivo de datos, no el código ni la versión de la app.
 
 #### Scenario: Frase en español con el paquete instalado
 - **WHEN** el paquete "es" está instalado y Carlos escribe "gaste 2 para un semillita"
@@ -34,6 +34,10 @@ El intérprete DEBE (MUST) reconocer palabras clave (etiquetas de comprobante, v
 #### Scenario: Idioma sin paquete instalado
 - **WHEN** el paquete "es" no está instalado y Carlos escribe "gaste 2 para un semillita"
 - **THEN** el intérprete no reconoce el verbo y propone igualmente un gasto de 2 con el tipo como inferido, como en cualquier frase sin verbo
+
+#### Scenario: El intérprete no conoce ninguna palabra por su cuenta
+- **WHEN** se interpreta una frase sin ningún paquete instalado, ni siquiera el inglés
+- **THEN** el intérprete no reconoce ningún verbo, mes ni etiqueta, porque no tiene palabras propias, y propone solo lo que se deduce de los números
 
 ### Requirement: Lectura de Montos y Monedas según el Locale
 El intérprete DEBE (MUST) leer montos con separadores decimales y de miles según el locale del usuario y reconocer la moneda por su código ISO o por su símbolo ("Bs", "US$", "R$", "€", "$"). Un símbolo compartido por varias monedas ("$") se resuelve con la moneda del locale y queda como inferido. Un monto que sigue siendo ambiguo toma la lectura del locale y queda como inferido. El intérprete nunca altera los dígitos leídos.
@@ -73,7 +77,7 @@ El intérprete DEBE (MUST) proponer movimientos a partir de comprobantes de banc
 - **THEN** el intérprete propone una transferencia de 10.00 BOB desde la cuenta del comprobante hacia la billetera por defecto
 
 ### Requirement: Plantillas Conocidas como Datos
-El intérprete DEBE (MUST) reconocer comprobantes que coinciden con una plantilla instalada, definida como datos (marcas que la identifican, etiquetas de cada campo, tipo de movimiento y billetera del emisor), y tomar sus campos como evidencia. Si ninguna plantilla coincide, usa el lector genérico.
+El intérprete DEBE (MUST) reconocer comprobantes que coinciden con una plantilla instalada, definida como datos (marcas que la identifican, etiquetas de cada campo, tipo de movimiento y billetera del emisor) que recibe ya cargada y **nunca trae en su propio código**, y tomar sus campos como evidencia. Si ninguna plantilla coincide, usa el lector genérico. Sumar el formato de un banco es instalar un archivo, no publicar una versión.
 
 #### Scenario: Comprobante de Yape
 - **WHEN** Carlos captura un comprobante con "¡Yapeaste!", "Bs 36", el destinatario y la fecha
@@ -82,6 +86,10 @@ El intérprete DEBE (MUST) reconocer comprobantes que coinciden con una plantill
 #### Scenario: Pago QR del Banco Económico
 - **WHEN** Carlos captura un "Pago QR otros bancos" con "Importe Bs25.00", "Beneficiario POLLOS DEL VALLE" y "Cuenta origen: CA: 1111222233 (Bs)"
 - **THEN** el intérprete propone un gasto de 25.00 BOB desde la billetera cuyo alias es esa cuenta, con la nota "POLLOS DEL VALLE"
+
+#### Scenario: El banco de Facundo con su plantilla recién instalada
+- **WHEN** se instala la plantilla del banco de Facundo y él captura uno de sus comprobantes
+- **THEN** el intérprete toma los campos de esa plantilla como evidencia, sin que la app se haya actualizado
 
 ### Requirement: Interpretación de Frases
 El intérprete DEBE (MUST) leer frases escritas o dictadas tolerando errores comunes de tipeo: el tipo de movimiento por los verbos del paquete (gasto si no hay verbo), el monto, la moneda si se nombra, la billetera por alias, la nota (lo que sigue a la preposición de nota o, si no hay, las palabras restantes) y varios movimientos unidos por un conector.
@@ -330,3 +338,80 @@ La nota de una frase NO DEBE (MUST NOT) contener las preposiciones de nota del p
 #### Scenario: Las notas que ya funcionaban
 - **WHEN** Carlos escribe "page 3 bs para trasmporte"
 - **THEN** la nota sigue siendo "trasmporte"
+
+### Requirement: Interpretación del Paquete
+El intérprete DEBE (MUST) interpretar un paquete en una sola pasada. Recibe los textos de sus evidencias no quitadas, cada uno marcado como **comprobante** (texto de un comprobante, foto o PDF leídos) o **contexto** (audios transcritos y notas), y devuelve los pagos del paquete. Cada comprobante es un pago con sus hechos: monto, moneda, medio de pago, billetera, hora del pago y referencia.
+
+#### Scenario: Comprobante sin glosa y su audio
+- **WHEN** el paquete tiene el comprobante QR de 25.00 Bs de "BNB Bs" de las 14:22, con referencia "400000001" y sin glosa, y el audio "esto es de mi comida"
+- **THEN** el intérprete devuelve un pago de 25.00 Bs en "BNB Bs" a las 14:22, con la referencia "400000001", la nota "comida", la categoría Comida y confianza alta
+
+#### Scenario: Paquete sin comprobante
+- **WHEN** el paquete solo tiene el audio "gasté 45 en almuerzo con bnb"
+- **THEN** el intérprete lo entiende como hoy entiende esa frase
+
+### Requirement: Modelo de Lenguaje con el Mismo Paquete
+Si hay un modelo de lenguaje en el teléfono, DEBE (MUST) recibir el mismo paquete con el mismo contrato que el intérprete de reglas, y las reglas validan su propuesta como validan cualquier otra. Sin modelo, el paquete se interpreta igual con las reglas.
+
+#### Scenario: Modelo y reglas no coinciden
+- **WHEN** el modelo propone 45.00 Bs para un paquete cuyo comprobante dice 25.00 Bs
+- **THEN** las reglas no aceptan el monto y el pago queda para revisar
+
+### Requirement: Frases de Contexto
+El contexto (audios transcritos y notas) DEBE (MUST) aportar a los pagos aunque no tenga monto ni verbo: una frase con monto habla de un pago y una sin monto lo explica (nota, categoría, billetera, para quién). Partir el contexto en frases y entender qué explica cada una es tarea del modelo de lenguaje, y las reglas verifican lo que propone. Sin modelo, cada audio o nota cuenta como una sola frase. Ninguna palabra para unir o separar frases vive en el código ni en los paquetes de idioma.
+
+#### Scenario: Frase sin monto sin modelo
+- **WHEN** no hay modelo, el paquete tiene un solo comprobante y el contexto es "esto es de mi comida"
+- **THEN** el pago tiene la nota "esto es de mi comida", sin motivo de revisión
+
+#### Scenario: Varias frases en un audio con modelo
+- **WHEN** hay modelo y el contexto es "estaba comiendo y luego un ambulante pasó y le di 25 en efectivo"
+- **THEN** el modelo propone dos frases, "estaba comiendo", explicativa, y "le di 25 en efectivo", con monto 25.00 Bs y medio efectivo, y las reglas aceptan el 25 porque está en lo dicho
+
+### Requirement: Emparejar Contexto con Comprobantes
+Cada frase con monto DEBE (MUST) emparejarse con los comprobantes, usando cada uno una sola vez: si coincide en monto y medio de pago, explica ese pago; si coincide el monto pero el medio es otro, es otro pago. Con varios comprobantes del mismo monto, se asignan por la hora del pago en el orden en que se dijeron, para revisar con el motivo "asignado por orden". Repetir el monto de un pago ya explicado es mencionarlo dos veces.
+
+#### Scenario: El ambulante en efectivo
+- **WHEN** el paquete tiene los comprobantes QR de 25.00 Bs y 60.00 Bs y el audio "estaba comiendo y luego un ambulante pasó y le di 25 en efectivo"
+- **THEN** hay tres pagos: QR 25.00 Bs, QR 60.00 Bs y 25.00 Bs en efectivo con la nota "ambulante"
+
+#### Scenario: Comida y somó del mismo monto
+- **WHEN** el paquete tiene comprobantes de 60.00 Bs y 10.00 Bs de las 12:05 y otro de 10.00 Bs de las 12:25, y el audio "estaba comiendo 60 y 10, pasó el somosero y le compré somó 10"
+- **THEN** el de 60.00 Bs y el de 10.00 Bs de las 12:05 tienen la nota "comida", el de 10.00 Bs de las 12:25 tiene la nota "somó", y los dos de 10.00 Bs quedan para revisar con el motivo "asignado por orden"
+
+#### Scenario: El mismo pago dicho dos veces
+- **WHEN** el paquete tiene un solo comprobante de 60.00 Bs y el audio "60 de mi comida, sí, los 60 de la comida"
+- **THEN** hay un solo pago de 60.00 Bs con la nota "comida"
+
+### Requirement: Frase con Monto sin su Comprobante
+Una frase con monto que no coincide con ningún comprobante DEBE (MUST) tratarse así: si el paquete tiene un solo comprobante y nada los separa (ni otro medio de pago), es una contradicción y el pago queda para revisar con las dos versiones; si tiene varios comprobantes o ninguno, es otro pago, para revisar.
+
+#### Scenario: Comprobante equivocado
+- **WHEN** el paquete tiene el comprobante de 25.00 Bs de una comida y el audio "gasté 1500, acá te paso el comprobante"
+- **THEN** hay un pago para revisar con el motivo "dijiste 1500.00 Bs, el comprobante dice 25.00 Bs"
+
+#### Scenario: Otro pago entre varios comprobantes
+- **WHEN** el paquete tiene los comprobantes de 25.00 Bs y 60.00 Bs y el audio "y le pagué 15 al taxi"
+- **THEN** hay un tercer pago de 15.00 Bs con la nota "taxi", para revisar
+
+### Requirement: Contexto Explicativo
+Una frase sin monto DEBE (MUST) aplicarse al pago que queda sin explicar si es uno solo. Si quedan varios pagos sin explicar, se sugiere en todos y todos quedan para revisar con el motivo "el contexto puede ser de cualquiera de los pagos". Sin pagos sin explicar, la frase completa el pago al que sigue en el orden de lo dicho.
+
+#### Scenario: Dos pagos y una frase
+- **WHEN** el paquete tiene los comprobantes de 40.00 Bs y 78.00 Bs y el audio "estaba comiendo"
+- **THEN** hay dos pagos con la categoría Comida sugerida, los dos para revisar con el motivo "el contexto puede ser de cualquiera de los pagos"
+
+#### Scenario: La frase explica el único pago
+- **WHEN** el paquete tiene un solo comprobante y la nota "útiles del colegio"
+- **THEN** el pago tiene la nota "útiles del colegio", sin motivo de revisión
+
+### Requirement: Hechos del Comprobante Protegidos
+El contexto NUNCA DEBE (MUST NOT) cambiar en silencio un hecho que un comprobante sí trae (monto, moneda, hora, referencia o billetera). Si lo contradice, el pago queda para revisar mostrando las dos versiones. El contexto sí completa lo que el comprobante no trae: la nota, la categoría, la billetera si el comprobante no la identifica y el medio de pago.
+
+#### Scenario: La billetera la dice el contexto
+- **WHEN** el comprobante no identifica la billetera y el audio dice "lo pagué con bnb"
+- **THEN** el pago queda en "BNB Bs" con origen dicho
+
+#### Scenario: El contexto completa una foto sin leer
+- **WHEN** la foto del comprobante no se pudo leer y la nota dice "farmacia 33 bnb"
+- **THEN** hay un pago de 33.00 Bs en "BNB Bs" con la nota "farmacia"

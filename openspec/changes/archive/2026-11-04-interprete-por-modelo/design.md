@@ -95,9 +95,9 @@ IntentInterpreterPort
 
 ### 2. Formato cerrado de verdad: gramática, no promesas
 
-Pedirle a un modelo de 0,6B que "responda JSON" falla seguido. La solución no es reintentar: es **no dejarlo escribir otra cosa**. `llama.cpp` acepta una gramática GBNF y en cada paso de decodificación enmascara los tokens que la violarían, así que la salida **no puede** salirse del formato ([llama.cpp/grammars](https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md)).
+Pedirle a un modelo de 0,6B que "responda JSON" falla seguido. La solución no es reintentar: es **no dejarlo escribir otra cosa**. LiteRT-LM acepta un JSON Schema (`ResponseFormat.json`) y en cada paso de decodificación enmascara los tokens que lo violarían, así que la salida **no puede** salirse del formato. (El diseño original pensaba en una gramática GBNF de llama.cpp; al elegir el motor, sec. 6, el mismo contrato pasó a JSON Schema.)
 
-La gramática se genera del esquema de `BundlePayment`: tipo de movimiento, monto como cadena de dígitos, moneda de una lista cerrada, `walletId` de una lista cerrada, nota libre y `paymentKey`. El modelo no ve el esquema, así que el prompt de sistema también lo describe.
+El esquema lo genera `IntentGrammar` a partir de `BundlePayment`: tipo de movimiento, monto como cadena de dígitos, moneda de una lista cerrada, `walletId` de una lista cerrada, nota libre y `paymentKey`. El modelo no ve el esquema, así que el prompt de sistema también lo describe.
 
 Esto cumple al pie de la letra el principio 4 ("responde con temperatura 0 y solo con un formato cerrado") sin confiar en la buena voluntad del modelo.
 
@@ -134,7 +134,7 @@ Criterios, en orden: **licencia libre** (el proyecto es MPL-2.0 y vive de donaci
 | **Llama 3.2 1B** | ~0,8 GB | Llama Community | Mucha documentación y ejemplos | Licencia con restricciones; multilingüe más flojo en pt |
 | **Qwen 3 1.7B** | ~1,1 GB | Apache 2.0 | Bastante mejor en intenciones complejas | Pide 6 GB para ir cómodo |
 
-**Recomendación: Qwen 3 0.6B (Apache 2.0) como piso y Qwen 3 1.7B como recomendado en 6 GB o más.** La licencia decide: Gemma y Llama traen condiciones de uso que no encajan con un proyecto de software libre que la gente puede redistribuir. Y como la gramática garantiza el formato y el validador verifica los hechos, el riesgo de un modelo chico es *entender de menos* (el borrador va a revisar), no *registrar mal*.
+**Decisión: Qwen 3 0.6B (Apache 2.0) como piso, en el paquete `.litertlm` publicado por `litert-community` (~586 MB en su variante INT4/INT8).** El motor LiteRT-LM necesita ese formato, no GGUF; las tablas de arriba hablan de tamaños en GGUF y son solo una guía. Qwen 3 1.7B como recomendado en 6 GB o más **solo si existe en `.litertlm`**; si no, el catálogo arranca con un único modelo. Antes de fijar la URL se verifica la licencia en la tarjeta del repositorio y se fija la huella SHA-256 del archivo descargado. La licencia decide: Gemma y Llama traen condiciones de uso que no encajan con un proyecto de software libre que la gente puede redistribuir. Y como la gramática garantiza el formato y el validador verifica los hechos, el riesgo de un modelo chico es *entender de menos* (el borrador va a revisar), no *registrar mal*.
 
 ### 6. El motor
 
@@ -184,7 +184,15 @@ La interpretación corre en la cola, nunca mientras la persona escribe: capturar
 
 - **El modelo entiende mal y la persona no lo nota.** Es el riesgo central. Se mitiga con el validador (los hechos no se tocan), con el desacuerdo que manda a revisar y con que nada toque saldos sin confirmar.
 - **Un modelo de 0,6B puede quedarse corto** en paquetes con varios pagos. Mitigación: la verificación lo convierte en "para revisar", no en un dato falso; y en teléfonos con 6 GB se usa el de 1,7B.
-- **Peso de la app y del modelo.** El motor suma unos 21 MB al APK en arm64 (Play entrega solo el de cada teléfono), aunque la persona nunca descargue un modelo; en un teléfono que no lo puede correr queda como código sin usar. El modelo es una descarga opcional que la persona pide y puede borrar.
+- **Peso de la app y del modelo.** El motor suma unos 21 MB al APK en arm64 (Play entrega solo el de cada teléfono), aunque la persona nunca descargue un modelo; en un teléfono que no lo puede correr queda como código sin usar. El modelo es una descarga opcional que la persona pide y puede borrar. **Decisión (tarea 4.6): el motor va dentro del APK, no como módulo bajo demanda.** Motivo: es la opción sin riesgo de integración (un dynamic feature obliga a cargar el JNI en tiempo de ejecución y a probarlo con `bundletool`) y el proyecto prefiere no cargar con esa complejidad ahora; el costo es que el AAB queda en ~81 MB. Se reevalúa si el tamaño pesa en las instalaciones.
+- **La medición no es en un teléfono físico.** No hay un teléfono arm64 de 4 GB disponible: el criterio de 5 s se mide en un emulador de gama baja (4 GB de RAM, x86_64). Sirve para memoria, cierres y orden de magnitud, no para el tiempo real de un Galaxy A15 o Redmi 13C. La prueba en un teléfono físico queda como verificación pendiente de la persona.
 - **Telemetría del motor.** Es una librería de Google, y el Manifiesto prohíbe la telemetría. Revisión estática de `litertlm-android` 0.18.0: su manifiesto no pide permisos; la parte nativa no importa funciones de red (`connect`, `socket`, `getaddrinfo`, SSL, curl) y solo carga librerías del sistema y de gráficos; sus dependencias son gson, kotlin-reflect y coroutines; los enlaces que contiene son documentación dentro de mensajes de error. Falta confirmarlo en ejecución, mirando el tráfico del emulador mientras interpreta. Al subir de versión el motor, la revisión se repite.
 - **La app queda en dos velocidades** según el teléfono. Es el precio de no tener servidores, y es explícito: la pantalla del modelo dice qué cambia al instalarlo.
 - **Perder lo que hoy funciona.** Las listas que se borran hoy entienden "gasté 45 en almuerzo". Por eso el respaldo conserva monto, moneda, alias, medio, fecha y plantillas: sin modelo la app no vuelve a cero, vuelve a lo esencial.
+
+## Resultado y retiro (4-nov-2026)
+
+- **Medido en emulador** (x86_64, API 34; 4 GB con Qwen 3 0.6B y 6 GB con Qwen 3 1.7B): ver el cierre de `tasks.md`. Ninguno cumple los 5 s ni supera a las reglas.
+- **Decisión:** el motor LiteRT-LM sale del app y del AAB (el AAB baja de ~81 MB a lo de antes). La decisión 4.6 ("dentro del APK") queda reemplazada: no hay motor.
+- **Lo que se conserva** en el dominio: el puerto del modelo, el validador, el orquestador y el esquema. El siguiente intento (`interprete-gemini-nano`) usa el modelo del sistema (Gemini Nano por ML Kit) como adaptador opcional detrás del mismo puerto.
+- **Hallazgo de producto:** con modelos de ~1 B, el intérprete de texto plano y el OCR nativo rinden mejor que el LLM. El principio 4 del Manifiesto ("el modelo interpreta primero") queda sin ejercerse; no se cambia el Manifiesto sin decisión de la persona.
