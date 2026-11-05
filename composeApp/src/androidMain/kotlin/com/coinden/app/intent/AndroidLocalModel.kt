@@ -3,11 +3,11 @@ package com.coinden.app.intent
 import com.coinden.core.domain.port.output.LocalModelPort
 
 /**
- * El motor que corre el modelo en el teléfono. Lo implementa LiteRT-LM (API en Kotlin, sin C++
- * propio).
+ * El motor que corre un modelo de lenguaje en el teléfono. En la 0.2.2 no hay ninguno conectado:
+ * los modelos medidos (Qwen con LiteRT-LM y Gemini Nano) no entendieron mejor que las reglas, así
+ * que la app interpreta solo con ellas. El puerto queda para una versión futura.
  *
- * [grammar] es un JSON Schema y no es una sugerencia: el motor lo aplica durante la decodificación,
- * así que la respuesta no puede salirse del formato.
+ * [grammar] es un JSON Schema; un motor que pueda aplicarlo durante la decodificación lo hace.
  */
 interface ModelEngine {
     suspend fun generate(

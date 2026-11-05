@@ -8,9 +8,6 @@ import com.coinden.app.capture.EncryptedAttachmentStore
 import com.coinden.app.currency.CurrencyNames
 import com.coinden.app.erase.AndroidDataEraser
 import com.coinden.app.i18n.AppLanguage
-import com.coinden.app.intent.AndroidLocalModel
-import com.coinden.app.intent.GeminiNanoEngine
-import com.coinden.app.intent.MlKitSystemModelClient
 import com.coinden.app.lock.AndroidDeviceAuth
 import com.coinden.app.lock.AppLockController
 import com.coinden.app.packs.PackStore
@@ -31,7 +28,6 @@ import com.coinden.core.data.memory.StaticRegionalSettings
 import com.coinden.core.data.memory.SystemClock
 import com.coinden.core.data.memory.UuidIdGenerator
 import com.coinden.core.domain.model.Currency
-import com.coinden.core.domain.model.interpret.ModelIntentInterpreter
 import com.coinden.core.domain.model.interpret.RegionalSettings
 import com.coinden.core.domain.model.interpret.UserLocale
 import kotlinx.coroutines.Dispatchers
@@ -127,13 +123,6 @@ class CoinDenApplication : Application() {
                 initialLanguage = savedLanguage ?: AppLanguage.proposedFor(device.language),
                 attachments = EncryptedAttachmentStore(filesDir.resolve("attachments")),
                 downloadedPacks = { packStore.downloadedTexts() },
-                // El modelo del sistema (Gemini Nano), solo si el teléfono lo tiene y la persona
-                // aceptó el motor de Google: se mira en cada captura, no solo al abrir la app.
-                // Sin él mandan las reglas, que es el caso de casi todos los teléfonos.
-                model =
-                    ModelIntentInterpreter(
-                        AndroidLocalModel(GeminiNanoEngine(MlKitSystemModelClient()) { storage.preferences.googleReaderEnabled() }),
-                    ),
             )
 
         // Una versión anterior podía dejar un PDF descifrado en la caché si se cortaba la lectura.
